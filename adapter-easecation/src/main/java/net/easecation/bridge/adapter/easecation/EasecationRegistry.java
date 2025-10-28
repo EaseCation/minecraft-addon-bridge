@@ -4,6 +4,7 @@ import cn.nukkit.block.Blocks;
 import cn.nukkit.entity.Entity;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.nbt.tag.ListTag;
+import cn.nukkit.plugin.PluginBase;
 import net.easecation.bridge.adapter.easecation.block.BlockComponentsNBT;
 import net.easecation.bridge.adapter.easecation.block.BlockDataDriven;
 import net.easecation.bridge.adapter.easecation.block.BlockPermutationNBT;
@@ -158,6 +159,23 @@ public class EasecationRegistry implements AddonRegistry {
     @Override
     public Capabilities capabilities() {
         return CAPS;
+    }
+
+    @Override
+    public void setupResourcePackPushing(List<DeployedPack> deployedPacks, Object plugin) {
+        if (!(plugin instanceof PluginBase pluginBase)) {
+            log.warning("[EaseCation] setupResourcePackPushing: plugin is not a PluginBase, skipping");
+            return;
+        }
+
+        if (deployedPacks.isEmpty()) {
+            log.info("[EaseCation] No resource packs to push, skipping listener registration");
+            return;
+        }
+
+        ResourcePackListener listener = new ResourcePackListener(deployedPacks, log);
+        pluginBase.getServer().getPluginManager().registerEvents(listener, pluginBase);
+        log.info("[EaseCation] Resource pack listener registered, will push " + deployedPacks.size() + " pack(s) to players");
     }
 
     @Override

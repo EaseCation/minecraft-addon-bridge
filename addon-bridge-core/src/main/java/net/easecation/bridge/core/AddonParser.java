@@ -31,9 +31,21 @@ public class AddonParser {
     }
 
     public List<AddonPack> scanAndParse(File addonsRoot) throws IOException {
+        System.out.println("[AddonParser] ========================================");
+        System.out.println("[AddonParser] Scanning directory: " + (addonsRoot != null ? addonsRoot.getAbsolutePath() : "null"));
+
         List<AddonPack> packs = new ArrayList<>();
-        if (addonsRoot == null) return packs;
-        if (!addonsRoot.isDirectory()) return packs;
+        if (addonsRoot == null) {
+            System.out.println("[AddonParser] addonsRoot is null, returning empty list");
+            return packs;
+        }
+        if (!addonsRoot.isDirectory()) {
+            System.out.println("[AddonParser] addonsRoot is not a directory, returning empty list");
+            return packs;
+        }
+
+        System.out.println("[AddonParser] Directory exists: " + addonsRoot.exists());
+        System.out.println("[AddonParser] Is directory: " + addonsRoot.isDirectory());
 
         // Scan for ZIP files (.zip, .mcpack, .mcaddon)
         List<File> zipFiles = Files.walk(addonsRoot.toPath(), 1)
@@ -46,28 +58,57 @@ public class AddonParser {
                 .sorted(Comparator.comparing(File::getName))
                 .collect(Collectors.toList());
 
+        System.out.println("[AddonParser] Found " + zipFiles.size() + " ZIP/MCPACK/MCADDON files:");
+        for (File zipFile : zipFiles) {
+            System.out.println("[AddonParser]   - " + zipFile.getName());
+        }
+
         // Parse each ZIP file
         for (File zipFile : zipFiles) {
             try {
-                packs.add(parseZipPack(zipFile));
+                System.out.println("[AddonParser] Parsing ZIP: " + zipFile.getName());
+                AddonPack pack = parseZipPack(zipFile);
+                boolean isBehavior = pack.manifest().isBehaviorPack();
+                System.out.println("[AddonParser]   Pack name: " + pack.manifest().getName());
+                System.out.println("[AddonParser]   Is behavior pack: " + isBehavior);
+                System.out.println("[AddonParser]   Blocks: " + pack.blocks().size());
+                System.out.println("[AddonParser]   Entities: " + pack.entities().size());
+                System.out.println("[AddonParser]   Items: " + pack.items().size());
+                packs.add(pack);
             } catch (Exception e) {
-                System.err.println("Failed to parse pack: " + zipFile.getName() + " - " + e.getMessage());
+                System.err.println("[AddonParser] Failed to parse pack: " + zipFile.getName());
+                System.err.println("[AddonParser]   Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                e.printStackTrace();
                 // Continue with next pack
             }
         }
 
         // Also scan for directory-based packs
+        System.out.println("[AddonParser] Scanning for directory-based packs...");
+        final int[] dirPackCount = {0};
         Files.walk(addonsRoot.toPath())
                 .filter(p -> p.getFileName().toString().equalsIgnoreCase("manifest.json"))
                 .filter(p -> !isInsideZip(p))
                 .forEach(manifestPath -> {
+                    dirPackCount[0]++;
+                    System.out.println("[AddonParser] Found directory pack manifest: " + manifestPath);
                     try {
-                        packs.add(parseDirectoryPack(manifestPath.getParent()));
+                        AddonPack pack = parseDirectoryPack(manifestPath.getParent());
+                        System.out.println("[AddonParser]   Pack name: " + pack.manifest().getName());
+                        System.out.println("[AddonParser]   Is behavior pack: " + pack.manifest().isBehaviorPack());
+                        System.out.println("[AddonParser]   Blocks: " + pack.blocks().size());
+                        packs.add(pack);
                     } catch (IOException e) {
-                        System.err.println("Failed to parse directory pack: " + manifestPath.getParent() + " - " + e.getMessage());
+                        System.err.println("[AddonParser] Failed to parse directory pack: " + manifestPath.getParent());
+                        System.err.println("[AddonParser]   Error: " + e.getMessage());
+                        e.printStackTrace();
                     }
                 });
+        System.out.println("[AddonParser] Found " + dirPackCount[0] + " directory pack(s)");
 
+        System.out.println("[AddonParser] ========================================");
+        System.out.println("[AddonParser] Total packs loaded: " + packs.size());
+        System.out.println("[AddonParser] ========================================");
         return packs;
     }
 

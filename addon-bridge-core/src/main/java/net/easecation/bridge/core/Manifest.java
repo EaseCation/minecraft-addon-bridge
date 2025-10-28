@@ -85,8 +85,13 @@ public record Manifest(
     }
 
     public boolean isBehaviorPack() {
-        return modules != null && modules.stream()
-                .anyMatch(m -> "data".equals(m.type()));
+        if (modules == null || modules.isEmpty()) {
+            return false;
+        }
+        return modules.stream()
+                .anyMatch(m -> "data".equalsIgnoreCase(m.type()) ||
+                              "behavior".equalsIgnoreCase(m.type()) ||
+                              "javascript".equalsIgnoreCase(m.type()));
     }
 
     public boolean isResourcePack() {

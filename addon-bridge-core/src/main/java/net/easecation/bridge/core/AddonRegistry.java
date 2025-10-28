@@ -17,5 +17,17 @@ public interface AddonRegistry {
      * 和 registerRecipes() 全部执行完毕后被调用。
      */
     void afterAllRegistrations();
+
+    /**
+     * 设置资源包推送功能。
+     * 在所有插件包加载和注册完成后调用，用于配置资源包自动推送给玩家。
+     *
+     * @param deployedPacks 已部署的资源包列表
+     * @param plugin 插件实例（通常是 PluginBase），用于注册事件监听器等
+     */
+    default void setupResourcePackPushing(List<DeployedPack> deployedPacks, Object plugin) {
+        // 默认实现：不做任何处理
+        // 各平台适配器可以根据需要覆写此方法
+    }
 }
 

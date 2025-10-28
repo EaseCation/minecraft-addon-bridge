@@ -5,7 +5,7 @@
 面向 Nukkit 系列分支（Cloudburst/Nukkit、PM1E、Nukkit‑MOT、PowerNukkitX）的"基岩版 Add‑on 桥接插件"。
 将 Add‑on 的 JSON 解析为通用模型（Common Model），通过"分支适配器"完成服务器注册，并统一打包与下发资源包。
 
-**当前状态**：最小可运行骨架（MVP）。解析仅覆盖 manifest 基本信息；适配器实现为 Demo（打印日志）；DTO 代码生成器已完成并可正常使用。
+**当前状态**：最小可运行骨架（MVP）。解析仅覆盖自定义方块和实体；适配器实现为 Demo；DTO 代码生成器已完成并可正常使用。
 
 ## 功能概览
 - 扫描插件数据目录 `addons/`，读取每个包的 `manifest.json`（提取 uuid/name/version）。
@@ -97,5 +97,3 @@ Schema 更新或升级 Minecraft 版本时需重新生成。
 - 插件入口：`plugin-runner/src/main/java/net/easecation/bridge/runner/BridgeBootstrap.java`
 - 通用模型与 SPI：`addon-bridge-core/src/main/java/net/easecation/bridge/core/*`
 - 资源打包：`addon-pack-tools/src/main/java/net/easecation/bridge/pack/*`
-
-需要我优先对接某个分支（例如 PNX 或 Cloudburst）并补充最小可运行注册示例，请直接提出。
