@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew :addon-bridge-core:compileJava:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run generate:blocks:*)",
+      "Bash(npm run generate:items:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(for file in /Users/fangyizhou/Documents/coding/nukkit-addon-bridge/schemas/minecraft-bedrock-json-schemas/behavior/{blocks,items,entities,recipes}/**.json)",
+      "Bash(done)",
+      "Bash(for file in /Users/fangyizhou/Documents/coding/nukkit-addon-bridge/schemas/minecraft-bedrock-json-schemas/behavior/*/*.json)",
+      "Bash(python3:*)",
+      "Bash(npm run generate:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

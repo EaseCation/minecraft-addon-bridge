@@ -1,0 +1,15 @@
+package net.easecation.bridge.core.dto.v1_21_60.behavior.entities;
+
+import com.fasterxml.jackson.annotation.*;
+import javax.annotation.Nullable;
+
+/* Allows the creeper to swell up when a player is nearby. It can only be used by Creepers. */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record Swell(
+    @JsonProperty("priority") @Nullable Priority priority,
+    /* This mob starts swelling when a target is at least this many blocks away. */
+    @JsonProperty("start_distance") @Nullable Double startDistance,
+    /* This mob stops swelling when a target has moved away at least this many blocks. */
+    @JsonProperty("stop_distance") @Nullable Double stopDistance
+) {
+}

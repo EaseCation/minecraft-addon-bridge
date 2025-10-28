@@ -1,0 +1,11 @@
+package net.easecation.bridge.core.dto.v1_21_60.behavior.entities;
+
+import com.fasterxml.jackson.annotation.*;
+import javax.annotation.Nullable;
+
+/* Enables the mob to barter for items that have been configured as barter currency. Must be used in combination with the barter component */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record Barter(
+    @JsonProperty("priority") @Nullable Priority priority
+) {
+}

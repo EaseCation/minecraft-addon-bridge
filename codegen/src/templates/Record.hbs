@@ -1,0 +1,24 @@
+package {{{package}}};
+
+{{#each imports}}
+{{{this}}}
+{{/each}}
+
+{{#if javadoc}}
+{{{javadoc}}}
+{{/if}}
+{{#each annotations}}
+{{{this}}}
+{{/each}}
+public record {{{className}}}(
+    {{#each properties}}
+    {{#if javadoc}}{{{javadoc}}}
+    {{/if}}{{#each annotations}}{{{this}}} {{/each}}{{{type}}} {{{name}}}{{#unless @last}},{{/unless}}
+    {{/each}}
+) {
+    {{#if nestedTypes}}
+    {{#each nestedTypes}}
+    {{> NestedType this}}
+    {{/each}}
+    {{/if}}
+}

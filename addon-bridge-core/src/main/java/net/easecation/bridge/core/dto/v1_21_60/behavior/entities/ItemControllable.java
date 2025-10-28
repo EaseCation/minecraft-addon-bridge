@@ -1,0 +1,12 @@
+package net.easecation.bridge.core.dto.v1_21_60.behavior.entities;
+
+import com.fasterxml.jackson.annotation.*;
+import javax.annotation.Nullable;
+
+/* Defines what items can be used to control this entity while ridden. */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record ItemControllable(
+    /* List of items that can be used to control this entity. */
+    @JsonProperty("control_items") @Nullable Object controlItems
+) {
+}

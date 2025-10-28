@@ -1,0 +1,14 @@
+package {{{package}}};
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+{{#if javadoc}}
+{{{javadoc}}}
+{{/if}}
+@JsonFormat(shape = JsonFormat.Shape.STRING)
+public enum {{{enumName}}} {
+    {{#each values}}
+    @JsonProperty("{{{jsonValue}}}") {{{javaName}}}{{#unless @last}},{{/unless}}
+    {{/each}}
+}

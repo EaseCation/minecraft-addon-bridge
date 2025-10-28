@@ -1,9 +1,11 @@
 # Nukkit Addon Bridge
 
-面向 Nukkit 系列分支（Cloudburst/Nukkit、PM1E、Nukkit‑MOT、PowerNukkitX）的“基岩版 Add‑on 桥接插件”。
-将 Add‑on 的 JSON 解析为通用模型（Common Model），通过“分支适配器”完成服务器注册，并统一打包与下发资源包。
+> **⚠️ WIP (Work In Progress)** - 项目正在积极开发中，核心功能尚未完全实现。
 
-提示：当前为最小可运行骨架（MVP）。解析仅覆盖 manifest 基本信息；适配器实现为 Demo（打印日志）。
+面向 Nukkit 系列分支（Cloudburst/Nukkit、PM1E、Nukkit‑MOT、PowerNukkitX）的"基岩版 Add‑on 桥接插件"。
+将 Add‑on 的 JSON 解析为通用模型（Common Model），通过"分支适配器"完成服务器注册，并统一打包与下发资源包。
+
+**当前状态**：最小可运行骨架（MVP）。解析仅覆盖 manifest 基本信息；适配器实现为 Demo（打印日志）；DTO 代码生成器已完成并可正常使用。
 
 ## 功能概览
 - 扫描插件数据目录 `addons/`，读取每个包的 `manifest.json`（提取 uuid/name/version）。
@@ -15,6 +17,9 @@
 ```
 nukkit-addon-bridge/
 ├─ addon-bridge-core/   # 核心：通用模型、SPI、解析器、依赖排序、默认桥接
+│   └─ src/main/java/net/easecation/bridge/core/dto/  # 自动生成的 DTO 类
+├─ codegen/             # TypeScript 代码生成器：从 JSON Schema 生成 Java DTO
+├─ schemas/             # Minecraft Bedrock JSON Schema 定义（Git Submodule）
 ├─ addon-pack-tools/    # 工具：ZIP 打包、SHA1、resource_packs.yml 写入
 ├─ adapter-* /          # 分支适配器（EaseCation/Cloudburst/PM1E/MOT/PNX），MVP 仅日志占位
 └─ plugin-runner/       # 插件入口（PluginBase）：装配 core + tools + 适配器
@@ -24,6 +29,18 @@ nukkit-addon-bridge/
 - Core 不依赖 Nukkit API；适配器以 compileOnly 引入，运行期由服务器提供。
 - 不可映射特性将记录并优雅降级（后续版本完善）。
 - 资源下发支持本地 ZIP+SHA1；可通过 `BRIDGE_RP_BASE_URL` 注入 CDN 前缀。
+
+## DTO 自动生成
+
+`codegen/` 模块从 Minecraft 基岩版 JSON Schema（Git Submodule）自动生成 Java 17 DTO 类（使用 record、sealed interface），输出至 `addon-bridge-core/src/main/java/net/easecation/bridge/core/dto/`。
+
+使用方法：
+```bash
+git submodule update --init --recursive  # 首次克隆需初始化
+cd codegen && npm install && npm run generate
+```
+
+Schema 更新或升级 Minecraft 版本时需重新生成。
 
 ## plugin-runner 工作原理
 1) 服务器加载插件 → `BridgeBootstrap#onEnable()` 执行。

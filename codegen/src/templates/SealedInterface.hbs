@@ -1,0 +1,24 @@
+package {{{package}}};
+
+{{#each imports}}
+{{{this}}}
+{{/each}}
+
+{{#if javadoc}}
+{{{javadoc}}}
+{{/if}}
+{{#each annotations}}
+{{{this}}}
+{{/each}}
+public sealed interface {{{interfaceName}}} {
+    {{#each variants}}
+    {{#if javadoc}}{{{javadoc}}}
+    {{/if}}{{#each annotations}}{{{this}}} {{/each}}
+    record {{{className}}}(
+        {{#each properties}}
+        {{#if javadoc}}{{{javadoc}}}
+        {{/if}}{{#each annotations}}{{{this}}} {{/each}}{{{type}}} {{{name}}}{{#unless @last}},{{/unless}}
+        {{/each}}
+    ) implements {{{../interfaceName}}} {}
+    {{/each}}
+}
