@@ -12,6 +12,6 @@ public record Trusting(
     /* Event to run when this entity becomes trusting. */
     @JsonProperty("trust_event") @Nullable Event trustEvent,
     /* The list of items that can be used to get the entity to trust players. */
-    @JsonProperty("trust_items") @Nullable List<ItemIdentifier> trustItems
+    @JsonProperty("trust_items") @Nullable List<String> trustItems
 ) {
 }

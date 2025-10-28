@@ -14,7 +14,7 @@ public record BiomeDefinition(
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record Description(
             /* The identifier for this biome. The name must include a namespace and must not use the Minecraft namespace unless overriding a Vanilla biome. */
-            @JsonProperty("identifier") Identifier identifier
+            @JsonProperty("identifier") String identifier
         ) {
         }
 }

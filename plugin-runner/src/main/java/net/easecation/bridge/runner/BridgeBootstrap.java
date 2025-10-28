@@ -12,16 +12,15 @@ public final class BridgeBootstrap extends PluginBase {
 
     @Override
     public void onEnable() {
-        var pLog = getLogger(); // Plugin logger (Nukkit type)
-        java.util.logging.Logger jLog = java.util.logging.Logger.getLogger(getName());
+        var nukkitLogger = getLogger(); // Plugin logger (Nukkit type)
         try {
             // 根据服务端品牌信息与类特征选择适配器
-            AddonRegistry registry = AdapterFactory.detectRegistryOrNoop(getServer(), jLog);
+            AddonRegistry registry = AdapterFactory.detectRegistryOrNoop(getServer(), nukkitLogger);
 
             Path dataDir = getDataFolder().toPath();
             ResourcePackDeployer deployer = new GenericResourceDeployer(
                     dataDir,
-                    jLog,
+                    new NukkitLoggerAdapter(nukkitLogger),
                     System.getenv("BRIDGE_RP_BASE_URL")
             );
 
@@ -35,11 +34,11 @@ public final class BridgeBootstrap extends PluginBase {
                 addonsRoot.mkdirs();
             }
 
-            pLog.info("AddonBridge scanning: " + addonsRoot.getAbsolutePath());
+            nukkitLogger.info("AddonBridge scanning: " + addonsRoot.getAbsolutePath());
             bridge.loadAndRegisterAll(addonsRoot);
-            pLog.info("AddonBridge enabled.");
+            nukkitLogger.info("AddonBridge enabled.");
         } catch (Throwable t) {
-            pLog.error("AddonBridge failed to enable: " + t.getMessage());
+            nukkitLogger.error("AddonBridge failed to enable: " + t.getMessage(), t);
         }
     }
 }

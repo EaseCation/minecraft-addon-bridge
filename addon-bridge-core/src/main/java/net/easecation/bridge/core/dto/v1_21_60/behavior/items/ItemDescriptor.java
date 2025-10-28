@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 public record ItemDescriptor(
     @JsonProperty("item") @Nullable Object item,
     /* [UNDOCUMENTED] A Molang expression ran against item or block to match. */
-    @JsonProperty("tags") @Nullable Molang tags,
+    @JsonProperty("tags") @Nullable String tags,
     /* [UNDOCUMENTED] A tag to lookup item or block by. */
     @JsonProperty("item_tag") @Nullable String itemTag
 ) {

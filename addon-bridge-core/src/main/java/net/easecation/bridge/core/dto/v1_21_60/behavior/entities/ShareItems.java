@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to give items it has to others. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ShareItems(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* List of entities this mob will share items with. */
     @JsonProperty("entity_types") @Nullable EntityTypes entityTypes,
     /* Distance in blocks within the mob considers it has reached the goal. This is the {@code wiggle room} to stop the AI from bouncing back and forth trying to reach a specific spot */

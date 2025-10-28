@@ -7,8 +7,8 @@ import javax.annotation.Nullable;
 /* Allows an entity to be tempted by a set item. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record FloatTempt(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* If true, the mob can stop being tempted if the player moves too fast while close to this mob. */
     @JsonProperty("can_get_scared") @Nullable Boolean canGetScared,
     /* If true, the mob can be tempted even if it has a passenger (i.e. if being ridden). */
@@ -22,7 +22,7 @@ public record FloatTempt(
     /* The distance at which the mob will stop following the player. */
     @JsonProperty("stop_distance") @Nullable Double stopDistance,
     /* Sound to play while the mob is being tempted. */
-    @JsonProperty("tempt_sound") @Nullable SoundEvent temptSound,
+    @JsonProperty("tempt_sound") @Nullable String temptSound,
     /* Distance in blocks this mob can get tempted by a player holding an item they like. */
     @JsonProperty("within_radius") @Nullable Double withinRadius,
     /* Specifies the event to trigger when the goal starts */

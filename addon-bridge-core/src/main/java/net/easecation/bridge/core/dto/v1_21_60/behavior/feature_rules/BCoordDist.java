@@ -11,7 +11,8 @@ public sealed interface BCoordDist {
     /* Expression for the coordinate (evaluated each iteration).  Mutually exclusive with random distribution object below. */
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record BCoordDist_Variant0(
-    ) implements BCoordDist {}
+    ) implements BCoordDist {
+    }
     /* Distribution for the coordinate (evaluated each iteration).  Mutually exclusive with Molang expression above. */
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record BCoordDist_Variant1(
@@ -19,12 +20,14 @@ public sealed interface BCoordDist {
         @JsonProperty("numerator") @Nullable Double numerator,
         /* UNDOCUMENTED. */
         @JsonProperty("denominator") @Nullable Double denominator
-    ) implements BCoordDist {}
+    ) implements BCoordDist {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record BCoordDist_Variant2(
         /* Distribution type */
         @JsonProperty("distribution") @Nullable String distribution,
         /* Represents the range of values on which that distribution operates, from minimum to maximum. */
         @JsonProperty("extent") @Nullable List<Double> extent
-    ) implements BCoordDist {}
+    ) implements BCoordDist {
+    }
 }

@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows an entity to attack the closest target within a given subset of specific target types. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record NearestAttackableTarget(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Filters which types of targets are valid for this entity */
     @JsonProperty("entity_types") @Nullable EntityTypes entityTypes,
     /* Time range (in seconds) between searching for an attack target, range is in (0, {@code attack<i>interval}]. Only used if {@code attack</i>interval} is greater than 0, otherwise {@code scan_interval} is used. */

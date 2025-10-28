@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 public record EntitiesDefinition(
     /* Allows an entity to use experimental features. */
     @JsonProperty("use_beta_features") @Nullable Boolean useBetaFeatures,
-    @JsonProperty("format_version") FormatVersion formatVersion,
+    @JsonProperty("format_version") String formatVersion,
     @JsonProperty("minecraft:entity") Entity minecraft_entity
 ) {
 }

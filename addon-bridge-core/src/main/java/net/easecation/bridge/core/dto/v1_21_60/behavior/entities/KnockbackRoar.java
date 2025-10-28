@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to perform a damaging knockback that affects all nearby entities. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record KnockbackRoar(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The delay after which the knockback occurs (in seconds). */
     @JsonProperty("attack_time") @Nullable Double attackTime,
     /* Time in seconds the mob has to wait before using the goal again. */

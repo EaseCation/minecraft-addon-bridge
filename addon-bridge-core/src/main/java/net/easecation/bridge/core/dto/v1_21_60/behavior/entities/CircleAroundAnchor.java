@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Causes an entity to circle around an anchor point placed near a point or target. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CircleAroundAnchor(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Horizontal distance from the anchor point this entity must stay within upon a successful radius adjustment. */
     @JsonProperty("radius_range") @Nullable Range_a_B_ radiusRange,
     /* A random value to determine when to increase the size of the radius up to the maximum. This has a 1/value chance every tick to do so. */

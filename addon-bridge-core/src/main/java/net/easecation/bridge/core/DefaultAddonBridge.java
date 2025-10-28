@@ -30,6 +30,8 @@ public final class DefaultAddonBridge implements AddonBridge {
             registry.registerEntities(p.entities());
             registry.registerRecipes(p.recipes());
         }
+        // 所有注册完成后，执行平台特定的后处理逻辑
+        registry.afterAllRegistrations();
     }
 }
 

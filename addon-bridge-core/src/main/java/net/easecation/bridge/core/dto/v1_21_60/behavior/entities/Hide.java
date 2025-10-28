@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows a mob with the hide component to attempt to move to - and hide at - an owned or nearby POI. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Hide(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Amount of time in seconds that the mob reacts. */
     @JsonProperty("duration") @Nullable Double duration,
     /* Defines what POI type to hide at. */

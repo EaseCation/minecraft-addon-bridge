@@ -23,7 +23,7 @@ public record Entity(
             /* Sets the mapping of internal animation / animation controllers references to actual animations. This is a JSON Object of name/animation pairs */
             @JsonProperty("animations") @Nullable Map<String, String> animations,
             /* Sets the identifier for this entity's description. */
-            @JsonProperty("identifier") EntityIdentifier identifier,
+            @JsonProperty("identifier") String identifier,
             /* Sets whether or not this entity has a spawn egg in the creative ui. */
             @JsonProperty("is_spawnable") @Nullable Boolean isSpawnable,
             /* Sets whether or not we can summon this entity using commands such as /summon. */

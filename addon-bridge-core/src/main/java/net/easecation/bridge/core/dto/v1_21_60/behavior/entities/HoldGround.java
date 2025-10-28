@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* The mob freezes and looks at the mob they are targeting. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record HoldGround(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Whether to broadcast out the mob's target to other mobs of the same type. */
     @JsonProperty("broadcast") @Nullable Boolean broadcast,
     /* Range in blocks for how far to broadcast. */

@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Activates the {@code EMERGING} actor flag during the specified duration and triggers {@code on_done} at the end */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Emerge(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Time in seconds the mob has to wait before using the goal again. */
     @JsonProperty("cooldown_time") @Nullable Double cooldownTime,
     /* Goal duration in seconds. */

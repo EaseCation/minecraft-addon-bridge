@@ -12,6 +12,6 @@ import java.util.List;
 public record SequenceFeature(
     @JsonProperty("description") Description description,
     /* List of features to be placed in sequence. The output position of the previous feature is used as the input position to the next. */
-    @JsonProperty("features") List<FeatureIdentifier> features
+    @JsonProperty("features") List<String> features
 ) {
 }

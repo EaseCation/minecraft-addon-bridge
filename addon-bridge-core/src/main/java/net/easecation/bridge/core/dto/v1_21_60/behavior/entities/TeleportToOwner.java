@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows an entity to teleport to its owner. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TeleportToOwner(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The time in seconds that must pass for the entity to be able to try to teleport again. */
     @JsonProperty("cooldown") @Nullable Double cooldown,
     /* Conditions to be satisfied for the entity to teleport to its owner. */

@@ -14,8 +14,10 @@ public sealed interface BfFiltersSpec {
         @JsonProperty("any_of") @Nullable BfGroupsSpec anyOf,
         /* All tests in a {@code none_of} group must fail in order for the group to pass. */
         @JsonProperty("none_of") @Nullable BfGroupsSpec noneOf
-    ) implements BfFiltersSpec {}
+    ) implements BfFiltersSpec {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record BfFiltersSpec_Variant1(
-    ) implements BfFiltersSpec {}
+    ) implements BfFiltersSpec {
+    }
 }

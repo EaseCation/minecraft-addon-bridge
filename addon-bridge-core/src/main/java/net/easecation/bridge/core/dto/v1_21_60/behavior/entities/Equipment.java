@@ -10,6 +10,6 @@ public record Equipment(
     /* A list of slots with the chance to drop an equipped item from that slot. */
     @JsonProperty("slot_drop_chance") @Nullable List<Object> slotDropChance,
     /* The file path to the equipment table, relative to the behavior pack's root. */
-    @JsonProperty("table") @Nullable LootTableIdentifier table
+    @JsonProperty("table") @Nullable String table
 ) {
 }

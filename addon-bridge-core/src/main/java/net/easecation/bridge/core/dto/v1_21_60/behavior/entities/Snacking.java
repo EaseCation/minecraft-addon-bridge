@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to take a load off and snack on food that it found nearby. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Snacking(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Items that we are interested in snacking on. */
     @JsonProperty("items") @Nullable Object items,
     /* The cooldown time in seconds before the mob is able to snack again. */

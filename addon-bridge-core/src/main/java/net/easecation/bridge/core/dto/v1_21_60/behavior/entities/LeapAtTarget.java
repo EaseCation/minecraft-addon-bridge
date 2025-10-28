@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows monsters to jump at and attack their target. Can only be used by hostile mobs. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record LeapAtTarget(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* If true, the mob will only jump at its target if its on the ground. Setting it to false will allow it to jump even if its already in the air */
     @JsonProperty("must_be_on_ground") @Nullable Boolean mustBeOnGround,
     /* Allows the actor to be set to persist upon targeting a player. */

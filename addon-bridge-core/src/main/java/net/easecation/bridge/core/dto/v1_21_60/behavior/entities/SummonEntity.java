@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to attack the player by summoning other entities. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record SummonEntity(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* List of spells for the mob to use to summon entities. */
     @JsonProperty("summon_choices") @Nullable List<Object> summonChoices
 ) {

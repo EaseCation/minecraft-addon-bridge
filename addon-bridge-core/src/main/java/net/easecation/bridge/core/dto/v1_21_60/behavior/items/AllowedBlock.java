@@ -7,6 +7,6 @@ import javax.annotation.Nullable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record AllowedBlock(
     /* Tags. */
-    @JsonProperty("tags") @Nullable Molang tags
+    @JsonProperty("tags") @Nullable String tags
 ) {
 }

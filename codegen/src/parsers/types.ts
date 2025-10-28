@@ -51,6 +51,7 @@ export interface ParsedType {
   javaPackage?: string;
   javaClassName?: string;
   nestedTypes?: ParsedType[];  // 内部类/接口列表
+  isValueWrapper?: boolean;     // 是否是原始值包装类（需要 @JsonValue）
 }
 
 /**

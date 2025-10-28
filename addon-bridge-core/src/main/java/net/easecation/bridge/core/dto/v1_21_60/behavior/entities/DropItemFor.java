@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the entity to move toward a target, and drop an item near the target. This goal requires a "minecraft:navigation" to execute. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record DropItemFor(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* The list of conditions another entity must meet to be a valid target to drop an item for. */
     @JsonProperty("entity_types") @Nullable EntityTypes entityTypes,
     /* Total time that the goal is on cooldown before it can be used again. */

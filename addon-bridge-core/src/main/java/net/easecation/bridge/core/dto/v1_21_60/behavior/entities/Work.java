@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the NPC to use the POI. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Work(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* The amount of ticks the NPC will stay in their the work location. */
     @JsonProperty("active_time") @Nullable Integer activeTime,
     /* If true, this entity can work when their jobsite POI is being rained on. */

@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 /* Allows the entity to consume a block, replace the eaten block with another block, and trigger an event as a result. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record EatBlock(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The event to trigger when the block eating animation has completed. */
     @JsonProperty("on_eat") @Nullable Trigger onEat,
     /* A molang expression defining the success chance the entity has to consume a block. */

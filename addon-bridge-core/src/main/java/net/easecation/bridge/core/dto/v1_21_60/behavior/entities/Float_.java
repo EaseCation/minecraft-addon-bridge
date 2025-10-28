@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to stay afloat while swimming. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Float_(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* If true, the mob will keep sinking as long as it has passengers. */
     @JsonProperty("sink_with_passengers") @Nullable Boolean sinkWithPassengers
 ) {

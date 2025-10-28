@@ -11,13 +11,13 @@ public record Leashable(
     @JsonProperty("can_be_stolen") @Nullable Boolean canBeStolen,
     /* When set to true, "on_unleash" does not trigger when the entity gets unleashed for other reasons such as being stolen or the leash breaking. */
     @JsonProperty("on_unleash_interact_only") @Nullable Boolean onUnleashInteractOnly,
-    @JsonProperty("hard_distance") @Nullable HardDistance hardDistance,
-    @JsonProperty("max_distance") @Nullable MaximumDistance maxDistance,
+    @JsonProperty("hard_distance") @Nullable Double hardDistance,
+    @JsonProperty("max_distance") @Nullable Double maxDistance,
     /* Event to call when this entity is leashed. */
     @JsonProperty("on_leash") @Nullable Event onLeash,
     /* Event to call when this entity is unleashed. */
     @JsonProperty("on_unleash") @Nullable Event onUnleash,
-    @JsonProperty("soft_distance") @Nullable SoftDistance softDistance,
+    @JsonProperty("soft_distance") @Nullable Double softDistance,
     /* Defines how this entity behaves when leashed to another entity. A preset is selected upon leashing and remains until the entity is leashed to something else. The first preset whose "filter" conditions are met will be applied; if none match, a default configuration is used instead. */
     @JsonProperty("presets") @Nullable List<Object> presets
 ) {

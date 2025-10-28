@@ -9,11 +9,13 @@ import javax.annotation.Nullable;
 public sealed interface MapColor {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record MapColor_Variant0(
-    ) implements MapColor {}
+    ) implements MapColor {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record MapColor_Variant1(
         @JsonProperty("color") BiColor color,
         /* Tint multiplied to the color. Tint method logic varies, but often refers to the "rain" and "temperature" of the biome the block is placed in to compute the tint. */
         @JsonProperty("tint_method") @Nullable TintMethod tintMethod
-    ) implements MapColor {}
+    ) implements MapColor {
+    }
 }

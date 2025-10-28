@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to use ranged attacks like shooting arrows. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record RangedAttack(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Alternative to "attack<i>interval</i>min" & "attack<i>interval</i>max". Consistent reload-time (in seconds), when not using a charged shot. Does not scale with target-distance. */
     @JsonProperty("attack_interval") @Nullable Double attackInterval,
     /* Maximum bound for reload-time range (in seconds), when not using a charged shot. Reload-time range scales with target-distance. */

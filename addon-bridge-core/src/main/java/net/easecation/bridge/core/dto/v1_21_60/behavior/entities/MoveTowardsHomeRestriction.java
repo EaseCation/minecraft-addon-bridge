@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows mobs with the home component to move toward their pre-defined area that the mob should be restricted to. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record MoveTowardsHomeRestriction(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier
 ) {
 }

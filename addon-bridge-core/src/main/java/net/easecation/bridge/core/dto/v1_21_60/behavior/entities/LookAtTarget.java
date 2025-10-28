@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to look at the entity they are targetting. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record LookAtTarget(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The distance in blocks from which the entity will look at this mob's current target. */
     @JsonProperty("look_distance") @Nullable Double lookDistance,
     /* The probability of looking at the target. A value of 1.00 is 100%. */

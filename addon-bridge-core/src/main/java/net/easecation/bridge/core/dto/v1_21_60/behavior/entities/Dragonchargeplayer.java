@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows this entity to attack a player by charging at them. The player is chosen by the "minecraft:behavior.dragonscanning". Note: This behavior can only be used by the ender_dragon entity type. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Dragonchargeplayer(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The speed this entity moves when this behavior has started or while it's active. */
     @JsonProperty("active_speed") @Nullable Double activeSpeed,
     /* If the dragon is outside the "target<i>zone" for longer than "continue</i>charge<i>threshold</i>time" seconds, the charge is canceled. */

@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows an entity to stalk a specific target. Once within range of the target, the entity will then leap at the target and deal damage based upon its attack attribute. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record StalkAndPounceOnTarget(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The amount of time the mob will be interested before pouncing. This happens when the mob is within range of pouncing */
     @JsonProperty("interest_time") @Nullable Double interestTime,
     /* The distance in blocks the mob jumps in the direction of its target. */

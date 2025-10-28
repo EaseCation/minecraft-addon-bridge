@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 /* Allows an entity to jump to another random block. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record JumpToBlock(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Minimum and maximum cooldown time-range (positive, in seconds) between each attempted jump. */
     @JsonProperty("cooldown_range") @Nullable VectorOf2Items cooldownRange,
     /* Blocks that the mob can't jump to. */

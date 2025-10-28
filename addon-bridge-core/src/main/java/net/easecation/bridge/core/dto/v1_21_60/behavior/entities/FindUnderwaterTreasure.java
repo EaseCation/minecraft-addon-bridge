@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to move towards the nearest underwater ruin or shipwreck. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record FindUnderwaterTreasure(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* The range that the mob will search for a treasure chest within a ruin or shipwreck to move towards. */
     @JsonProperty("search_range") @Nullable Integer searchRange,
     /* The distance the mob will move before stopping. */

@@ -8,6 +8,6 @@ import javax.annotation.Nullable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record BreakBlocks(
     /* A list of the blocks that can be broken as this entity moves around. */
-    @JsonProperty("breakable_blocks") @Nullable List<BlockName> breakableBlocks
+    @JsonProperty("breakable_blocks") @Nullable List<String> breakableBlocks
 ) {
 }

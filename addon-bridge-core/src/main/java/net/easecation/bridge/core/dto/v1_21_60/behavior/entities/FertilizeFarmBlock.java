@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to search within an area for a growable crop block. If found, the mob will use any available fertilizer in their inventory on the crop. This goal will not execute if the mob does not have a fertilizer item in its inventory. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record FertilizeFarmBlock(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Distance in blocks within the mob considers it has reached it's target position. */
     @JsonProperty("goal_radius") @Nullable Double goalRadius,
     /* The maximum number of times the mob will use fertilzer on the target block. */

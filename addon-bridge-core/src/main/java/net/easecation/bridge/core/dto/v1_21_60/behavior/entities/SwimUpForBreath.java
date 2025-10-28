@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to try to move to air once it is close to running out of its total breathable supply. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record SwimUpForBreath(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The material the mob is traveling in. An air block will only be considered valid to move to with a block of this material below it. */
     @JsonProperty("material_type") @Nullable String materialType,
     /* The height (in blocks) above the mob's current position that it will search for a valid air block to move to. If a valid block cannot be found, the mob will move to the position this many blocks above it. */

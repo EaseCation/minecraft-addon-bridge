@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the entity to search within an area for farmland with air above it. If found, the entity will replace the air block by planting a seed item from its inventory on the farmland block. This goal requires "minecraft:inventory" and "minecraft:navigation" to execute. This goal will not execute if the entity does not have an item in its inventory. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record HarvestFarmBlock(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* The maximum amount of time in seconds that the goal can take before searching for the first harvest block. The time is chosen between 0 and this number. */
     @JsonProperty("max_seconds_before_search") @Nullable Double maxSecondsBeforeSearch,
     /* The maximum amount of time in seconds that the goal can take before searching again, after failing to find a a harvest block already. The time is chosen between 0 and this number. */

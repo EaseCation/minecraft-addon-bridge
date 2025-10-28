@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the entity go idle, if swimming. Entity must be in water. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record SwimIdle(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Amount of time (in seconds) to stay idle. */
     @JsonProperty("idle_time") @Nullable Double idleTime,
     /* Percent chance this entity will go idle, 1.0 = 100%. */

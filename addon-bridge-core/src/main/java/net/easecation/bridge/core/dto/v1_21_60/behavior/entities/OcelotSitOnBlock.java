@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows an entity to sit in place, similar to the ocelot entity animation pose. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record OcelotSitOnBlock(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier
 ) {
 }

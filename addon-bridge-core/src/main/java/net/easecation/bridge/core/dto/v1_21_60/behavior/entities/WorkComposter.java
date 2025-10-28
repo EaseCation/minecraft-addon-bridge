@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the NPC to use the composter POI to convert excess seeds into bone meal. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record WorkComposter(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* The amount of ticks the NPC will stay in their the work location. */
     @JsonProperty("active_time") @Nullable Integer activeTime,
     /* The maximum number of times the mob will interact with the composter. */

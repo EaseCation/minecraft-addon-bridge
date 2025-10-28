@@ -6,6 +6,6 @@ import javax.annotation.Nullable;
 /* Allows the Dragon to fly around in a circle around the center podium. Note: This behavior can only be used by the ender_dragon entity type. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Dragonholdingpattern(
-    @JsonProperty("priority") @Nullable Priority priority
+    @JsonProperty("priority") @Nullable Integer priority
 ) {
 }

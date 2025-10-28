@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows this entity to use a flame-breath attack. Note: This behavior can only be used by the ender_dragon entity type. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Dragonflaming(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Time (in seconds), after roar, to breath flame. */
     @JsonProperty("cooldown_time") @Nullable Double cooldownTime,
     /* Time (in seconds), after roar, to breath flame. */

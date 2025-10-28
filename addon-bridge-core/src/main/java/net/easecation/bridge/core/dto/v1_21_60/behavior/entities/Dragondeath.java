@@ -6,6 +6,6 @@ import javax.annotation.Nullable;
 /* Controls the entity's death state and animation. Note: This behavior can only be used by the ender_dragon entity type. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Dragondeath(
-    @JsonProperty("priority") @Nullable Priority priority
+    @JsonProperty("priority") @Nullable Integer priority
 ) {
 }

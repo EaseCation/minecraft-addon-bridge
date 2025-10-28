@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Sniff compels this entity to detect the nearest player within "sniffing<i>radius" and update its minecraft:suspect</i>tracking component state. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Sniff(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Cooldown range between sniffs in seconds. */
     @JsonProperty("cooldown_range") @Nullable VectorOf2Items cooldownRange,
     /* Sniffing duration in seconds */

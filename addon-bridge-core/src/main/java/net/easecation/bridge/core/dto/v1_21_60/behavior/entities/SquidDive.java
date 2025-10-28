@@ -6,6 +6,6 @@ import javax.annotation.Nullable;
 /* Allows an entity to dive underwater. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record SquidDive(
-    @JsonProperty("priority") @Nullable Priority priority
+    @JsonProperty("priority") @Nullable Integer priority
 ) {
 }

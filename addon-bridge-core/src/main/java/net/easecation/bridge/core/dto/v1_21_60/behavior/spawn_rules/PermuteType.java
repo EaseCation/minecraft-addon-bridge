@@ -8,5 +8,6 @@ import com.fasterxml.jackson.annotation.*;
 public sealed interface PermuteType {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record PermuteType_Variant1(
-    ) implements PermuteType {}
+    ) implements PermuteType {
+    }
 }

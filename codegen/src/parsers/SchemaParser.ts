@@ -45,8 +45,23 @@ export class SchemaParser {
     // 解析 definitions（添加模块前缀避免命名冲突）
     if (schema.definitions) {
       for (const [defName, defSchema] of Object.entries(schema.definitions)) {
+        const def = defSchema as JSONSchema7;
+
+        // 检查是否是纯基本类型（没有 properties，只有 type，没有额外约束）
+        const isPrimitiveType = this.isPurePrimitiveType(def);
+        if (isPrimitiveType) {
+          // 直接映射到 Java 基本类型，不生成类
+          const javaType = this.typeResolver.resolveType(def, { filePath: context.filePath });
+          this.typeRegistry.registerDefinitionRef(
+            context.filePath,
+            defName,
+            javaType
+          );
+          continue;
+        }
+
         // 优先使用 title，如果没有才使用 defName
-        const titleOrName = (defSchema as JSONSchema7).title || defName;
+        const titleOrName = def.title || defName;
         const defClassName = toPascalCase(titleOrName);
         // 为短名称（如 A, B, C）添加模块前缀
         const prefixedClassName = this.needsPrefix(defClassName)
@@ -54,7 +69,7 @@ export class SchemaParser {
           : defClassName;
 
         const defType = this.parseSchema(
-          defSchema as JSONSchema7,
+          def,
           prefixedClassName,
           {
             ...context,
@@ -100,6 +115,57 @@ export class SchemaParser {
       return true;
     }
     return false;
+  }
+
+  /**
+   * 判断是否是纯原始值类型（用于 sealed interface 的 variant）
+   * 纯原始值类型是指：只有一个基本类型值，没有额外的对象结构
+   * 例如：boolean (true/false), number (1.5), string ("hello")
+   *
+   * 这种类型需要使用 @JsonValue 来直接序列化/反序列化原始值
+   */
+  private isPrimitiveValueType(schema: JSONSchema7): boolean {
+    // 必须是基本类型之一
+    const isPrimitive = schema.type === 'string' ||
+                       schema.type === 'boolean' ||
+                       schema.type === 'number' ||
+                       schema.type === 'integer';
+
+    // 不能有 properties（有就是对象类型了）
+    const hasNoProperties = !schema.properties ||
+                           Object.keys(schema.properties).length === 0;
+
+    return isPrimitive && hasNoProperties;
+  }
+
+  /**
+   * 判断是否是纯基本类型（无语义约束）
+   * 纯基本类型应该直接使用 Java 基本类型，不需要生成包装类
+   *
+   * 注意：pattern, minLength, maxLength, minimum, maximum 等验证约束不影响类型的本质，
+   * 不应该导致生成包装类。只有 enum, const, oneOf/anyOf/allOf 这些改变类型语义的才需要包装。
+   */
+  private isPurePrimitiveType(schema: JSONSchema7): boolean {
+    // 必须有 type 字段，且是基本类型之一
+    const type = schema.type;
+    if (type !== 'string' && type !== 'boolean' && type !== 'number' && type !== 'integer') {
+      return false;
+    }
+
+    // 不能有 properties（那样就是对象类型了）
+    if (schema.properties && Object.keys(schema.properties).length > 0) {
+      return false;
+    }
+
+    // 只检查改变类型语义的约束，忽略纯验证性质的约束（pattern, min/max等）
+    const hasSemanticConstraints = schema.enum ||
+                                    schema.const !== undefined ||
+                                    schema.oneOf ||
+                                    schema.anyOf ||
+                                    schema.allOf;
+
+    // 只有没有语义约束的纯基本类型才返回 true
+    return !hasSemanticConstraints;
   }
 
   /**
@@ -178,7 +244,8 @@ export class SchemaParser {
       }
       usedNames.add(uniqueName);
 
-      const variantType = this.parseSchema(variant, `${name}_${uniqueName}`, context);
+      // 为 sealed interface 的 variants，强制生成类型（包括基本类型）
+      const variantType = this.parseSchemaForVariant(variant, `${name}_${uniqueName}`, context);
       if (variantType) {
         oneOfVariants.push(variantType);
       }
@@ -192,6 +259,119 @@ export class SchemaParser {
       annotations: this.buildClassAnnotations(schema, JavaTypeKind.SEALED_INTERFACE),
       javaPackage: getJavaPackage(context.filePath, this.version),
       javaClassName: sanitizeIdentifier(name),
+    };
+  }
+
+  /**
+   * 解析 sealed interface 的 variant
+   * 与 parseSchema 的区别：对于纯基本类型，强制生成 wrapper 类
+   */
+  private parseSchemaForVariant(
+    schema: JSONSchema7,
+    suggestedName: string,
+    context: ParserContext
+  ): ParsedType | null {
+    if (!schema || typeof schema !== 'object') {
+      return null;
+    }
+
+    // 确定 Java 类型种类
+    const kind = this.typeResolver.determineJavaTypeKind(schema);
+
+    // 根据类型种类调用相应的解析方法
+    switch (kind) {
+      case JavaTypeKind.ENUM:
+        return this.parseEnum(schema, suggestedName, context);
+
+      case JavaTypeKind.SEALED_INTERFACE:
+        return this.parseSealedInterface(schema, suggestedName, context);
+
+      case JavaTypeKind.RECORD:
+        // 强制生成 record，即使是纯基本类型
+        return this.parseRecordForVariant(schema, suggestedName, context);
+
+      default:
+        return this.parseRecordForVariant(schema, suggestedName, context);
+    }
+  }
+
+  /**
+   * 为 variant 解析 record（强制为纯基本类型生成 wrapper）
+   */
+  private parseRecordForVariant(
+    schema: JSONSchema7,
+    name: string,
+    context: ParserContext
+  ): ParsedType | null {
+    // 处理 allOf（属性合并）
+    let mergedSchema = schema;
+    if (schema.allOf) {
+      mergedSchema = this.mergeAllOf(schema);
+    }
+
+    // 判断是否是纯原始值类型（需要 @JsonValue 支持）
+    const isPrimitiveValue = this.isPrimitiveValueType(mergedSchema);
+
+    // 解析属性
+    let properties = this.parseProperties(mergedSchema, context);
+
+    // 检查是否是空对象
+    if (properties.length === 0 && mergedSchema.type === 'object') {
+      const hasAdditionalProps = mergedSchema.additionalProperties === true ||
+                                 (typeof mergedSchema.additionalProperties === 'object' &&
+                                  Object.keys(mergedSchema.additionalProperties).length > 0);
+      const hasPatternProps = mergedSchema.patternProperties &&
+                             Object.keys(mergedSchema.patternProperties).length > 0;
+
+      if (!hasAdditionalProps && !hasPatternProps) {
+        // 这是一个空对象，不生成类型定义（使用全局 EmptyObject）
+        return null;
+      }
+    }
+
+    // 对于纯基本类型的 variant，强制生成 wrapper 类
+    if (properties.length === 0 && (mergedSchema.type === 'string' || mergedSchema.type === 'boolean' ||
+        mergedSchema.type === 'number' || mergedSchema.type === 'integer')) {
+      const javaType = this.typeResolver.resolveType(mergedSchema, { filePath: context.filePath });
+      properties = [{
+        name: 'value',
+        javaName: 'value',
+        type: javaType,
+        required: true,
+        description: mergedSchema.description,
+        annotations: []
+      }];
+    }
+
+    // 决定使用 record 还是 class
+    const kind = properties.length > 200 ? JavaTypeKind.REGULAR_CLASS : JavaTypeKind.RECORD;
+
+    // 收集所有内联类型作为嵌套类型
+    const nestedTypes: ParsedType[] = [];
+    const sanitizedName = sanitizeIdentifier(name);
+
+    for (const prop of properties) {
+      if (prop.inlineType) {
+        // 检查是否与父类型名称冲突
+        if (prop.inlineType.javaClassName === sanitizedName) {
+          // 添加后缀避免冲突
+          prop.inlineType.javaClassName = `${sanitizedName}Data`;
+          prop.type = prop.inlineType.javaClassName;
+        }
+        nestedTypes.push(prop.inlineType);
+      }
+    }
+
+    return {
+      name,
+      kind,
+      description: mergedSchema.description,
+      properties,
+      annotations: this.buildClassAnnotations(mergedSchema, kind),
+      javaPackage: getJavaPackage(context.filePath, this.version),
+      javaClassName: sanitizedName,
+      nestedTypes: nestedTypes.length > 0 ? nestedTypes : undefined,
+      isValueWrapper: isPrimitiveValue,  // 标记是否是原始值包装类
     };
   }
 
@@ -226,9 +406,27 @@ export class SchemaParser {
       }
     }
 
-    // 如果是基本类型（没有 properties），为它生成单字段 wrapper
+    // 如果是纯基本类型（没有 properties，只有 type 定义，没有语义约束），不生成包装类
+    // 这样 identifier 等简单字段可以直接使用 String 而不是 BlockIdentifier wrapper
+    // 注意：pattern 等验证约束不影响类型本质，不触发包装类生成
     if (properties.length === 0 && (mergedSchema.type === 'string' || mergedSchema.type === 'boolean' ||
         mergedSchema.type === 'number' || mergedSchema.type === 'integer')) {
+
+      // 只检查改变类型语义的约束（enum, const, oneOf/anyOf/allOf）
+      // 忽略纯验证性质的约束（pattern, minLength, maxLength, minimum, maximum等）
+      const hasSemanticConstraints = mergedSchema.enum ||
+                                      mergedSchema.const !== undefined ||
+                                      mergedSchema.oneOf ||
+                                      mergedSchema.anyOf ||
+                                      mergedSchema.allOf;
+
+      // 如果没有语义约束，这是一个纯基本类型，不需要生成包装类
+      // 返回 null 表示应该直接使用 Java 基本类型
+      if (!hasSemanticConstraints) {
+        return null;
+      }
+
+      // 如果有语义约束，生成包装类（暂时保留，未来可能需要更好的处理）
       const javaType = this.typeResolver.resolveType(mergedSchema, { filePath: context.filePath });
       properties = [{
         name: 'value',

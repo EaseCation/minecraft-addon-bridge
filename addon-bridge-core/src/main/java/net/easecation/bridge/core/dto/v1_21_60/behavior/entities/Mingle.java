@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows an entity to go to the village bell and mingle with other entities. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Mingle(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Time in seconds the mob has to wait before using the goal again. */
     @JsonProperty("cooldown_time") @Nullable Double cooldownTime,
     /* Amount of time in seconds that the entity will chat with another entity. */

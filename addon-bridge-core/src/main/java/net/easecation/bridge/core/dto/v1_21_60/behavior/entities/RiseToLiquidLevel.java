@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to stay at a certain level when in liquid. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record RiseToLiquidLevel(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Vertical offset from the liquid. */
     @JsonProperty("liquid_y_offset") @Nullable Double liquidYOffset,
     /* Displacement for how much the entity will move up in the vertical axis. */

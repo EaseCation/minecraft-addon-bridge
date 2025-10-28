@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the entity to first travel to a random point on the outskirts of the village, and then explore random points within a small distance. This goal requires "minecraft:dweller" and "minecraft:navigation" to execute. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ExploreOutskirts(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* The distance from the boundary the villager must be within in to explore the outskirts. */
     @JsonProperty("dist_from_boundary") @Nullable VectorOf3Items distFromBoundary,
     /* Total distance in blocks the the entity will explore beyond the village bounds when choosing its travel point. */

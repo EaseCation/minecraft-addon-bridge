@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Can only be used by Villagers. Allows the villagers to create paths around the village. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record MoveThroughVillage(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* If true, the mob will only move through the village during night time. */
     @JsonProperty("only_at_night") @Nullable Boolean onlyAtNight
 ) {

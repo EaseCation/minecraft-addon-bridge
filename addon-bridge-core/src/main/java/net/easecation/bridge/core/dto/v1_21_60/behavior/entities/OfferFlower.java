@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to offer the player a flower like the Iron Golem does. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record OfferFlower(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Percent chance that the mob will start this goal from 0.0 to 1.0 (where 1.0 = 100%). */
     @JsonProperty("chance_to_start") @Nullable Double chanceToStart,
     /* Conditions that need to be met for the behavior to start. */

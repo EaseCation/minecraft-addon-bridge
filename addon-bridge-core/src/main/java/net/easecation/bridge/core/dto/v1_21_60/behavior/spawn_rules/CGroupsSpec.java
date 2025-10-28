@@ -7,5 +7,6 @@ import com.fasterxml.jackson.annotation.*;
 public sealed interface CGroupsSpec {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record CGroupsSpec_Variant0(
-    ) implements CGroupsSpec {}
+    ) implements CGroupsSpec {
+    }
 }

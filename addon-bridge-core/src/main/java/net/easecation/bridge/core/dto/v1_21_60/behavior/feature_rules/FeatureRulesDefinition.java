@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.*;
 /* Each feature rule controls exactly one feature and serves as the root of a chain of feature data. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record FeatureRulesDefinition(
-    @JsonProperty("format_version") FormatVersion formatVersion,
+    @JsonProperty("format_version") String formatVersion,
     @JsonProperty("minecraft:feature_rules") FeatureRules minecraft_featureRules
 ) {
 }

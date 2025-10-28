@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* [EXPERIMENTAL BEHAVIOR] The entity will attempt to toss the items from its inventory to a nearby recently played noteblock. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record StayNearNoteblock(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Sets the time an entity should stay near a noteblock after hearing it. */
     @JsonProperty("listen_time") @Nullable Integer listenTime,
     /* Sets the entity's speed when moving toward the block. */

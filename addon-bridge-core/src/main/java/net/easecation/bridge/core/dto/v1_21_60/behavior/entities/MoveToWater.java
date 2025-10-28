@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to move back into water when on land. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record MoveToWater(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* The distance in blocks it will look for water to move towards. */
     @JsonProperty("search_range") @Nullable Integer searchRange,
     /* Height in blocks the mob will look for water to move towards. */

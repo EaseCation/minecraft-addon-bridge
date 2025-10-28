@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Can only be used by Slimes and Magma Cubes. Allows the mob to use a melee attack like the slime's. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record SlimeAttack(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Allows the actor to be set to persist upon targeting a player. */
     @JsonProperty("set_persistent") @Nullable Boolean setPersistent,
     /* Maximum rotation (in degrees), on the X-axis, this entity can rotate while trying to look at the target. */

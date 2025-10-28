@@ -8,5 +8,6 @@ import com.fasterxml.jackson.annotation.*;
 public sealed interface BiomeFilter {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record BiomeFilter_Variant0(
-    ) implements BiomeFilter {}
+    ) implements BiomeFilter {
+    }
 }

@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the player to trade with this mob. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TradeWithPlayer(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Conditions that need to be met for the behavior to start. */
     @JsonProperty("filters") @Nullable Filters filters
 ) {

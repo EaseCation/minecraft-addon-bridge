@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows this mob to breed with other mobs. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Breed(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier
 ) {
 }

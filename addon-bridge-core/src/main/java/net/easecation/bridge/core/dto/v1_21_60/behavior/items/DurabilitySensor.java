@@ -11,6 +11,6 @@ public record DurabilitySensor(
     /* Particle effect to emit when the threshold is met. */
     @JsonProperty("particle_type") @Nullable String particleType,
     /* Sound effect to emit when the threshold is met. */
-    @JsonProperty("sound_event") @Nullable SoundEvent soundEvent
+    @JsonProperty("sound_event") @Nullable String soundEvent
 ) {
 }

@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Has the fish swim around when they can't pathfind. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record SwimWander(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Percent chance to start wandering, when not path-finding. 1 = 100% */
     @JsonProperty("interval") @Nullable Double interval,
     /* Distance to look ahead for obstacle avoidance, while wandering. */

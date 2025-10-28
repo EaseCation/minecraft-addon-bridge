@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to use the polar bear's melee attack. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record StompAttack(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Allows the entity to use this attack behavior, only once EVER. */
     @JsonProperty("attack_once") @Nullable Boolean attackOnce,
     /* Defines the entity types this entity will attack. */

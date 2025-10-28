@@ -16,6 +16,9 @@ public record {{{className}}}(
     {{/if}}{{#each annotations}}{{{this}}} {{/each}}{{{type}}} {{{name}}}{{#unless @last}},{{/unless}}
     {{/each}}
 ) {
+    {{#if jsonCreatorMethod}}
+    {{{jsonCreatorMethod}}}
+    {{/if}}
     {{#if nestedTypes}}
     {{#each nestedTypes}}
     {{> NestedType this}}

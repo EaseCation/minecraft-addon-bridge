@@ -13,12 +13,59 @@ package {{{package}}};
 public sealed interface {{{interfaceName}}} {
     {{#each variants}}
     {{#if javadoc}}{{{javadoc}}}
-    {{/if}}{{#each annotations}}{{{this}}} {{/each}}
+    {{/if}}{{#if ../needsCustomDeserializer}}@JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) {{/if}}{{#each annotations}}{{{this}}} {{/each}}
     record {{{className}}}(
         {{#each properties}}
         {{#if javadoc}}{{{javadoc}}}
         {{/if}}{{#each annotations}}{{{this}}} {{/each}}{{{type}}} {{{name}}}{{#unless @last}},{{/unless}}
         {{/each}}
-    ) implements {{{../interfaceName}}} {}
+    ) implements {{{../interfaceName}}} {
+        {{#if jsonCreatorMethod}}
+        {{{jsonCreatorMethod}}}
+        {{/if}}
+    }
     {{/each}}
+    {{#if needsCustomDeserializer}}
+
+    /* Custom deserializer to handle oneOf with primitive values */
+    class Deserializer extends com.fasterxml.jackson.databind.JsonDeserializer<{{{interfaceName}}}> {
+        @Override
+        public {{{interfaceName}}} deserialize(com.fasterxml.jackson.core.JsonParser p, com.fasterxml.jackson.databind.DeserializationContext ctxt)
+                throws java.io.IOException {
+            com.fasterxml.jackson.databind.JsonNode node = p.getCodec().readTree(p);
+
+            // Check if it's a primitive value
+            if (node.isBoolean() || node.isNumber() || node.isTextual()) {
+                // Try to deserialize as value wrapper variants
+                {{#each variants}}
+                {{#if isValueWrapper}}
+                try {
+                    com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
+                    nodeParser.nextToken();
+                    return ctxt.readValue(nodeParser, {{{className}}}.class);
+                } catch (Exception e) {
+                    // Try next variant
+                }
+                {{/if}}
+                {{/each}}
+            }
+
+            // It's an object, try each variant
+            {{#each variants}}
+            {{#unless isValueWrapper}}
+            try {
+                com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
+                nodeParser.nextToken();
+                return ctxt.readValue(nodeParser, {{{className}}}.class);
+            } catch (Exception e) {
+                // Try next variant
+            }
+            {{/unless}}
+            {{/each}}
+
+            throw new com.fasterxml.jackson.databind.JsonMappingException(p,
+                "Cannot deserialize {{{interfaceName}}}: no matching variant found");
+        }
+    }
+    {{/if}}
 }

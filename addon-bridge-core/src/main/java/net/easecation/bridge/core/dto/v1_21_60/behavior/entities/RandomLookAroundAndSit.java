@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to randomly sit and look around for a duration. Note: Must have a sitting animation set up to use this. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record RandomLookAroundAndSit(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* If the goal should continue to be used as long as the mob is leashed. */
     @JsonProperty("continue_if_leashed") @Nullable Boolean continueIfLeashed,
     /* The mob will stay sitting on reload. */

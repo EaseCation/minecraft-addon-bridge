@@ -3,13 +3,12 @@ package net.easecation.bridge.adapter.cloudburst;
 import net.easecation.bridge.core.*;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 public class CloudburstRegistry implements AddonRegistry {
-    private final Logger log;
+    private final BridgeLogger log;
     private static final Capabilities CAPS = new Capabilities(true);
 
-    public CloudburstRegistry(Logger log) { this.log = log; }
+    public CloudburstRegistry(BridgeLogger log) { this.log = log; }
 
     @Override public void registerItems(List<ItemDef> items) {
         log.info("[Cloudburst] registerItems size=" + items.size());
@@ -24,5 +23,11 @@ public class CloudburstRegistry implements AddonRegistry {
         log.info("[Cloudburst] registerRecipes size=" + recipes.size());
     }
     @Override public Capabilities capabilities() { return CAPS; }
+
+    @Override
+    public void afterAllRegistrations() {
+        // Cloudburst 平台当前不需要特殊的后处理逻辑
+        log.info("[Cloudburst] Registration completed, no platform-specific post-processing needed");
+    }
 }
 

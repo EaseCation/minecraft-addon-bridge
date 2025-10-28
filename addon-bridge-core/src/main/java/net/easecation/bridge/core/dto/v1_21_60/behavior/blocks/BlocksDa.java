@@ -7,11 +7,14 @@ import com.fasterxml.jackson.annotation.*;
 public sealed interface BlocksDa {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record BlocksDa_Variant0(
-    ) implements BlocksDa {}
+    ) implements BlocksDa {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record BlocksDa_Variant1(
-    ) implements BlocksDa {}
+    ) implements BlocksDa {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record BlocksDa_Variant2(
-    ) implements BlocksDa {}
+    ) implements BlocksDa {
+    }
 }

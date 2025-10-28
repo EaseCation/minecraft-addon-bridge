@@ -1,16 +1,62 @@
 package net.easecation.bridge.core.dto.v1_21_60.behavior.entities;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.io.IOException;
 
 /* Trigger to fire. */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
+@JsonDeserialize(using = Trigger.Deserializer.class)
 public sealed interface Trigger {
-    @JsonIgnoreProperties(ignoreUnknown = true) 
+    @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
     record Trigger_Variant0(
-        String value
-    ) implements Trigger {}
-    @JsonIgnoreProperties(ignoreUnknown = true) 
+        @JsonValue String value
+    ) implements Trigger {
+        @JsonCreator
+        public static Trigger_Variant0 of(String value) {
+            return new Trigger_Variant0(value);
+        }
+    }
+    @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
     record Trigger_Variant2(
-    ) implements Trigger {}
+    ) implements Trigger {
+    }
+
+    /* Custom deserializer to handle oneOf with primitive values */
+    class Deserializer extends com.fasterxml.jackson.databind.JsonDeserializer<Trigger> {
+        @Override
+        public Trigger deserialize(com.fasterxml.jackson.core.JsonParser p, com.fasterxml.jackson.databind.DeserializationContext ctxt)
+                throws java.io.IOException {
+            com.fasterxml.jackson.databind.JsonNode node = p.getCodec().readTree(p);
+
+            // Check if it's a primitive value
+            if (node.isBoolean() || node.isNumber() || node.isTextual()) {
+                // Try to deserialize as value wrapper variants
+                try {
+                    com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
+                    nodeParser.nextToken();
+                    return ctxt.readValue(nodeParser, Trigger_Variant0.class);
+                } catch (Exception e) {
+                    // Try next variant
+                }
+            }
+
+            // It's an object, try each variant
+            try {
+                com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
+                nodeParser.nextToken();
+                return ctxt.readValue(nodeParser, Trigger_Variant2.class);
+            } catch (Exception e) {
+                // Try next variant
+            }
+
+            throw new com.fasterxml.jackson.databind.JsonMappingException(p,
+                "Cannot deserialize Trigger: no matching variant found");
+        }
+    }
 }

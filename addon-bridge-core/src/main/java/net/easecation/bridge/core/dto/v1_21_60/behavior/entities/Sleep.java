@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows mobs that own a bed to in a village to move to and sleep in it. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Sleep(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* If true, the mob will be able to use the sleep goal if riding something. */
     @JsonProperty("can_sleep_while_riding") @Nullable Boolean canSleepWhileRiding,
     /* Time in seconds the mob has to wait before using the goal again. */

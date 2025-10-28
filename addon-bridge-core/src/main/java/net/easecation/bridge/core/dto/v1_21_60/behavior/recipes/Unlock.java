@@ -10,8 +10,10 @@ public sealed interface Unlock {
     record Unlock_Variant0(
         /* The context of the achievement to unlock */
         @JsonProperty("context") String context
-    ) implements Unlock {}
+    ) implements Unlock {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record Unlock_Variant1(
-    ) implements Unlock {}
+    ) implements Unlock {
+    }
 }

@@ -13,7 +13,7 @@ public record VegetationPatchFeature(
     /* Block used to create a base for the vegetation patch. */
     @JsonProperty("ground_block") BlockReference groundBlock,
     /* Feature that will be placed by the patch. */
-    @JsonProperty("vegetation_feature") FeatureIdentifier vegetationFeature,
+    @JsonProperty("vegetation_feature") String vegetationFeature,
     /* Determines if a vegetation patch will grow from the ceiling or the floor. */
     @JsonProperty("surface") @Nullable String surface,
     /* Depth of the base covered by the ground blocks. */

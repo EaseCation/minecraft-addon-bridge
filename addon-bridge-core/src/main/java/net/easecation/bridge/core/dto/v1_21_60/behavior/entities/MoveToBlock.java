@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 /* Allows mob to move towards a block. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record MoveToBlock(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Distance in blocks within the mob considers it has reached the goal. This is the "wiggle room" to stop the AI from bouncing back and forth trying to reach a specific spot */
     @JsonProperty("goal_radius") @Nullable Double goalRadius,
     /* Event to run on completing a stay of stay_duration at the block. */

@@ -8,5 +8,6 @@ import com.fasterxml.jackson.annotation.*;
 public sealed interface HeightFilter {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record HeightFilter_Variant1(
-    ) implements HeightFilter {}
+    ) implements HeightFilter {
+    }
 }

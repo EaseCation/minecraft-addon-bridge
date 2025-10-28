@@ -45,19 +45,42 @@ export class JavaGenerator {
    * 生成 Java record
    */
   private generateRecord(type: ParsedType): string {
+    // 处理属性注解，为 value wrapper 添加 @JsonValue
+    const properties = type.properties?.map(prop => {
+      const annotations = this.annotationBuilder.buildPropertyAnnotations(prop);
+
+      // 如果这是原始值包装类，且属性名是 value，添加 @JsonValue
+      if (type.isValueWrapper && prop.javaName === 'value') {
+        annotations.unshift('@JsonValue');
+      }
+
+      return {
+        name: prop.javaName,
+        type: prop.type,
+        annotations,
+        javadoc: prop.description ? generateJavadoc(prop.description, undefined, '') : undefined,
+      };
+    }) || [];
+
+    // 如果是原始值包装类，生成 @JsonCreator 静态工厂方法
+    let jsonCreatorMethod = undefined;
+    if (type.isValueWrapper && type.properties && type.properties.length === 1) {
+      const prop = type.properties[0];
+      jsonCreatorMethod = `@JsonCreator
+    public static ${type.javaClassName} of(${prop.type} value) {
+        return new ${type.javaClassName}(value);
+    }`;
+    }
+
     const data = {
       package: type.javaPackage,
       className: type.javaClassName,
       javadoc: generateJavadoc(type.description, undefined, ''),
       annotations: this.annotationBuilder.buildClassAnnotations(type),
       imports: this.annotationBuilder.generateImports(type),
-      properties: type.properties?.map(prop => ({
-        name: prop.javaName,
-        type: prop.type,
-        annotations: this.annotationBuilder.buildPropertyAnnotations(prop),
-        javadoc: prop.description ? generateJavadoc(prop.description, undefined, '') : undefined,
-      })) || [],
+      properties,
       nestedTypes: this.prepareNestedTypes(type.nestedTypes),
+      jsonCreatorMethod,  // 传递给模板
     };
 
     return this.templateEngine.render('Record.hbs', data);
@@ -89,23 +112,64 @@ export class JavaGenerator {
    * 生成 sealed interface
    */
   private generateSealedInterface(type: ParsedType): string {
+    // 检查是否需要自定义 deserializer（有原始值 variant）
+    const hasValueWrapper = type.oneOfVariants?.some(v => v.isValueWrapper);
+    const needsCustomDeserializer = hasValueWrapper;
+
+    // 构建注解
+    let annotations = this.annotationBuilder.buildClassAnnotations(type);
+
+    if (needsCustomDeserializer) {
+      // 移除 @JsonTypeInfo(DEDUCTION)，因为我们使用自定义 deserializer
+      annotations = annotations.filter(a => !a.includes('@JsonTypeInfo'));
+      // 添加自定义 deserializer 注解
+      annotations.push(`@JsonDeserialize(using = ${type.javaClassName}.Deserializer.class)`);
+    }
+
     const data = {
       package: type.javaPackage,
       interfaceName: type.javaClassName,
       javadoc: generateJavadoc(type.description, undefined, ''),
-      annotations: this.annotationBuilder.buildClassAnnotations(type),
+      annotations,
       imports: this.annotationBuilder.generateImports(type),
-      variants: type.oneOfVariants?.map(variant => ({
-        className: variant.javaClassName,
-        annotations: this.annotationBuilder.buildClassAnnotations(variant),
-        javadoc: variant.description ? generateJavadoc(variant.description, undefined, '') : undefined,
-        properties: variant.properties?.map(prop => ({
-          name: prop.javaName,
-          type: prop.type,
-          annotations: this.annotationBuilder.buildPropertyAnnotations(prop),
-          javadoc: prop.description ? generateJavadoc(prop.description, undefined, '') : undefined,
-        })) || [],
-      })) || [],
+      needsCustomDeserializer,
+      variants: type.oneOfVariants?.map(variant => {
+        // 处理属性注解，为 value wrapper 添加 @JsonValue
+        const properties = variant.properties?.map(prop => {
+          const annotations = this.annotationBuilder.buildPropertyAnnotations(prop);
+
+          // 如果这是原始值包装类，且属性名是 value，添加 @JsonValue
+          if (variant.isValueWrapper && prop.javaName === 'value') {
+            annotations.unshift('@JsonValue');
+          }
+
+          return {
+            name: prop.javaName,
+            type: prop.type,
+            annotations,
+            javadoc: prop.description ? generateJavadoc(prop.description, undefined, '') : undefined,
+          };
+        }) || [];
+
+        // 如果是原始值包装类，生成 @JsonCreator 静态工厂方法
+        let jsonCreatorMethod = undefined;
+        if (variant.isValueWrapper && variant.properties && variant.properties.length === 1) {
+          const prop = variant.properties[0];
+          jsonCreatorMethod = `@JsonCreator
+        public static ${variant.javaClassName} of(${prop.type} value) {
+            return new ${variant.javaClassName}(value);
+        }`;
+        }
+
+        return {
+          className: variant.javaClassName,
+          annotations: this.annotationBuilder.buildClassAnnotations(variant),
+          javadoc: variant.description ? generateJavadoc(variant.description, undefined, '') : undefined,
+          properties,
+          jsonCreatorMethod,
+          isValueWrapper: variant.isValueWrapper,  // 传递给模板
+        };
+      }) || [],
     };
 
     return this.templateEngine.render('SealedInterface.hbs', data);

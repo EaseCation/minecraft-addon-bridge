@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows an entity to randomly move through water. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record RandomSwim(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* If true, the mob will avoid surface water blocks by swimming below them. */
     @JsonProperty("avoid_surface") @Nullable Boolean avoidSurface,
     /* A random value to determine when to randomly move somewhere. This has a 1/interval chance to choose this goal */

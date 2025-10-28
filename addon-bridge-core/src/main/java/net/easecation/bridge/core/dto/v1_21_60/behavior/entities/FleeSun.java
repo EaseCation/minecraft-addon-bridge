@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to run away from direct sunlight and seek shade. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record FleeSun(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier
 ) {
 }

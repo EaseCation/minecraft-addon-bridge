@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to look at a player that is holding a tradable item. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TradeInterest(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The Maximum time in seconds that the trader will hold an item before attempting to switch for a different item that takes the same trade. */
     @JsonProperty("carried_item_switch_time") @Nullable Double carriedItemSwitchTime,
     /* The time in seconds before the trader can use this goal again. */

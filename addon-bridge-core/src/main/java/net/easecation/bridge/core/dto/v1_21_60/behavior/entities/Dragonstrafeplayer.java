@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows this entity to fly around looking for a player to shoot fireballs at. Note: This behavior can only be used by the ender_dragon entity type. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Dragonstrafeplayer(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The speed this entity moves when this behavior has started or while it's active. */
     @JsonProperty("active_speed") @Nullable Double activeSpeed,
     /* Maximum distance of this entity's fireball attack while strafing. */

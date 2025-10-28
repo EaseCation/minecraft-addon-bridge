@@ -8,12 +8,15 @@ import javax.annotation.Nullable;
 public sealed interface EntitiesBb {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record EntitiesBb_Variant0(
-    ) implements EntitiesBb {}
+    ) implements EntitiesBb {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record EntitiesBb_Variant1(
-    ) implements EntitiesBb {}
+    ) implements EntitiesBb {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record EntitiesBb_Variant2(
         @JsonProperty("item") @Nullable Object item
-    ) implements EntitiesBb {}
+    ) implements EntitiesBb {
+    }
 }

@@ -13,6 +13,6 @@ public record HasDamagedEquipment(
     @JsonProperty("operator") @Nullable Operator operator,
     @JsonProperty("subject") @Nullable Subject subject,
     /* The item name to look for. */
-    @JsonProperty("value") ItemIdentifier value
+    @JsonProperty("value") String value
 ) {
 }

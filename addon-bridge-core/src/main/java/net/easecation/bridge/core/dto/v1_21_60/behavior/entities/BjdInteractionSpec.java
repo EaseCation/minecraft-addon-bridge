@@ -26,7 +26,7 @@ public record BjdInteractionSpec(
     /* Particle effect that will be triggered at the start of the interaction. */
     @JsonProperty("particle_on_start") @Nullable ParticleOnStart particleOnStart,
     /* List of sounds to play when the interaction occurs. */
-    @JsonProperty("play_sounds") @Nullable SoundEvent playSounds,
+    @JsonProperty("play_sounds") @Nullable String playSounds,
     /* List of entities to spawn when the interaction occurs. */
     @JsonProperty("spawn_entities") @Nullable String spawnEntities,
     /* Loot table with items to drop on the ground upon successful interaction. */
@@ -57,7 +57,7 @@ public record BjdInteractionSpec(
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record AddItems(
             /* File path, relative to the Behavior Pack's path, to the loot table file. */
-            @JsonProperty("table") @Nullable LootTableIdentifier table
+            @JsonProperty("table") @Nullable String table
         ) {
         }
     
@@ -77,7 +77,7 @@ public record BjdInteractionSpec(
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record SpawnItems(
             /* File path, relative to the Behavior Pack's path, to the loot table file. */
-            @JsonProperty("table") @Nullable LootTableIdentifier table
+            @JsonProperty("table") @Nullable String table
         ) {
         }
     

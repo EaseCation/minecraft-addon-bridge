@@ -1,6 +1,7 @@
 package net.easecation.bridge.pack;
 
 import net.easecation.bridge.core.AddonPack;
+import net.easecation.bridge.core.BridgeLogger;
 import net.easecation.bridge.core.DeployedPack;
 import net.easecation.bridge.core.ResourcePackDeployer;
 
@@ -11,7 +12,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Minimal deployer: zip resourceFiles to dataDir/packs, compute sha1, write resource_packs.yml.
@@ -19,10 +19,10 @@ import java.util.logging.Logger;
  */
 public class GenericResourceDeployer implements ResourcePackDeployer {
     private final Path dataDir;
-    private final Logger log;
+    private final BridgeLogger log;
     private final String baseUrl; // optional CDN base; if empty uses file URI
 
-    public GenericResourceDeployer(Path dataDir, Logger log, String baseUrl) {
+    public GenericResourceDeployer(Path dataDir, BridgeLogger log, String baseUrl) {
         this.dataDir = dataDir;
         this.log = log;
         this.baseUrl = baseUrl != null ? baseUrl : "";
@@ -35,7 +35,7 @@ public class GenericResourceDeployer implements ResourcePackDeployer {
         Files.createDirectories(packsDir);
 
         String ts = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
-        String fileName = sanitize(pack.manifest().name()) + "-" + ts + ".zip";
+        String fileName = sanitize(pack.manifest().getName()) + "-" + ts + ".zip";
         Path outZip = packsDir.resolve(fileName);
 
         Map<String, byte[]> files = pack.resourceFiles();

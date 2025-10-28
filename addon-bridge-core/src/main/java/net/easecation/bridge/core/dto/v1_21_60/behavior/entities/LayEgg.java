@@ -7,8 +7,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to lay an egg block on a sand block if the mob is pregnant. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record LayEgg(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* [EXPERIMENTAL] Allows the mob to lay its eggs from below the target if it can't get there. This is useful if the target block is water with air above, since mobs may not be able to get to the air block above water. */
     @JsonProperty("allow_laying_from_below") @Nullable Boolean allowLayingFromBelow,
     /* [EXPERIMENTAL] Block type for the egg to lay. If this is a turtle egg, the number of eggs in the block is randomly set. */
@@ -16,7 +16,7 @@ public record LayEgg(
     /* Distance in blocks within the mob considers it has reached the goal. This is the "wiggle room" to stop the AI from bouncing back and forth trying to reach a specific spot */
     @JsonProperty("goal_radius") @Nullable Double goalRadius,
     /* Sound event name for laying egg. Defaulted to lay_egg which is used for Turtles. */
-    @JsonProperty("lay_egg_sound") @Nullable SoundEvent layEggSound,
+    @JsonProperty("lay_egg_sound") @Nullable String layEggSound,
     /* Duration of the laying egg process in seconds. */
     @JsonProperty("lay_seconds") @Nullable Double laySeconds,
     /* Event to run when this mob lays the egg. */

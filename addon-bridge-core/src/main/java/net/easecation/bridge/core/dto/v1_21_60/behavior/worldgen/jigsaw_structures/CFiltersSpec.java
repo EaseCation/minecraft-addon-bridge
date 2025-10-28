@@ -14,8 +14,10 @@ public sealed interface CFiltersSpec {
         @JsonProperty("any_of") @Nullable CGroupsSpec anyOf,
         /* All tests in a {@code none_of} group must fail in order for the group to pass. */
         @JsonProperty("none_of") @Nullable CGroupsSpec noneOf
-    ) implements CFiltersSpec {}
+    ) implements CFiltersSpec {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record CFiltersSpec_Variant1(
-    ) implements CFiltersSpec {}
+    ) implements CFiltersSpec {
+    }
 }

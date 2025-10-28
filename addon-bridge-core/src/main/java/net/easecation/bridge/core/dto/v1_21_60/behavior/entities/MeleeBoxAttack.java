@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Permits an entity to deal damage through a melee attack with reach calculations based on bounding boxes. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record MeleeBoxAttack(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Allows the entity to use this attack behavior, only once EVER. */
     @JsonProperty("attack_once") @Nullable Boolean attackOnce,
     /* Defines the entity types this entity will attack. */

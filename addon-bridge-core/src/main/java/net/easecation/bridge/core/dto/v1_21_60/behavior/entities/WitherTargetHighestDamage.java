@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the wither to focus its attacks on whichever mob has dealt the most damage to it. Can only be used by the Wither Boss. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record WitherTargetHighestDamage(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* List of entity types the wither takes into account to find who dealt the most damage to it. */
     @JsonProperty("entity_types") @Nullable EntityTypes entityTypes
 ) {

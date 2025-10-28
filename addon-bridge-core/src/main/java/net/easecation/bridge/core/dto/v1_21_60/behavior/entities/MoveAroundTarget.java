@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows an entity to move around a target. If the entity is too close (i.e. closer than destination range min and height difference limit) it will try to move away from its target. If the entity is too far away from its target it will try to move closer to a random position within the destination range. A randomized amount of those positions will be behind the target, and the spread can be tweaked with 'destination<i>pos</i>search<i>spread</i>degrees'. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record MoveAroundTarget(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* This angle (in degrees) is used for controlling the spread when picking a destination position behind the target. A zero spread angle means the destination position will be straight behind the target with no variance. A 90 degree spread angle means the destination position can be up to 45 degrees to the left and to the right of the position straight behind the target's view direction. */
     @JsonProperty("destination_pos_search_spread_degrees") @Nullable Double destinationPosSearchSpreadDegrees,
     /* The range of distances from the target entity within which the goal should look for a position to move the owner entity to. */

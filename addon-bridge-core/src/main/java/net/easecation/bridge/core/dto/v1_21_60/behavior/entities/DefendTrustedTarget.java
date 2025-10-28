@@ -6,9 +6,9 @@ import javax.annotation.Nullable;
 /* Allows the mob to target another mob that hurts an entity it trusts. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record DefendTrustedTarget(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Sound to occasionally play while defending. */
-    @JsonProperty("aggro_sound") @Nullable SoundEvent aggroSound,
+    @JsonProperty("aggro_sound") @Nullable String aggroSound,
     /* Time in seconds between attacks. */
     @JsonProperty("attack_interval") @Nullable Integer attackInterval,
     /* If true, only entities in this mob's viewing range can be selected as targets. */

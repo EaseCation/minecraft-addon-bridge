@@ -6,6 +6,6 @@ import javax.annotation.Nullable;
 /* Allows an entity to look around for a player to attack while in perch mode. Note: This behavior can only be used by the ender_dragon entity type. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Dragonscanning(
-    @JsonProperty("priority") @Nullable Priority priority
+    @JsonProperty("priority") @Nullable Integer priority
 ) {
 }

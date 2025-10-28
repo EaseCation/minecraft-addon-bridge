@@ -6,6 +6,6 @@ import javax.annotation.Nullable;
 /* Allows the mob to automatically start avoiding the sun when its a clear day out. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record RestrictSun(
-    @JsonProperty("priority") @Nullable Priority priority
+    @JsonProperty("priority") @Nullable Integer priority
 ) {
 }

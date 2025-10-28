@@ -8,11 +8,14 @@ import com.fasterxml.jackson.annotation.*;
 public sealed interface Commands {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record Commands_Event(
-    ) implements Commands {}
+    ) implements Commands {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record Commands_Command(
-    ) implements Commands {}
+    ) implements Commands {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record Commands_Molang(
-    ) implements Commands {}
+    ) implements Commands {
+    }
 }

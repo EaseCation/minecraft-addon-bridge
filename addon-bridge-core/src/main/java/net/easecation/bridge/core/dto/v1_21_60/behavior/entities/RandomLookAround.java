@@ -7,8 +7,8 @@ import javax.annotation.Nullable;
 /* Allows this entity to locate a random target block that it can path find to. Once found, the entity will move towards it and dig up an item. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record RandomLookAround(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Goal cooldown range in seconds. */
     @JsonProperty("cooldown_range") @Nullable Object cooldownRange,
     /* Digging duration in seconds. */

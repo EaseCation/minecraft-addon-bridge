@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to float around like the Ghast. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record FloatWander(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* If true, the mob will have an additional buffer zone around it to avoid collisions with blocks when picking a position to wander to. */
     @JsonProperty("additional_collision_buffer") @Nullable Boolean additionalCollisionBuffer,
     /* If true allows the mob to navigate through liquids on its way to the target position. */

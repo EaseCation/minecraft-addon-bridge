@@ -11,7 +11,7 @@ public record CelebrateHunt(
     /* The list of conditions that target of hunt must satisfy to initiate celebration. */
     @JsonProperty("celebration_targets") @Nullable Filters celebrationTargets,
     /* The sound event to play when the mob is celebrating. */
-    @JsonProperty("celebrate_sound") @Nullable SoundEvent celebrateSound,
+    @JsonProperty("celebrate_sound") @Nullable String celebrateSound,
     /* Duration, in seconds, of celebration. */
     @JsonProperty("duration") @Nullable Integer duration,
     /* If broadcast is enabled, specifies the radius in which it will notify other entities for celebration. */

@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Features are decorations scattered throughout the world. Things such as trees, plants, flowers, springs, ore, and coral are all features. Basically, if it isn't the terrain or a mob, it's probably a feature! */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record FeaturesDefinition(
-    @JsonProperty("format_version") FormatVersion formatVersion,
+    @JsonProperty("format_version") String formatVersion,
     @JsonProperty("minecraft:aggregate_feature") @Nullable AggregateFeature minecraft_aggregateFeature,
     @JsonProperty("minecraft:cave_carver_feature") @Nullable CaveCarverFeature minecraft_caveCarverFeature,
     @JsonProperty("minecraft:fossil_feature") @Nullable FossilFeature minecraft_fossilFeature,

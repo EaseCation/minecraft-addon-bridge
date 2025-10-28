@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 public record SnapToSurfaceFeature(
     @JsonProperty("description") Description description,
     /* Named reference of feature to be snapped. */
-    @JsonProperty("feature_to_snap") FeatureIdentifier featureToSnap,
+    @JsonProperty("feature_to_snap") String featureToSnap,
     /* Range to search for a floor or ceiling for snaping the feature. */
     @JsonProperty("vertical_search_range") Double verticalSearchRange,
     /* Defines the surface that the y-value of the placement position will be snapped to. Valid values: {@code ceiling} and `floor' */

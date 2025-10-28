@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Can only be used by Villagers. Allows the mob to accept flowers from Iron Golems. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TakeFlower(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Conditions that need to be met for the behavior to start. */
     @JsonProperty("filters") @Nullable Filters filters,
     /* Maximum rotation (in degrees), on the Y-axis, this entity can rotate its head while trying to look at the target. */

@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows a mob to randomly fly around. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record RandomFly(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* If true, the mob will avoid blocks that cause damage. */
     @JsonProperty("avoid_damage_blocks") @Nullable Boolean avoidDamageBlocks,
     /* If true, the mob can stop flying and land on a tree instead of the ground. */

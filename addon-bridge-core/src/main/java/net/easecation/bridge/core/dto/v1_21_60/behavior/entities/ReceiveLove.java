@@ -6,6 +6,6 @@ import javax.annotation.Nullable;
 /* Allows the villager to stop so another villager can breed with it. Can only be used by a Villager. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ReceiveLove(
-    @JsonProperty("priority") @Nullable Priority priority
+    @JsonProperty("priority") @Nullable Integer priority
 ) {
 }

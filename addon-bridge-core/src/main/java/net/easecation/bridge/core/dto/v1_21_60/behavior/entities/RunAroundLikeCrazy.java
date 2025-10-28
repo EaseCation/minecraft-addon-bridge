@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to run around aimlessly. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record RunAroundLikeCrazy(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier
 ) {
 }

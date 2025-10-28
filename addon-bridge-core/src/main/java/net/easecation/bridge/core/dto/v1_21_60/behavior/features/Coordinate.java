@@ -10,7 +10,8 @@ public sealed interface Coordinate {
     /* Expression for the coordinate (evaluated each iteration). Mutually exclusive with random distribution object below. */
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record Coordinate_Variant0(
-    ) implements Coordinate {}
+    ) implements Coordinate {
+    }
     /* Distribution for the coordinate (evaluated each iteration). Mutually exclusive with Molang expression above. */
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record Coordinate_Variant1(
@@ -22,5 +23,6 @@ public sealed interface Coordinate {
         @JsonProperty("grid_offset") @Nullable Integer gridOffset,
         /* The lower and upper bound as an offset from the input position */
         @JsonProperty("extent") List<MolangNumber> extent
-    ) implements Coordinate {}
+    ) implements Coordinate {
+    }
 }

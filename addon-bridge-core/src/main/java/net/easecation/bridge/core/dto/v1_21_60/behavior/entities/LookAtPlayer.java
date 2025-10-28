@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to look at the player when the player is nearby. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record LookAtPlayer(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The angle in degrees that the mob can see in the X-axis (left-right). */
     @JsonProperty("angle_of_view_vertical") @Nullable Integer angleOfViewVertical,
     /* The angle in degrees that the mob can see in the Y-axis (up-down). */

@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to look at nearby entities. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record LookAtEntity(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The distance in blocks from which the entity will look at. */
     @JsonProperty("look_distance") @Nullable Double lookDistance,
     /* The probability of looking at the target. A value of 1.00 is 100%. */

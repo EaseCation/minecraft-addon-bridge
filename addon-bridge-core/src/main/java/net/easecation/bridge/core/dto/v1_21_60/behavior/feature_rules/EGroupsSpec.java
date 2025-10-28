@@ -7,5 +7,6 @@ import com.fasterxml.jackson.annotation.*;
 public sealed interface EGroupsSpec {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record EGroupsSpec_Variant0(
-    ) implements EGroupsSpec {}
+    ) implements EGroupsSpec {
+    }
 }

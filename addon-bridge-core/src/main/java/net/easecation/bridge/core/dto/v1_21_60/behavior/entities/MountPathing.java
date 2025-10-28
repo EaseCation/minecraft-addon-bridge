@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to move around on its own while mounted seeking a target to attack. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record MountPathing(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* The distance at which this mob wants to be away from its target. */
     @JsonProperty("target_dist") @Nullable Double targetDist,
     /* If true, this mob will chase after the target as long as it's a valid target. */

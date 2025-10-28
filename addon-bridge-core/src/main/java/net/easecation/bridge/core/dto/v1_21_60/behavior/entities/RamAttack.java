@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to search for a random target and, if a direct path exists between the mob and the target, it will perform a charge. If the attack hits, the target will be knocked back based on the mob's speed. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record RamAttack(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The modifier to knockback that babies have. */
     @JsonProperty("baby_knockback_modifier") @Nullable Double babyKnockbackModifier,
     /* Minimum and maximum cooldown time-range (positive, in seconds) between each attempted ram attack. */
@@ -20,11 +20,11 @@ public record RamAttack(
     /* The event to trigger when attacking. */
     @JsonProperty("on_start") @Nullable Trigger onStart,
     /* The sound to play when an entity is about to perform a ram attack. */
-    @JsonProperty("pre_ram_sound") @Nullable SoundEvent preRamSound,
+    @JsonProperty("pre_ram_sound") @Nullable String preRamSound,
     /* The distance at which the mob start to run with ram speed. */
     @JsonProperty("ram_distance") @Nullable Double ramDistance,
     /* The sound to play when an entity is impacting on a ram attack. */
-    @JsonProperty("ram_impact_sound") @Nullable SoundEvent ramImpactSound,
+    @JsonProperty("ram_impact_sound") @Nullable String ramImpactSound,
     /* Sets the entity's speed when charging toward the target. */
     @JsonProperty("ram_speed") @Nullable Double ramSpeed,
     /* Sets the entity's speed when running toward the target. */

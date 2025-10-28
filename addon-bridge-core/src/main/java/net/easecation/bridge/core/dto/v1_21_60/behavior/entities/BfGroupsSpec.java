@@ -7,5 +7,6 @@ import com.fasterxml.jackson.annotation.*;
 public sealed interface BfGroupsSpec {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record BfGroupsSpec_Variant0(
-    ) implements BfGroupsSpec {}
+    ) implements BfGroupsSpec {
+    }
 }

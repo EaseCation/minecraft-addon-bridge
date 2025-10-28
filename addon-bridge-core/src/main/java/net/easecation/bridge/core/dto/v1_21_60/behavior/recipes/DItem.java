@@ -12,10 +12,12 @@ public sealed interface DItem {
         @JsonProperty("item") String item,
         /* The data of the item to unlock */
         @JsonProperty("data") @Nullable Integer data
-    ) implements DItem {}
+    ) implements DItem {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record DItem_Variant1(
         /* The item to unlock */
         @JsonProperty("tag") String tag
-    ) implements DItem {}
+    ) implements DItem {
+    }
 }

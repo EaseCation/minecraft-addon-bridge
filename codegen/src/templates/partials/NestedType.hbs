@@ -1,0 +1,33 @@
+
+    {{#if javadoc}}
+    {{{javadoc}}}
+    {{/if}}
+    {{#each annotations}}
+    {{{this}}}
+    {{/each}}
+    {{#if isRecord}}
+    public record {{{javaClassName}}}(
+        {{#each properties}}
+        {{#if javadoc}}{{{javadoc}}}
+        {{/if}}{{#each annotations}}{{{this}}} {{/each}}{{{type}}} {{{name}}}{{#unless @last}},{{/unless}}
+        {{/each}}
+    ) {
+        {{#if nestedTypes}}
+        {{#each nestedTypes}}
+        {{> NestedType this}}
+        {{/each}}
+        {{/if}}
+    }
+    {{else}}
+    public class {{{javaClassName}}} {
+        {{#each properties}}
+        {{#if javadoc}}{{{javadoc}}}
+        {{/if}}{{#each annotations}}{{{this}}} {{/each}}public {{{type}}} {{{name}}};
+        {{/each}}
+        {{#if nestedTypes}}
+        {{#each nestedTypes}}
+        {{> NestedType this}}
+        {{/each}}
+        {{/if}}
+    }
+    {{/if}}

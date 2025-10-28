@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 /* Specifies the dialogue scenes. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record DialogueDefinition(
-    @JsonProperty("format_version") FormatVersion formatVersion,
+    @JsonProperty("format_version") String formatVersion,
     /* Specifies the dialogue of an npc. */
     @JsonProperty("minecraft:npc_dialogue") Minecraft_npcDialogue minecraft_npcDialogue
 ) {

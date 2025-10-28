@@ -6,9 +6,9 @@ import javax.annotation.Nullable;
 /* Allows this entity to celebrate surviving a raid by making celebration sounds and jumping. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Celebrate(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The sound event to trigger during the celebration. */
-    @JsonProperty("celebration_sound") @Nullable SoundEvent celebrationSound,
+    @JsonProperty("celebration_sound") @Nullable String celebrationSound,
     /* The duration in seconds that the celebration lasts for. */
     @JsonProperty("duration") @Nullable Double duration,
     /* Minimum and maximum time between jumping (positive, in seconds). */

@@ -30,22 +30,20 @@ export class FileWriter {
 
   /**
    * 清理已生成的文件
-   * @param version - 版本号
+   * @param version - 版本号（必需）
+   *
+   * 注意：只清理指定版本的 DTO 目录，不清理整个输出目录，以保护手写的代码
    */
-  clean(version?: string): void {
-    if (version) {
-      const versionSegment = `v${version.replace(/\./g, '_')}`;
-      const versionDir = path.join(this.baseOutputDir, versionSegment);
+  clean(version: string): void {
+    const versionSegment = `v${version.replace(/\./g, '_')}`;
+    // 只清理 DTO 包目录，不清理整个 src/main/java
+    const dtoDir = path.join(this.baseOutputDir, 'net', 'easecation', 'bridge', 'core', 'dto', versionSegment);
 
-      if (fs.existsSync(versionDir)) {
-        fs.rmSync(versionDir, { recursive: true, force: true });
-        console.log(`✓ 已清理版本目录: ${versionDir}`);
-      }
+    if (fs.existsSync(dtoDir)) {
+      fs.rmSync(dtoDir, { recursive: true, force: true });
+      console.log(`✓ 已清理 DTO 目录: ${dtoDir}`);
     } else {
-      if (fs.existsSync(this.baseOutputDir)) {
-        fs.rmSync(this.baseOutputDir, { recursive: true, force: true });
-        console.log(`✓ 已清理输出目录: ${this.baseOutputDir}`);
-      }
+      console.log(`⚠️  DTO 目录不存在: ${dtoDir}`);
     }
   }
 

@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to look around for another mob to ride atop it. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record FindMount(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* If true, the mob will not go into water blocks when going towards a mount. */
     @JsonProperty("avoid_water") @Nullable Boolean avoidWater,
     /* This is the distance the mob needs to be, in blocks, from the desired mount to mount it. If the value is below 0, the mob will use its default attack distance */

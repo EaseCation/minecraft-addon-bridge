@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Plays the provided sounds and activates the {@code SONIC BOOM} actor flag during the specified duration */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record SonicBoom(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Cooldown in seconds required after using this attack until the entity can use sonic boom again. */
     @JsonProperty("attack_cooldown") @Nullable Double attackCooldown,
     /* Attack damage of the sonic boom. */
@@ -17,9 +17,9 @@ public record SonicBoom(
     /* Vertical range (in blocks) at which the sonic boom can damage the target. */
     @JsonProperty("attack_range_vertical") @Nullable Double attackRangeVertical,
     /* Sound event for the attack. */
-    @JsonProperty("attack_sound") @Nullable SoundEvent attackSound,
+    @JsonProperty("attack_sound") @Nullable String attackSound,
     /* Sound event for the charge up. */
-    @JsonProperty("charge_sound") @Nullable SoundEvent chargeSound,
+    @JsonProperty("charge_sound") @Nullable String chargeSound,
     /* Goal duration in seconds. */
     @JsonProperty("duration") @Nullable Double duration,
     /* Duration in seconds until the attack sound is played. */

@@ -7,8 +7,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to eat/raid crops out of farms until they are full. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record RaidGarden(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Blocks that the mob is looking for to eat. */
     @JsonProperty("blocks") @Nullable List<BlockReference> blocks,
     /* Time in seconds between each time it eats. */

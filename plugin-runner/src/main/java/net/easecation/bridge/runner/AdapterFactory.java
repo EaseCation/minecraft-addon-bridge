@@ -1,14 +1,15 @@
 package net.easecation.bridge.runner;
 
+import cn.nukkit.utils.Logger;
 import net.easecation.bridge.core.AddonRegistry;
+import net.easecation.bridge.core.BridgeLogger;
 import net.easecation.bridge.core.NoopRegistry;
-
-import java.util.logging.Logger;
 
 public final class AdapterFactory {
     private AdapterFactory() {}
 
-    public static AddonRegistry detectRegistryOrNoop(cn.nukkit.Server server, Logger log) {
+    public static AddonRegistry detectRegistryOrNoop(cn.nukkit.Server server, Logger nukkitLogger) {
+        BridgeLogger log = new NukkitLoggerAdapter(nukkitLogger);
         // 仅根据服务端品牌信息进行判定；支持环境变量强制覆盖
         if (server != null) {
             String force = safe(System.getenv("BRIDGE_FORCE_ADAPTER"));
@@ -79,8 +80,8 @@ public final class AdapterFactory {
         return new NoopRegistry();
     }
 
-    public static AddonRegistry detectRegistryOrNoop(Logger log) {
-        return detectRegistryOrNoop(null, log);
+    public static AddonRegistry detectRegistryOrNoop(Logger nukkitLogger) {
+        return detectRegistryOrNoop(null, nukkitLogger);
     }
 
     private static String safe(String s) { return s == null ? "" : s; }

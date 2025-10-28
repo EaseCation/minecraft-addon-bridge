@@ -11,7 +11,7 @@ public record DelayFilter(
     /* This is the maximum delay that a mob spawns. */
     @JsonProperty("max") @Nullable Integer max,
     /* The identifier of the mob that will spawn. */
-    @JsonProperty("identifier") EntityIdentifier identifier,
+    @JsonProperty("identifier") String identifier,
     /* The percent chance that this entity will spawn. */
     @JsonProperty("spawn_chance") @Nullable Double spawnChance
 ) {

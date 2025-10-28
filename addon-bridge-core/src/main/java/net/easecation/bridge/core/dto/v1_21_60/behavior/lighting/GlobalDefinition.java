@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record GlobalDefinition(
-    @JsonProperty("format_version") @Nullable FormatVersion formatVersion,
+    @JsonProperty("format_version") @Nullable String formatVersion,
     /* The directional lights that affect the world */
     @JsonProperty("directional_lights") @Nullable DirectionalLights directionalLights
 ) {

@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 public record ScatterFeature(
     @JsonProperty("description") Description description,
     /* Named reference of feature to be placed. */
-    @JsonProperty("places_feature") FeatureIdentifier placesFeature,
+    @JsonProperty("places_feature") String placesFeature,
     /* If true, snaps the y-value of the scattered position to the terrain heightmap. If false or unset, y-value is unmodified. */
     @JsonProperty("project_input_to_floor") @Nullable Boolean projectInputToFloor,
     /* Parameters controlling the initial scatter of the feature. */

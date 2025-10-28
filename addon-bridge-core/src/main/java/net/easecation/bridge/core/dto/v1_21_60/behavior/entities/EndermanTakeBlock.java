@@ -6,6 +6,6 @@ import javax.annotation.Nullable;
 /* Allows the enderman to take a block and carry it around. Can only be used by Endermen. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record EndermanTakeBlock(
-    @JsonProperty("priority") @Nullable Priority priority
+    @JsonProperty("priority") @Nullable Integer priority
 ) {
 }

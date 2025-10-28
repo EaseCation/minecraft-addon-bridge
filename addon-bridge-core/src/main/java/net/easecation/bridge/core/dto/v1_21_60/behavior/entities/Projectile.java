@@ -29,9 +29,9 @@ public record Projectile(
     /* [EXPERIMENTAL] An array of strings defining the types of entities that this entity does not collide with. */
     @JsonProperty("ignored_entities") @Nullable List<String> ignoredEntities,
     /* The sound that plays when the projectile hits the ground. */
-    @JsonProperty("hit_ground_sound") @Nullable SoundEvent hitGroundSound,
+    @JsonProperty("hit_ground_sound") @Nullable String hitGroundSound,
     /* The sound that plays when the projectile hits something. */
-    @JsonProperty("hit_sound") @Nullable SoundEvent hitSound,
+    @JsonProperty("hit_sound") @Nullable String hitSound,
     /* If true, the projectile homes in to the nearest entity. */
     @JsonProperty("homing") @Nullable Boolean homing,
     /* The fraction of the projectile's speed maintained every frame while traveling in air. */
@@ -67,7 +67,7 @@ public record Projectile(
     /* If true, damage will be randomized based on damage and speed. */
     @JsonProperty("semi_random_diff_damage") @Nullable Boolean semiRandomDiffDamage,
     /* The sound that plays when the projectile is shot. */
-    @JsonProperty("shoot_sound") @Nullable SoundEvent shootSound,
+    @JsonProperty("shoot_sound") @Nullable String shootSound,
     /* If true, the projectile will be shot towards the target of the entity firing it. */
     @JsonProperty("shoot_target") @Nullable Boolean shootTarget,
     /* If true, the projectile will bounce upon hit. */

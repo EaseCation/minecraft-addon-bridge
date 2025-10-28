@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to send an event to another mob. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record SendEvent(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Time in seconds for the entire event sending process. */
     @JsonProperty("cast_duration") @Nullable Double castDuration,
     /* If true, the mob will face the entity it sends an event to. */

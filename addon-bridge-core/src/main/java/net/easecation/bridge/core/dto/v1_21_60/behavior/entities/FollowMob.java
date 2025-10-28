@@ -6,12 +6,12 @@ import javax.annotation.Nullable;
 /* Allows the mob to follow other mobs. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record FollowMob(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* If non-empty, provides criteria for filtering which nearby Mobs can be followed. If empty default criteria will be used, which will exclude Players, Squid variants, Fish variants, Tadpoles, Dolphins, and mobs of the same type as the owner of the Goal. */
     @JsonProperty("filters") @Nullable Filters filters,
     /* The type of actor to prefer following. If left unspecified, a random actor among those in range will be chosen. */
     @JsonProperty("preferred_actor_type") @Nullable String preferredActorType,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* The distance in blocks it will look for a mob to follow. */
     @JsonProperty("search_range") @Nullable Integer searchRange,
     /* The distance in blocks this mob stops from the mob it is following. */

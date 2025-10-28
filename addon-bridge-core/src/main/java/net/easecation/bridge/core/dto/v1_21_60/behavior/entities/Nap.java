@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows mobs to occassionally stop and take a nap under certain conditions. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Nap(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Maximum time in seconds the mob has to wait before using the goal again. */
     @JsonProperty("cooldown_max") @Nullable Double cooldownMax,
     /* Minimum time in seconds the mob has to wait before using the goal again. */

@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to move into a random location within a village within the search range. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record StrollTowardsVillage(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Time in seconds the mob has to wait before using the goal again. */
     @JsonProperty("cooldown_time") @Nullable Double cooldownTime,
     /* Distance in blocks within the mob considers it has reached the goal. This is the {@code wiggle room} to stop the AI from bouncing back and forth trying to reach a specific spot */

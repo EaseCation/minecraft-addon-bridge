@@ -6,6 +6,6 @@ import javax.annotation.Nullable;
 /* Allows an entity to leave perch mode and go back to flying around. Note: This behavior can only be used by the ender_dragon entity type. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Dragontakeoff(
-    @JsonProperty("priority") @Nullable Priority priority
+    @JsonProperty("priority") @Nullable Integer priority
 ) {
 }

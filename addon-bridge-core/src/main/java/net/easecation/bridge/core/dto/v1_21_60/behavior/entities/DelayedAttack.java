@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows an entity to attack, while also delaying the damage-dealt until a specific time in the attack animation. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record DelayedAttack(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* The entity's attack animation will play out over this duration (in seconds). Also controls attack cooldown. */
     @JsonProperty("attack_duration") @Nullable Double attackDuration,
     /* Allows the entity to use this attack behavior, only once EVER. */

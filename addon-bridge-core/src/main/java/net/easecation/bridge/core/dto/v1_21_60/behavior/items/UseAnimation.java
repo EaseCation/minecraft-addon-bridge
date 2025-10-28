@@ -8,10 +8,12 @@ import com.fasterxml.jackson.annotation.*;
 public sealed interface UseAnimation {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record UseAnimation_Variant0(
-    ) implements UseAnimation {}
+    ) implements UseAnimation {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record UseAnimation_Variant1(
         /* Which animation to play when using the item. */
         @JsonProperty("value") EeAnimation value
-    ) implements UseAnimation {}
+    ) implements UseAnimation {
+    }
 }

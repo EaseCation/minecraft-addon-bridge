@@ -22,6 +22,6 @@ public record Triggers(
     /* Specifies filters for entity definitions and events. */
     @JsonProperty("on_damage") @Nullable Trigger onDamage,
     /* Defines what sound to play, if any, when the on_damage filters are met. */
-    @JsonProperty("on_damage_sound_event") @Nullable SoundEvent onDamageSoundEvent
+    @JsonProperty("on_damage_sound_event") @Nullable String onDamageSoundEvent
 ) {
 }

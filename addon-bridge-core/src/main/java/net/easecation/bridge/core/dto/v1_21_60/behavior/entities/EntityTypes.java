@@ -7,8 +7,10 @@ import com.fasterxml.jackson.annotation.*;
 public sealed interface EntityTypes {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record EntityTypes_Variant0(
-    ) implements EntityTypes {}
+    ) implements EntityTypes {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record EntityTypes_Variant1(
-    ) implements EntityTypes {}
+    ) implements EntityTypes {
+    }
 }

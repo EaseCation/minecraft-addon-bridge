@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the entity follow another entity. Both entities must be swimming and in water. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record SwimWithEntity(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Percent chance to start following another entity, if not already doing so. 1.0 = 100% */
     @JsonProperty("success_rate") @Nullable Double successRate,
     /* Percent chance to stop following the current entity, if they're riding another entity or they're not swimming. 1.0 = 100% */

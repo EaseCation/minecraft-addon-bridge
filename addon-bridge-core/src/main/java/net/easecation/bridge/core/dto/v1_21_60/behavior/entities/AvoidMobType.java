@@ -6,9 +6,9 @@ import javax.annotation.Nullable;
 /* Allows the entity to run away from other entities that meet the criteria specified. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record AvoidMobType(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The sound event to play when the mob is avoiding another mob. */
-    @JsonProperty("avoid_mob_sound") @Nullable SoundEvent avoidMobSound,
+    @JsonProperty("avoid_mob_sound") @Nullable String avoidMobSound,
     /* The next target position the entity chooses to avoid another entity will be chosen within this XZ Distance. */
     @JsonProperty("avoid_target_xz") @Nullable Integer avoidTargetXz,
     /* The next target position the entity chooses to avoid another entity will be chosen within this Y Distance. */

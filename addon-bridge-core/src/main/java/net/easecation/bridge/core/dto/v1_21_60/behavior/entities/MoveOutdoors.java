@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Forces the entity to move {@code outside}, whatever that means. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record MoveOutdoors(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* The radius away from the target block to count as reaching the goal. */
     @JsonProperty("goal_radius") @Nullable Double goalRadius,
     /* The amount of times to try finding a random outdoors position before failing. */

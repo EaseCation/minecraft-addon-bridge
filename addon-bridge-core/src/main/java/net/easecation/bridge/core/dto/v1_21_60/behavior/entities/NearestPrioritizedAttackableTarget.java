@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to check for and pursue the nearest valid target. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record NearestPrioritizedAttackableTarget(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* List of entity types that this mob considers valid targets */
     @JsonProperty("entity_types") @Nullable EntityTypes entityTypes,
     /* Time in seconds before selecting a target. */

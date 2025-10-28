@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to randomly break surface of the water. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record RandomBreach(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Time in seconds the mob has to wait before using the goal again. */
     @JsonProperty("cooldown_time") @Nullable Double cooldownTime,
     /* A random value to determine when to randomly move somewhere. This has a 1/interval chance to choose this goal */

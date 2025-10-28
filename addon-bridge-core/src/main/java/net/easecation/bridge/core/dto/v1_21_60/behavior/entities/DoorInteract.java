@@ -6,6 +6,6 @@ import javax.annotation.Nullable;
 /* Allows the mob to open and close doors. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record DoorInteract(
-    @JsonProperty("priority") @Nullable Priority priority
+    @JsonProperty("priority") @Nullable Integer priority
 ) {
 }

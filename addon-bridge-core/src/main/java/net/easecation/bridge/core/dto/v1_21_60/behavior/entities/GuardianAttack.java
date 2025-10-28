@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows this entity to use a laser beam attack. Can only be used by Guardians and Elder Guardians. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record GuardianAttack(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Amount of additional damage dealt from an elder guardian's magic attack. */
     @JsonProperty("elder_extra_magic_damage") @Nullable Integer elderExtraMagicDamage,
     /* In hard difficulty, amount of additional damage dealt from a guardian's magic attack. */

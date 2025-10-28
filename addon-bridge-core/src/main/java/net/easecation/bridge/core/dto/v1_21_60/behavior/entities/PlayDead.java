@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to play dead when attacked by other entities. When playing dead, other entities will not target this mob. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record PlayDead(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Whether the mob will receive the regeneration effect while playing dead. */
     @JsonProperty("apply_regeneration") @Nullable Boolean applyRegeneration,
     /* The amount of time the mob will remain playing dead (in seconds). */

@@ -14,8 +14,10 @@ public sealed interface EFiltersSpec {
         @JsonProperty("any_of") @Nullable EGroupsSpec anyOf,
         /* All tests in a {@code none_of} group must fail in order for the group to pass. */
         @JsonProperty("none_of") @Nullable EGroupsSpec noneOf
-    ) implements EFiltersSpec {}
+    ) implements EFiltersSpec {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record EFiltersSpec_Variant1(
-    ) implements EFiltersSpec {}
+    ) implements EFiltersSpec {
+    }
 }

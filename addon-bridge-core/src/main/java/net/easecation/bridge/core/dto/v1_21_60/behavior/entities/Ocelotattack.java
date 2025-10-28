@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Can only be used by the Ocelot. Allows it to perform the sneak and pounce attack. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Ocelotattack(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Time (in seconds) between attacks. */
     @JsonProperty("cooldown_time") @Nullable Double cooldownTime,
     /* Max distance from the target, this entity will use this attack behavior. */

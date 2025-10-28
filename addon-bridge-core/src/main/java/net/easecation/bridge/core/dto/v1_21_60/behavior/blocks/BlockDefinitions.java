@@ -18,7 +18,7 @@ public record BlockDefinitions(
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record Description(
             /* The identifier for this block. The name must include a namespace and must not use the Minecraft namespace unless overriding a Vanilla block. */
-            @JsonProperty("identifier") BlockIdentifier identifier,
+            @JsonProperty("identifier") String identifier,
             /* Specifies the menu category and group for the block, which determine where this block is placed in the inventory and crafting table container screens. If this field is omitted, the block will not appear in the inventory or crafting table container screens. */
             @JsonProperty("menu_category") @Nullable MenuCategory menuCategory,
             @JsonProperty("states") @Nullable States states,

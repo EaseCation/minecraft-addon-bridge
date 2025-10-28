@@ -26,7 +26,7 @@ public record SpawnRulesDefinition(
                 @JsonIgnoreProperties(ignoreUnknown = true)
                 public record Description(
                     /* The entity identifier this spawn rule will apply to, entity must exist. */
-                    @JsonProperty("identifier") EntityIdentifier identifier,
+                    @JsonProperty("identifier") String identifier,
                     /* Setting an entity to a pool it will spawn as long as that pool hasn't reached the spawn limit. */
                     @JsonProperty("population_control") String populationControl
                 ) {

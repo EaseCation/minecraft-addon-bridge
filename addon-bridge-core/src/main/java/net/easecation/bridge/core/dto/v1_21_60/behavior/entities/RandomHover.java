@@ -7,8 +7,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to hover around randomly, close to the surface. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record RandomHover(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* The height above the surface which the mob will try to maintain. */
     @JsonProperty("hover_height") @Nullable List<Double> hoverHeight,
     /* A random value to determine when to randomly move somewhere. This has a 1/interval chance to choose this goal */

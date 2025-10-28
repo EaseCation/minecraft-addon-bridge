@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* [EXPERIMENTAL BEHAVIOR] Activates the {@code DIGGING} actor flag during the specified duration. Currently only Warden can use the Dig goal */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Dig(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* If true, this behavior can run when this entity is named. Otherwise not. */
     @JsonProperty("allow_dig_when_named") @Nullable Boolean allowDigWhenNamed,
     /* Indicates that the actor should start digging when it sees daylight. */

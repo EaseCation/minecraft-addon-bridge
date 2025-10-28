@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 public record SearchFeature(
     @JsonProperty("description") Description description,
     /* Named reference of feature to be placed. */
-    @JsonProperty("places_feature") @Nullable FeatureIdentifier placesFeature,
+    @JsonProperty("places_feature") @Nullable String placesFeature,
     /* Axis-aligned bounding box that will be searched for valid placement positions. Expressed as offsets from the input position. */
     @JsonProperty("search_volume") @Nullable SearchVolume searchVolume,
     /* Axis that the search will sweep along through the {@code search_volume}. */

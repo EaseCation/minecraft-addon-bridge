@@ -12,7 +12,8 @@ public sealed interface EntitySensor {
     record EntitySensor_Variant0(
         /* If true the sensor range is additive on top of the entity's size. */
         @JsonProperty("relative_range") @Nullable Boolean relativeRange
-    ) implements EntitySensor {}
+    ) implements EntitySensor {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record EntitySensor_Variant1(
         /* The list of subsensors. */
@@ -21,5 +22,6 @@ public sealed interface EntitySensor {
         @JsonProperty("relative_range") @Nullable Boolean relativeRange,
         /* Limits the search to Players only for all subsensors. */
         @JsonProperty("find_players_only") @Nullable Boolean findPlayersOnly
-    ) implements EntitySensor {}
+    ) implements EntitySensor {
+    }
 }

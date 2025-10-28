@@ -6,6 +6,6 @@ import javax.annotation.Nullable;
 /* Allows the mob to stay put while it is in a sitting state instead of doing something else. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record StayWhileSitting(
-    @JsonProperty("priority") @Nullable Priority priority
+    @JsonProperty("priority") @Nullable Integer priority
 ) {
 }

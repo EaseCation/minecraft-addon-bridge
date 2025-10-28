@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 /* UNDOCUMENTED. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TradingDefinition(
-    @JsonProperty("format_version") @Nullable FormatVersion formatVersion,
+    @JsonProperty("format_version") @Nullable String formatVersion,
     /* A collection of tiers. */
     @JsonProperty("tiers") @Nullable List<Object> tiers
 ) {

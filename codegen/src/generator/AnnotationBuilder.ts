@@ -70,6 +70,17 @@ export class AnnotationBuilder {
     // Jackson 相关导入
     imports.add('import com.fasterxml.jackson.annotation.*;');
 
+    // 如果是 sealed interface 且有 value wrapper variant，需要额外的导入
+    if (type.kind === 'sealed_interface' && type.oneOfVariants?.some(v => v.isValueWrapper)) {
+      imports.add('import com.fasterxml.jackson.databind.annotation.JsonDeserialize;');
+      imports.add('import com.fasterxml.jackson.databind.JsonDeserializer;');
+      imports.add('import com.fasterxml.jackson.databind.DeserializationContext;');
+      imports.add('import com.fasterxml.jackson.core.JsonParser;');
+      imports.add('import com.fasterxml.jackson.databind.JsonNode;');
+      imports.add('import com.fasterxml.jackson.databind.JsonMappingException;');
+      imports.add('import java.io.IOException;');
+    }
+
     // 收集所有需要检查的属性（包括主类型、oneOf 变体和嵌套类型）
     const allProperties: ParsedProperty[] = [];
 

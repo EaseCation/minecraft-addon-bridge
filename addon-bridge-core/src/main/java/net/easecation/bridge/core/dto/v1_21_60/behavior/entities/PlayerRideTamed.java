@@ -6,6 +6,6 @@ import javax.annotation.Nullable;
 /* Allows the mob to be ridden by the player after being tamed. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record PlayerRideTamed(
-    @JsonProperty("priority") @Nullable Priority priority
+    @JsonProperty("priority") @Nullable Integer priority
 ) {
 }

@@ -10,7 +10,7 @@ public record Home(
     /* The radius that the entity will be restricted to in relation to its home. */
     @JsonProperty("restriction_radius") @Nullable Integer restrictionRadius,
     /* Optional block list that the home position will be associated with. If any of the blocks no longer exist at that position, the home restriction is removed. Example syntax: minecraft:sand. Not supported: minecraft:sand:1 */
-    @JsonProperty("home_block_list") @Nullable List<ItemIdentifier> homeBlockList,
+    @JsonProperty("home_block_list") @Nullable List<String> homeBlockList,
     /*
  * Defines how the the entity will be restricted to its home position. The possible values are:
  * - 'none', which poses no restriction.

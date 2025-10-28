@@ -20,7 +20,7 @@ public record Angry(
     /* Event to run after the number of seconds specified in duration expires (when the entity stops being "angry") */
     @JsonProperty("calm_event") @Nullable Event calmEvent,
     /* The sound event to play when the mob is angry. */
-    @JsonProperty("angry_sound") @Nullable SoundEvent angrySound,
+    @JsonProperty("angry_sound") @Nullable String angrySound,
     /* If true, other entities of the same entity definition within the broadcastRange will also become angry whenever this mob attacks. */
     @JsonProperty("broadcast_anger_on_attack") @Nullable Boolean broadcastAngerOnAttack,
     /* If true, other entities of the same entity definition within the broadcastRange will also become angry whenever this mob is attacked. */

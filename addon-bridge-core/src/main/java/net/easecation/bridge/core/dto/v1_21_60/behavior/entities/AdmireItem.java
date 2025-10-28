@@ -6,9 +6,9 @@ import javax.annotation.Nullable;
 /* Enables the mob to admire items that have been configured as admirable. Must be used in combination with the admire_item component. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record AdmireItem(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The sound event to play when admiring the item. */
-    @JsonProperty("admire_item_sound") @Nullable SoundEvent admireItemSound,
+    @JsonProperty("admire_item_sound") @Nullable String admireItemSound,
     /* The event to run when admiring the item. */
     @JsonProperty("on_admire_item_start") @Nullable Event onAdmireItemStart,
     /* The event to run when no longer admiring the item. */

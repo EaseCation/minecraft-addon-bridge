@@ -7,8 +7,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to pick up items on the ground. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record PickupItems(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* If true, the mob can pickup any item. */
     @JsonProperty("can_pickup_any_item") @Nullable Boolean canPickupAnyItem,
     /* If true, the mob can pickup items to its hand or armor slots. */

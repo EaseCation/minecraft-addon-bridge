@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 public record SurfaceRelativeThresholdFeature(
     @JsonProperty("description") Description description,
     /* Named reference of feature to be placed. */
-    @JsonProperty("feature_to_place") FeatureIdentifier featureToPlace,
+    @JsonProperty("feature_to_place") String featureToPlace,
     /* The minimum number of blocks required to be between the estimated surface level and a valid place for this feature. */
     @JsonProperty("minimum_distance_below_surface") @Nullable Integer minimumDistanceBelowSurface
 ) {

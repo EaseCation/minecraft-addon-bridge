@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the mob to target a mob that is hurt by their owner. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record OwnerHurtTarget(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* List of entity types that this entity can target if the potential target is hurt by this mob's owner. */
     @JsonProperty("entity_types") @Nullable EntityTypes entityTypes
 ) {

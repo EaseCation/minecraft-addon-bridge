@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* [EXPERIMENTAL BEHAVIOR] Plays the provided sound and activates the {@code ROARING} actor flag during the specified duration */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Roar(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Goal duration in seconds. */
     @JsonProperty("duration") @Nullable Double duration
 ) {

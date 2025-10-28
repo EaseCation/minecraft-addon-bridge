@@ -10,7 +10,7 @@ public record Transformation(
     /* List of components to add to the entity after the transformation. */
     @JsonProperty("add") @Nullable Add add,
     /* Sound to play when the transformation starts. */
-    @JsonProperty("begin_transform_sound") @Nullable SoundEvent beginTransformSound,
+    @JsonProperty("begin_transform_sound") @Nullable String beginTransformSound,
     /* Defines the properties of the delay for the transformation. */
     @JsonProperty("delay") @Nullable Object delay,
     /* Cause the entity to drop all equipment upon transformation. */
@@ -26,7 +26,7 @@ public record Transformation(
     /* Cause the entity to keep equipment after going through transformation. */
     @JsonProperty("preserve_equipment") @Nullable Boolean preserveEquipment,
     /* Sound to play when the entity is done transforming. */
-    @JsonProperty("transformation_sound") @Nullable SoundEvent transformationSound
+    @JsonProperty("transformation_sound") @Nullable String transformationSound
 ) {
     
         /* List of components to add to the entity after the transformation. */

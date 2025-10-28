@@ -26,7 +26,7 @@ public record EntitySpawn(
     /* Method to use to spawn the entity. */
     @JsonProperty("spawn_method") @Nullable String spawnMethod,
     /* Identifier of the sound effect to play when the entity is spawned. */
-    @JsonProperty("spawn_sound") @Nullable SoundEvent spawnSound,
+    @JsonProperty("spawn_sound") @Nullable String spawnSound,
     /* Event to call on this entity when the item is spawned. */
     @JsonProperty("spawn_item_event") @Nullable Event spawnItemEvent
 ) {

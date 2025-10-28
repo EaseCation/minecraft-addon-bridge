@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows an entity to attack by firing a shot with a delay. Anchor and offset parameters of this component overrides the anchor and offset from projectile component. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record FireAtTarget(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The cooldown time in seconds before this goal can be used again. */
     @JsonProperty("attack_cooldown") @Nullable Double attackCooldown,
     /* Target needs to be within this range for the attack to happen. */

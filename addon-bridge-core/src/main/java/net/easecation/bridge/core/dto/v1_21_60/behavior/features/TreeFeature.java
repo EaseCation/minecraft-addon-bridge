@@ -72,12 +72,12 @@ public record TreeFeature(
         /* Configutarion for the acacia trunk. */
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record AcaciaTrunk(
-            @JsonProperty("trunk_width") @Nullable TrunkWidth trunkWidth,
+            @JsonProperty("trunk_width") @Nullable Integer trunkWidth,
             /* Configuration object for the trunk height. */
             @JsonProperty("trunk_height") @Nullable TrunkHeight trunkHeight,
             /* Configuration object for diagonal branches. */
             @JsonProperty("trunk_lean") @Nullable TrunkLean trunkLean,
-            @JsonProperty("trunk_block") @Nullable TrunkBlock trunkBlock,
+            @JsonProperty("trunk_block") @Nullable BlockReference trunkBlock,
             /* Configuration object for branches. */
             @JsonProperty("branches") @Nullable Branches branches
         ) {
@@ -126,7 +126,7 @@ public record TreeFeature(
         /* Configutarion for the cherry trunk. */
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record CherryTrunk(
-            @JsonProperty("trunk_block") @Nullable TrunkBlock trunkBlock,
+            @JsonProperty("trunk_block") @Nullable BlockReference trunkBlock,
             /* Configuration object for the trunk height. */
             @JsonProperty("trunk_height") @Nullable TrunkHeight trunkHeight,
             /* Configuration object for branches. */
@@ -182,9 +182,9 @@ public record TreeFeature(
             @JsonProperty("stump_height") @Nullable Integer stumpHeight,
             /* Modifier for the length of the fallen log. */
             @JsonProperty("height_modifier") @Nullable Integer heightModifier,
-            @JsonProperty("trunk_block") @Nullable TrunkBlock trunkBlock,
+            @JsonProperty("trunk_block") @Nullable BlockReference trunkBlock,
             /* Feature that can be used to decorate the fallen log. */
-            @JsonProperty("log_decoration_feature") @Nullable FeatureIdentifier logDecorationFeature,
+            @JsonProperty("log_decoration_feature") @Nullable String logDecorationFeature,
             @JsonProperty("trunk_decoration") @Nullable Decoration trunkDecoration
         ) {
         }
@@ -194,10 +194,10 @@ public record TreeFeature(
         public record FancyTrunk(
             /* Configuration object for the trunk height. */
             @JsonProperty("trunk_height") @Nullable TrunkHeight trunkHeight,
-            @JsonProperty("trunk_width") @Nullable TrunkWidth trunkWidth,
+            @JsonProperty("trunk_width") @Nullable Integer trunkWidth,
             /* Configuration object for branches. */
             @JsonProperty("branches") @Nullable Branches branches,
-            @JsonProperty("trunk_block") @Nullable TrunkBlock trunkBlock,
+            @JsonProperty("trunk_block") @Nullable BlockReference trunkBlock,
             /* Scale modifier for the tree radius. */
             @JsonProperty("width_scale") @Nullable Double widthScale,
             /* Min height for foliage. Represented by a percentage of the tree height. */
@@ -232,10 +232,10 @@ public record TreeFeature(
         /* Configutarion for the mangrove trunk. */
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record MangroveTrunk(
-            @JsonProperty("trunk_width") @Nullable TrunkWidth trunkWidth,
+            @JsonProperty("trunk_width") @Nullable Integer trunkWidth,
             /* Configuration object for the trunk height. */
             @JsonProperty("trunk_height") @Nullable TrunkHeight trunkHeight,
-            @JsonProperty("trunk_block") @Nullable TrunkBlock trunkBlock,
+            @JsonProperty("trunk_block") @Nullable BlockReference trunkBlock,
             /* Configuration object for branches. */
             @JsonProperty("branches") @Nullable Branches branches,
             @JsonProperty("trunk_decoration") @Nullable Decoration trunkDecoration
@@ -269,10 +269,10 @@ public record TreeFeature(
         /* Configutarion for the mega trunk. */
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record MegaTrunk(
-            @JsonProperty("trunk_width") @Nullable TrunkWidth trunkWidth,
+            @JsonProperty("trunk_width") @Nullable Integer trunkWidth,
             /* Configuration object for the trunk height. */
             @JsonProperty("trunk_height") @Nullable TrunkHeight trunkHeight,
-            @JsonProperty("trunk_block") @Nullable TrunkBlock trunkBlock,
+            @JsonProperty("trunk_block") @Nullable BlockReference trunkBlock,
             @JsonProperty("trunk_decoration") @Nullable Decoration trunkDecoration,
             /* Configuration object for branches. */
             @JsonProperty("branches") @Nullable Branches branches
@@ -325,7 +325,7 @@ public record TreeFeature(
             @JsonProperty("height_modifier") @Nullable Range_a_B_ heightModifier,
             /* Specifies if the trunk can be submerged. */
             @JsonProperty("can_be_submerged") @Nullable Object canBeSubmerged,
-            @JsonProperty("trunk_block") @Nullable TrunkBlock trunkBlock,
+            @JsonProperty("trunk_block") @Nullable BlockReference trunkBlock,
             @JsonProperty("trunk_decoration") @Nullable Decoration trunkDecoration
         ) {
         }
@@ -335,8 +335,8 @@ public record TreeFeature(
         public record AcaciaCanopy(
             /* The size of the canopy. */
             @JsonProperty("canopy_size") @Nullable Integer canopySize,
-            @JsonProperty("leaf_block") @Nullable LeafBlock leafBlock,
-            @JsonProperty("simplify_canopy") @Nullable SimplifyCanopy simplifyCanopy
+            @JsonProperty("leaf_block") @Nullable BlockReference leafBlock,
+            @JsonProperty("simplify_canopy") @Nullable Boolean simplifyCanopy
         ) {
         }
     
@@ -351,7 +351,7 @@ public record TreeFeature(
             @JsonProperty("canopy_slope") @Nullable CanopySlope canopySlope,
             /* Determines the chance of creating leaf blocks for every layer of the canopy. Larger numbers create a denser tree. */
             @JsonProperty("variation_chance") @Nullable Object variationChance,
-            @JsonProperty("leaf_block") @Nullable LeafBlock leafBlock,
+            @JsonProperty("leaf_block") @Nullable BlockReference leafBlock,
             /* Configuration object for the canopy decoration. */
             @JsonProperty("canopy_decoration") @Nullable CanopyDecoration canopyDecoration
         ) {
@@ -394,10 +394,10 @@ public record TreeFeature(
         /* Configuration object for the cherry canopy. */
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record CherryCanopy(
-            @JsonProperty("leaf_block") @Nullable LeafBlock leafBlock,
-            @JsonProperty("height") @Nullable Height height,
-            @JsonProperty("radius") @Nullable Radius radius,
-            @JsonProperty("trunk_width") @Nullable TrunkWidth trunkWidth,
+            @JsonProperty("leaf_block") @Nullable BlockReference leafBlock,
+            @JsonProperty("height") @Nullable Integer height,
+            @JsonProperty("radius") @Nullable Integer radius,
+            @JsonProperty("trunk_width") @Nullable Integer trunkWidth,
             /* Probability of the canopy having a hole in the bottom layer. */
             @JsonProperty("wide_bottom_layer_hole_chance") @Nullable ChanceInformation wideBottomLayerHoleChance,
             /* Probability of the canopy having a hole in the corner. */
@@ -412,17 +412,17 @@ public record TreeFeature(
         /* Configuration object for the fancy canopy. */
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record FancyCanopy(
-            @JsonProperty("height") @Nullable Height height,
-            @JsonProperty("radius") @Nullable Radius radius,
-            @JsonProperty("leaf_block") @Nullable LeafBlock leafBlock
+            @JsonProperty("height") @Nullable Integer height,
+            @JsonProperty("radius") @Nullable Integer radius,
+            @JsonProperty("leaf_block") @Nullable BlockReference leafBlock
         ) {
         }
     
         /* Configuration object for the mangrove canopy. */
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record MangroveCanopy(
-            @JsonProperty("canopy_height") @Nullable Height canopyHeight,
-            @JsonProperty("canopy_radius") @Nullable Radius canopyRadius,
+            @JsonProperty("canopy_height") @Nullable Integer canopyHeight,
+            @JsonProperty("canopy_radius") @Nullable Integer canopyRadius,
             /* Max number of attempts to create leaf blocks. */
             @JsonProperty("leaf_placement_attempts") @Nullable Integer leafPlacementAttempts,
             /* The blocks that form the canopy of the tree */
@@ -438,34 +438,34 @@ public record TreeFeature(
         /* Configuration object for the mega canopy. */
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record MegaCanopy(
-            @JsonProperty("canopy_height") @Nullable Height canopyHeight,
-            @JsonProperty("base_radius") @Nullable Radius baseRadius,
+            @JsonProperty("canopy_height") @Nullable Integer canopyHeight,
+            @JsonProperty("base_radius") @Nullable Integer baseRadius,
             /* Width of the tree trunk. */
             @JsonProperty("core_width") @Nullable Double coreWidth,
-            @JsonProperty("simplify_canopy") @Nullable SimplifyCanopy simplifyCanopy,
-            @JsonProperty("leaf_block") @Nullable LeafBlock leafBlock
+            @JsonProperty("simplify_canopy") @Nullable Boolean simplifyCanopy,
+            @JsonProperty("leaf_block") @Nullable BlockReference leafBlock
         ) {
         }
     
         /* Configuration object for the mega pine canopy. */
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record MegaPineCanopy(
-            @JsonProperty("canopy_height") @Nullable Height canopyHeight,
-            @JsonProperty("base_radius") @Nullable Radius baseRadius,
+            @JsonProperty("canopy_height") @Nullable Integer canopyHeight,
+            @JsonProperty("base_radius") @Nullable Integer baseRadius,
             /* Modifier for the base radius of the canopy. */
             @JsonProperty("radius_step_modifier") @Nullable Double radiusStepModifier,
             /* Width of the tree trunk. */
             @JsonProperty("core_width") @Nullable Double coreWidth,
-            @JsonProperty("leaf_block") @Nullable LeafBlock leafBlock
+            @JsonProperty("leaf_block") @Nullable BlockReference leafBlock
         ) {
         }
     
         /* Configuration object for the pine canopy. */
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record PineCanopy(
-            @JsonProperty("height") @Nullable Height height,
-            @JsonProperty("radius") @Nullable Radius radius,
-            @JsonProperty("leaf_block") @Nullable LeafBlock leafBlock
+            @JsonProperty("height") @Nullable Integer height,
+            @JsonProperty("radius") @Nullable Integer radius,
+            @JsonProperty("leaf_block") @Nullable BlockReference leafBlock
         ) {
         }
     
@@ -480,7 +480,7 @@ public record TreeFeature(
             @JsonProperty("outer_radius") @Nullable Integer outerRadius,
             /* Radius used for the middle layers. */
             @JsonProperty("inner_radius") @Nullable Integer innerRadius,
-            @JsonProperty("leaf_block") @Nullable LeafBlock leafBlock
+            @JsonProperty("leaf_block") @Nullable BlockReference leafBlock
         ) {
         }
     
@@ -493,15 +493,15 @@ public record TreeFeature(
             @JsonProperty("upper_offset") @Nullable Integer upperOffset,
             /* Max radius of the canopy. */
             @JsonProperty("max_radius") @Nullable Integer maxRadius,
-            @JsonProperty("leaf_block") @Nullable LeafBlock leafBlock
+            @JsonProperty("leaf_block") @Nullable BlockReference leafBlock
         ) {
         }
     
         /* Configuration object for the random spread canopy. */
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record RandomSpreadCanopy(
-            @JsonProperty("canopy_height") @Nullable Height canopyHeight,
-            @JsonProperty("canopy_radius") @Nullable Radius canopyRadius,
+            @JsonProperty("canopy_height") @Nullable Integer canopyHeight,
+            @JsonProperty("canopy_radius") @Nullable Integer canopyRadius,
             /* Max number of attempts to create leaf blocks. */
             @JsonProperty("leaf_placement_attempts") @Nullable Integer leafPlacementAttempts,
             /* The blocks that form the canopy of the tree */

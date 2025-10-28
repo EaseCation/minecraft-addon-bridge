@@ -6,6 +6,6 @@ import javax.annotation.Nullable;
 /* Allows the squid to swim away. Can only be used by the Squid. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record SquidFlee(
-    @JsonProperty("priority") @Nullable Priority priority
+    @JsonProperty("priority") @Nullable Integer priority
 ) {
 }

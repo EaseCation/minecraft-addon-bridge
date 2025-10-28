@@ -9,16 +9,20 @@ public sealed interface Commands {
     /* Sets the value to a molang variable. */
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record Commands_Variable(
-    ) implements Commands {}
+    ) implements Commands {
+    }
     /* Executes a minecraft command. */
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record Commands_MinecraftCommand(
-    ) implements Commands {}
+    ) implements Commands {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record Commands_Molang(
-    ) implements Commands {}
+    ) implements Commands {
+    }
     /* An event to be called upon within the executing entity. */
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record Commands_Event(
-    ) implements Commands {}
+    ) implements Commands {
+    }
 }

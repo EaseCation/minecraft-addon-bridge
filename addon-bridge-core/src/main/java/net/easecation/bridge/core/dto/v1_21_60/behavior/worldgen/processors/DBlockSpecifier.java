@@ -9,10 +9,12 @@ import javax.annotation.Nullable;
 public sealed interface DBlockSpecifier {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record DBlockSpecifier_Variant0(
-    ) implements DBlockSpecifier {}
+    ) implements DBlockSpecifier {
+    }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record DBlockSpecifier_Variant1(
-        @JsonProperty("name") @Nullable BlockIdentifier name,
+        @JsonProperty("name") @Nullable String name,
         @JsonProperty("states") @Nullable Map<String, Object> states
-    ) implements DBlockSpecifier {}
+    ) implements DBlockSpecifier {
+    }
 }

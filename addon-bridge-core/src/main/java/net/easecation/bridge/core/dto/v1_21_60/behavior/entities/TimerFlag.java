@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 /* Fires an event when this behavior starts, then waits for a duration before stopping. When stopping due to that timeout or due to being interrupted by another behavior, fires another event. query.timer<i>flag</i><n> will return 1.0 on both the client and server when this behavior is running, and 0.0 otherwise. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TimerFlag(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Goal cooldown range in seconds. */
     @JsonProperty("cooldown_range") @Nullable Object cooldownRange,
     /* Goal duration range in seconds. */

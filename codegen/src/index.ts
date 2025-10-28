@@ -42,7 +42,7 @@ async function main(options: GenerateOptions) {
   if (options.clean) {
     console.log('🧹 清理旧文件...');
     const fileWriter = new FileWriter(outputDir);
-    fileWriter.clean();
+    fileWriter.clean(version);  // 传递版本号，只清理对应版本的 DTO 目录
     console.log('');
   }
 

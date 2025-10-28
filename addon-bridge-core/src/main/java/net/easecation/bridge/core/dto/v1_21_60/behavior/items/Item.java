@@ -17,7 +17,7 @@ public record Item(
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record Description(
             /* The identifier for this item. The name must include a namespace and must not use the Minecraft namespace unless overriding a Vanilla item. */
-            @JsonProperty("identifier") @Nullable ItemIdentifier identifier,
+            @JsonProperty("identifier") @Nullable String identifier,
             /* If this item is experimental, it will only be registered if the world is marked as experimental. */
             @JsonProperty("is_experimental") @Nullable Boolean isExperimental,
             /* The Creative Category that includes the specified item. */

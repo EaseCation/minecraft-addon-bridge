@@ -7,8 +7,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to move back to the position they were spawned. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record GoHome(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Distance in blocks within the mob considers it has reached the goal. This is the {@code wiggle room} to stop the AI from bouncing back and forth trying to reach a specific spot */
     @JsonProperty("goal_radius") @Nullable Double goalRadius,
     /* A random value to determine when to randomly move somewhere. This has a 1/interval chance to choose this goal */

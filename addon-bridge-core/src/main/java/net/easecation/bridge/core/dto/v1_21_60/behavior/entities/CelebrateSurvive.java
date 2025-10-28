@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 /* Allows this entity to celebrate surviving a raid by shooting fireworks. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CelebrateSurvive(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Minimum and maximum time between firework (positive, in seconds). */
     @JsonProperty("fireworks_interval") @Nullable Range_a_B_ fireworksInterval,
     /* The duration in seconds that the celebration lasts for. */

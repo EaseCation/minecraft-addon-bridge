@@ -11,5 +11,6 @@ public class NoopRegistry implements AddonRegistry {
     @Override public void registerEntities(List<EntityDef> entities) { /* no-op */ }
     @Override public void registerRecipes(List<RecipeDef> recipes) { /* no-op */ }
     @Override public Capabilities capabilities() { return CAPS; }
+    @Override public void afterAllRegistrations() { /* no-op */ }
 }
 

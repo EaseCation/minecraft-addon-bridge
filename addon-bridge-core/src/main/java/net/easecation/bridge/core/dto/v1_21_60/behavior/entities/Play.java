@@ -7,8 +7,8 @@ import javax.annotation.Nullable;
 /* Allows the mob to play with other baby villagers. This can only be used by Villagers. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Play(
-    @JsonProperty("priority") @Nullable Priority priority,
-    @JsonProperty("speed_multiplier") @Nullable SpeedMultiplier speedMultiplier,
+    @JsonProperty("priority") @Nullable Integer priority,
+    @JsonProperty("speed_multiplier") @Nullable Double speedMultiplier,
     /* Percent chance that the mob will start this goal, from 0 to 1. */
     @JsonProperty("chance_to_start") @Nullable Double chanceToStart,
     /* The distance (in blocks) that the mob tries to be in range of the friend it's following. */

@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* Allows the entity to stay in a village and defend the village from aggressors. If a player is in bad standing with the village this goal will cause the entity to attack the player regardless of filter conditions. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record DefendVillageTarget(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* List of entity types this mob considers a threat to the village. */
     @JsonProperty("entity_types") @Nullable EntityTypes entityTypes,
     /* The entity must be able to reach attacker. */

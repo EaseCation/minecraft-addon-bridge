@@ -6,6 +6,6 @@ import javax.annotation.Nullable;
 /* The entity puts on the desired equipment. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record EquipItem(
-    @JsonProperty("priority") @Nullable Priority priority
+    @JsonProperty("priority") @Nullable Integer priority
 ) {
 }

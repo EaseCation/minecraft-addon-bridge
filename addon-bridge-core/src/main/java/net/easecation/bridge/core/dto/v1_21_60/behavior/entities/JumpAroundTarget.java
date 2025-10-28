@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 /* Allows an entity to jump around a target. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record JumpAroundTarget(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* Enables collision checks when calculating the jump. Setting check_collision to true may affect performance and should be used with care. */
     @JsonProperty("check_collision") @Nullable Boolean checkCollision,
     /* Scaling temporarily applied to the entity's AABB bounds when jumping. A smaller bounding box reduces the risk of collisions during the jump. When check_collision is true it also increases the chance of being able to jump when close to obstacles. */

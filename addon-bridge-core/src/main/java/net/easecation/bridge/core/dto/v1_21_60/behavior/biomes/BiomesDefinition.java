@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.*;
 /* The minecraft biome behavior specification. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record BiomesDefinition(
-    @JsonProperty("format_version") FormatVersion formatVersion,
+    @JsonProperty("format_version") String formatVersion,
     @JsonProperty("minecraft:biome") BiomeDefinition minecraft_biome
 ) {
 }

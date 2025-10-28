@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 /* This allows the mob to roll forward. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Roll(
-    @JsonProperty("priority") @Nullable Priority priority,
+    @JsonProperty("priority") @Nullable Integer priority,
     /* The probability that the mob will use the goal. */
     @JsonProperty("probability") @Nullable Double probability
 ) {
