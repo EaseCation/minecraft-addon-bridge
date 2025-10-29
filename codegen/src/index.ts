@@ -81,6 +81,11 @@ async function main(options: GenerateOptions) {
         module,
       };
       typeRegistry.register(typeInfo);
+
+      // 注册外部文件引用：将 schema 文件路径映射到生成的 Java 类名
+      // 这样当其他 schema 引用这个文件时（如 ../types/trigger.json），可以解析到 Trigger 类
+      const absoluteSchemaPath = path.resolve(schemaDir, filePath);
+      typeRegistry.registerExternalFileRef(absoluteSchemaPath, typeInfo.javaClassName);
     }
   }
 

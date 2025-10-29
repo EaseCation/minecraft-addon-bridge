@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.IOException;
+import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = BiColor.Deserializer.class)
@@ -23,6 +24,7 @@ public sealed interface BiColor {
     }
     @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
     record BiColor_Variant1(
+        List<Integer> value
     ) implements BiColor {
     }
 

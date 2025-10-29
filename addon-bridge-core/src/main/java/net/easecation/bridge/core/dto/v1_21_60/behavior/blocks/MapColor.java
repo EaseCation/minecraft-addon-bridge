@@ -1,13 +1,14 @@
 package net.easecation.bridge.core.dto.v1_21_60.behavior.blocks;
 
 import com.fasterxml.jackson.annotation.*;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /* Sets the color of the block when rendered to a map. The color is represented as a hex value in the format "#RRGGBB". May also be expressed as an array of [R, G, B] from 0 to 255. If this component is omitted, the block will not show up on the map. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
 public sealed interface MapColor {
-    @JsonIgnoreProperties(ignoreUnknown = true) 
+    @JsonIgnoreProperties(ignoreUnknown = true) @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION) 
     record MapColor_Variant0(
     ) implements MapColor {
     }

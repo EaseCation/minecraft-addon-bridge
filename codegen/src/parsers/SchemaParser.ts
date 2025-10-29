@@ -30,14 +30,20 @@ export class SchemaParser {
   parse(schema: JSONSchema7, context: ParserContext): ParsedType[] {
     const results: ParsedType[] = [];
 
+    // 将 rootSchema 添加到 context，用于解析内部引用
+    const enhancedContext: ParserContext = {
+      ...context,
+      rootSchema: schema,
+    };
+
     // 提取文件名作为主类名和前缀
-    const fileName = path.basename(context.filePath);
+    const fileName = path.basename(enhancedContext.filePath);
     const mainClassName = fileNameToClassName(fileName);
     // 提取模块名作为前缀（如 blocks, items, entities）
-    const modulePrefix = toPascalCase(context.module || '');
+    const modulePrefix = toPascalCase(enhancedContext.module || '');
 
     // 解析主定义
-    const mainType = this.parseSchema(schema, mainClassName, context);
+    const mainType = this.parseSchema(schema, mainClassName, enhancedContext);
     if (mainType) {
       results.push(mainType);
     }
@@ -51,9 +57,9 @@ export class SchemaParser {
         const isPrimitiveType = this.isPurePrimitiveType(def);
         if (isPrimitiveType) {
           // 直接映射到 Java 基本类型，不生成类
-          const javaType = this.typeResolver.resolveType(def, { filePath: context.filePath });
+          const javaType = this.typeResolver.resolveType(def, { filePath: enhancedContext.filePath });
           this.typeRegistry.registerDefinitionRef(
-            context.filePath,
+            enhancedContext.filePath,
             defName,
             javaType
           );
@@ -72,8 +78,8 @@ export class SchemaParser {
           def,
           prefixedClassName,
           {
-            ...context,
-            currentPath: [...(context.currentPath || []), 'definitions', defName],
+            ...enhancedContext,
+            currentPath: [...(enhancedContext.currentPath || []), 'definitions', defName],
           }
         );
         if (defType) {
@@ -114,8 +120,8 @@ export class SchemaParser {
                   addlProps,
                   valueTypeName,
                   {
-                    ...context,
-                    currentPath: [...(context.currentPath || []), 'definitions', defName, 'value']
+                    ...enhancedContext,
+                    currentPath: [...(enhancedContext.currentPath || []), 'definitions', defName, 'value']
                   }
                 );
 
@@ -128,22 +134,22 @@ export class SchemaParser {
                 }
               } else {
                 // 简单类型，使用 TypeResolver 解析
-                valueType = this.typeResolver.resolveAdditionalPropertiesType(def, { filePath: context.filePath });
+                valueType = this.typeResolver.resolveAdditionalPropertiesType(def, { filePath: enhancedContext.filePath });
               }
             } else {
               // additionalProperties === true 或简单类型
-              valueType = this.typeResolver.resolveAdditionalPropertiesType(def, { filePath: context.filePath });
+              valueType = this.typeResolver.resolveAdditionalPropertiesType(def, { filePath: enhancedContext.filePath });
             }
 
             this.typeRegistry.registerDefinitionRef(
-              context.filePath,
+              enhancedContext.filePath,
               defName,
               `Map<String, ${valueType}>`
             );
           } else {
             // 空对象，注册映射到 EmptyObject
             this.typeRegistry.registerDefinitionRef(
-              context.filePath,
+              enhancedContext.filePath,
               defName,
               'net.easecation.bridge.core.dto.EmptyObject'
             );
@@ -317,6 +323,52 @@ export class SchemaParser {
   }
 
   /**
+   * 从 rootSchema 的 definitions 中解析 $ref
+   * @param ref - 引用路径（如 "#/definitions/enum"）
+   * @param context - 解析上下文
+   * @param visited - 已访问的引用集合（防止循环引用）
+   * @returns 解析后的 schema，如果无法解析则返回 null
+   */
+  private resolveSchemaRef(
+    ref: string,
+    context: ParserContext,
+    visited: Set<string> = new Set()
+  ): JSONSchema7 | null {
+    // 只处理内部引用 #/definitions/X
+    if (!ref.startsWith('#/definitions/')) {
+      return null;
+    }
+
+    // 防止循环引用
+    if (visited.has(ref)) {
+      console.warn(`检测到循环引用: ${ref} 在 ${context.filePath}`);
+      return null;
+    }
+    visited.add(ref);
+
+    const defName = ref.split('/').pop();
+    if (!defName) return null;
+
+    // 从 rootSchema 的 definitions 中提取
+    const rootSchema = context.rootSchema;
+    if (!rootSchema || !rootSchema.definitions || !rootSchema.definitions[defName]) {
+      return null;
+    }
+
+    let resolvedSchema = rootSchema.definitions[defName] as JSONSchema7;
+
+    // 如果解析后的 schema 本身也是纯 $ref，递归解析
+    if (resolvedSchema.$ref && Object.keys(resolvedSchema).length === 1) {
+      const nestedResolved = this.resolveSchemaRef(resolvedSchema.$ref, context, visited);
+      if (nestedResolved) {
+        resolvedSchema = nestedResolved;
+      }
+    }
+
+    return resolvedSchema;
+  }
+
+  /**
    * 解析 sealed interface 的 variant
    * 与 parseSchema 的区别：对于纯基本类型，强制生成 wrapper 类
    */
@@ -327,6 +379,20 @@ export class SchemaParser {
   ): ParsedType | null {
     if (!schema || typeof schema !== 'object') {
       return null;
+    }
+
+    // 处理纯 $ref 的 variant
+    // 当 variant 只是一个引用（如 { "$ref": "#/definitions/enum" }）时，
+    // 需要从 definitions 中提取实际内容
+    if (schema.$ref && Object.keys(schema).length === 1) {
+      const resolvedSchema = this.resolveSchemaRef(schema.$ref, context);
+      if (resolvedSchema) {
+        // 使用解引用后的 schema 继续解析
+        schema = resolvedSchema;
+      } else {
+        console.warn(`无法解析引用: ${schema.$ref} 在 ${context.filePath}`);
+        // 继续使用原 schema，可能会生成空 record
+      }
     }
 
     // 确定 Java 类型种类
@@ -399,6 +465,19 @@ export class SchemaParser {
         type: javaType,
         required: true,
         description: mergedSchema.description,
+        annotations: []
+      }];
+    }
+
+    // 对于 array 类型的 variant，生成 List wrapper 类
+    if (properties.length === 0 && mergedSchema.type === 'array') {
+      const javaType = this.typeResolver.resolveType(mergedSchema, { filePath: context.filePath, isRequired: false });
+      properties = [{
+        name: 'value',
+        javaName: 'value',
+        type: javaType,
+        required: true,
+        description: mergedSchema.description || '',
         annotations: []
       }];
     }
@@ -579,7 +658,8 @@ export class SchemaParser {
       && schema.properties
       && Object.keys(schema.properties).length > 0
       && !schema.$ref
-      && !schema.additionalProperties  // 避免动态属性对象
+      // additionalProperties: false 是可以的，只排除 true 或有定义的对象
+      && !(schema.additionalProperties === true || (typeof schema.additionalProperties === 'object' && schema.additionalProperties !== null))
       && !schema.patternProperties;    // 避免模式属性对象
 
     if (isInlineObject) {

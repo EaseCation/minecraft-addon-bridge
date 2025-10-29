@@ -14,6 +14,7 @@ import java.io.IOException;
 public sealed interface Dcb {
     @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
     record Dcb_Variant0(
+        VectorOf2Items value
     ) implements Dcb {
     }
     @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 

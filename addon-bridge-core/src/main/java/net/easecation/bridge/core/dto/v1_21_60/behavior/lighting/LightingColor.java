@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.IOException;
+import java.util.List;
 
 /* The color of the light emitted by the block, in RGB format or hex format. */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -24,6 +25,7 @@ public sealed interface LightingColor {
     }
     @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
     record LightingColor_Variant1(
+        List<Integer> value
     ) implements LightingColor {
     }
 

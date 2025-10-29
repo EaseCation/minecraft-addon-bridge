@@ -19,6 +19,10 @@ export class TypeRegistry {
   // key: "schemaFilePath#/definitions/X", value: "ClassName"
   private refToClassName: Map<string, string> = new Map();
 
+  // 外部文件路径到类名的映射（用于解析 ../types/trigger.json 形式的引用）
+  // key: "normalized file path", value: "ClassName"
+  private filePathToClassName: Map<string, string> = new Map();
+
   /**
    * 注册一个类型
    */
@@ -141,6 +145,7 @@ export class TypeRegistry {
     this.typesByPackage.clear();
     this.typesByModule.clear();
     this.refToClassName.clear();
+    this.filePathToClassName.clear();
   }
 
   /**
@@ -155,19 +160,72 @@ export class TypeRegistry {
   }
 
   /**
+   * 注册外部文件引用到类名的映射
+   * @param filePath - Schema 文件路径（规范化后的相对路径）
+   * @param className - Java 类名
+   */
+  registerExternalFileRef(filePath: string, className: string): void {
+    const normalizedPath = this.normalizeFilePath(filePath);
+    this.filePathToClassName.set(normalizedPath, className);
+  }
+
+  /**
    * 解析 $ref 引用获取类名
    * @param schemaPath - 当前 Schema 文件路径
-   * @param ref - $ref 值（如 "#/definitions/C"）
+   * @param ref - $ref 值（如 "#/definitions/C" 或 "../types/trigger.json"）
    * @returns 对应的 Java 类名，如果找不到返回 undefined
    */
   resolveDefinitionRef(schemaPath: string, ref: string): string | undefined {
-    // 只处理内部引用（#/definitions/...）
-    if (!ref.startsWith('#/definitions/')) {
-      return undefined;
+    // 处理内部引用（#/definitions/...）
+    if (ref.startsWith('#/definitions/')) {
+      const key = `${schemaPath}${ref}`;
+      return this.refToClassName.get(key);
     }
 
-    const key = `${schemaPath}${ref}`;
-    return this.refToClassName.get(key);
+    // 处理外部文件引用（相对路径）
+    if (!ref.startsWith('#')) {
+      // 解析相对路径
+      const path = require('path');
+      const schemaDir = path.dirname(schemaPath);
+      const absoluteRefPath = path.resolve(schemaDir, ref);
+      const normalizedPath = this.normalizeFilePath(absoluteRefPath);
+
+      // 先尝试精确匹配
+      let className = this.filePathToClassName.get(normalizedPath);
+      if (className) {
+        return className;
+      }
+
+      // 尝试去掉 .json 扩展名匹配
+      const withoutExt = normalizedPath.replace(/\.json$/, '');
+      className = this.filePathToClassName.get(withoutExt);
+      if (className) {
+        return className;
+      }
+
+      // 尝试只用文件名匹配（不含路径）
+      const fileName = path.basename(normalizedPath, '.json');
+      for (const [registeredPath, registeredClass] of this.filePathToClassName.entries()) {
+        const registeredFileName = path.basename(registeredPath, '.json');
+        if (registeredFileName === fileName) {
+          return registeredClass;
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * 规范化文件路径（转换为小写，统一分隔符）
+   */
+  private normalizeFilePath(filePath: string): string {
+    const path = require('path');
+    return filePath
+      .split(path.sep)
+      .join('/')
+      .toLowerCase()
+      .replace(/\.json$/, ''); // 去掉扩展名以便更灵活地匹配
   }
 
   /**

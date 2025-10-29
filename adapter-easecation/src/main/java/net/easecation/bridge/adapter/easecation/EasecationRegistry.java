@@ -281,17 +281,31 @@ public class EasecationRegistry implements AddonRegistry {
             }
 
             // Properties/States - convert states to properties
-            // Note: Using blockDef.states() instead of description.states() because the DTO States record is empty
-            if (blockDef.states() != null && !blockDef.states().isEmpty()) {
-                log.trace("[EaseCation]       - Adding states/properties (" + blockDef.states().size() + " states)");
+            // Use description.states() which contains the structured StatesValue from JSON Schema
+            var description = blockDef.description();
+            if (description != null && description.states() != null && !description.states().isEmpty()) {
+                log.trace("[EaseCation]       - Adding states/properties (" + description.states().size() + " states)");
                 try {
-                    ListTag<CompoundTag> properties = BlockStatesNBT.toPropertiesNBT(blockDef.states());
+                    ListTag<CompoundTag> properties = BlockStatesNBT.toPropertiesNBT(description.states());
                     if (!properties.isEmpty()) {
                         nbt.putList("properties", properties);
                         log.trace("[EaseCation]         Converted to " + properties.size() + " properties");
                     }
                 } catch (Exception e) {
                     log.warning("[EaseCation]       - Failed to convert states: " + e.getMessage());
+                    throw new RuntimeException("Failed to convert block states for " + blockDef.id(), e);
+                }
+            } else if (blockDef.states() != null && !blockDef.states().isEmpty()) {
+                // Fallback to legacy states (Map<String, Object>) for backward compatibility
+                log.trace("[EaseCation]       - Adding legacy states/properties (" + blockDef.states().size() + " states)");
+                try {
+                    ListTag<CompoundTag> properties = BlockStatesNBT.toPropertiesNBTLegacy(blockDef.states());
+                    if (!properties.isEmpty()) {
+                        nbt.putList("properties", properties);
+                        log.trace("[EaseCation]         Converted to " + properties.size() + " properties");
+                    }
+                } catch (Exception e) {
+                    log.warning("[EaseCation]       - Failed to convert legacy states: " + e.getMessage());
                     throw new RuntimeException("Failed to convert block states for " + blockDef.id(), e);
                 }
             }

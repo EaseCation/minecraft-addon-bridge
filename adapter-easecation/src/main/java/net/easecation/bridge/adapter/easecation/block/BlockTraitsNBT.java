@@ -40,9 +40,11 @@ public class BlockTraitsNBT {
         }
 
         // Connection Trait (for fence-like blocks)
-        if (traits.minecraft_connection() != null) {
-            listTag.add(convertConnection(traits.minecraft_connection()));
-        }
+        // Note: minecraft:connection trait not yet in DTO schema
+        // If needed, uncomment and implement when added to schema:
+        // if (traits.minecraft_connection() != null) {
+        //     listTag.add(convertConnection(traits.minecraft_connection()));
+        // }
 
         return listTag;
     }
@@ -133,7 +135,11 @@ public class BlockTraitsNBT {
      *
      * @param connection The connection configuration
      * @return CompoundTag for connection trait
+     *
+     * Note: Currently commented out because minecraft:connection is not in the DTO schema.
+     * Uncomment when Connection class is added to the DTO.
      */
+    /*
     private static CompoundTag convertConnection(Connection connection) {
         CompoundTag tag = new CompoundTag();
 
@@ -151,4 +157,5 @@ public class BlockTraitsNBT {
 
         return tag;
     }
+    */
 }

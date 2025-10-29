@@ -78,6 +78,7 @@ export interface ParserContext {
   version: string;
   currentPath?: string[];
   typeRegistry?: any;  // TypeRegistry 实例
+  rootSchema?: JSONSchema7;  // 根 Schema（用于解析内部引用）
 }
 
 /**

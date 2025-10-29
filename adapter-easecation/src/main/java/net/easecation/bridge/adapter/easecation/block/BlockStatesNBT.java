@@ -4,7 +4,9 @@ import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.nbt.tag.IntTag;
 import cn.nukkit.nbt.tag.ListTag;
 import cn.nukkit.nbt.tag.StringTag;
+import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.StatesValue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +25,86 @@ import java.util.Map;
 public class BlockStatesNBT {
 
     /**
+     * Convert states map (with StatesValue DTO) to NBT properties ListTag for block registration.
+     * This is the new method that handles the structured StatesValue type from JSON Schema.
+     *
+     * @param statesMap Map of state name to StatesValue (from BlockDefinitions.Description.states())
+     * @return ListTag containing all state property NBT data
+     */
+    public static ListTag<CompoundTag> toPropertiesNBT(Map<String, StatesValue> statesMap) {
+        ListTag<CompoundTag> properties = new ListTag<>();
+
+        if (statesMap == null || statesMap.isEmpty()) {
+            return properties;
+        }
+
+        for (Map.Entry<String, StatesValue> entry : statesMap.entrySet()) {
+            String stateName = entry.getKey();
+            StatesValue stateValue = entry.getValue();
+
+            try {
+                CompoundTag property = convertStatesValueToProperty(stateName, stateValue);
+                if (property != null) {
+                    properties.add(property);
+                }
+            } catch (Exception e) {
+                throw new IllegalArgumentException(
+                    "Failed to convert state '" + stateName + "': " + e.getMessage(), e);
+            }
+        }
+
+        return properties;
+    }
+
+    /**
+     * Convert a StatesValue to property NBT.
+     * Handles both enum list format (Variant0) and integer range format (Variant1).
+     *
+     * @param name State name (e.g., "my:color")
+     * @param statesValue StatesValue from DTO (sealed interface with two variants)
+     * @return CompoundTag for the property, or null if invalid
+     */
+    private static CompoundTag convertStatesValueToProperty(String name, StatesValue statesValue) {
+        if (statesValue instanceof StatesValue.StatesValue_Variant0 variant0) {
+            // Enum list format: ["red", "green", "blue"] or [0, 1, 2, 3]
+            List<Object> values = variant0.value();
+            if (values == null || values.isEmpty()) {
+                throw new IllegalArgumentException("State '" + name + "' has empty value list");
+            }
+            return convertStateToProperty(name, values);
+
+        } else if (statesValue instanceof StatesValue.StatesValue_Variant1 variant1) {
+            // Integer range format: {min: 0, max: 15}
+            StatesValue.StatesValue_Variant1.Values rangeValues = variant1.values();
+            if (rangeValues == null) {
+                throw new IllegalArgumentException("State '" + name + "' has null range values");
+            }
+
+            Integer min = rangeValues.min();
+            Integer max = rangeValues.max();
+
+            if (min == null || max == null) {
+                throw new IllegalArgumentException(
+                    "State '" + name + "' range must have both min and max values");
+            }
+
+            // Convert range to list of integers
+            List<Object> values = new ArrayList<>();
+            for (int i = min; i <= max; i++) {
+                values.add(i);
+            }
+
+            return convertStateToProperty(name, values);
+
+        } else {
+            throw new IllegalArgumentException(
+                "Unknown StatesValue variant for '" + name + "': " + statesValue.getClass());
+        }
+    }
+
+    /**
      * Convert states map to NBT properties ListTag for block registration.
+     * This is the legacy method that accepts raw Map<String, Object>.
      *
      * Format in JSON:
      * {
@@ -34,10 +115,12 @@ public class BlockStatesNBT {
      *   }
      * }
      *
-     * @param states Map of state name to state values (can be List or Map for range)
+     * @param states Map of state name to state values (must be List)
      * @return ListTag containing all state property NBT data
+     * @deprecated Use {@link #toPropertiesNBT(Map)} with StatesValue type instead
      */
-    public static ListTag<CompoundTag> toPropertiesNBT(Map<String, Object> states) {
+    @Deprecated
+    public static ListTag<CompoundTag> toPropertiesNBTLegacy(Map<String, Object> states) {
         ListTag<CompoundTag> properties = new ListTag<>();
 
         if (states == null || states.isEmpty()) {
@@ -71,7 +154,6 @@ public class BlockStatesNBT {
      */
     private static CompoundTag convertStateToProperty(String name, Object value) {
         if (!(value instanceof List<?> values)) {
-            // TODO: Support Map format for integer range: {min: 0, max: 15}
             throw new IllegalArgumentException("State value must be a List, got: " + value.getClass());
         }
 
@@ -195,12 +277,4 @@ public class BlockStatesNBT {
 
         return enumList;
     }
-
-    // TODO: Support integer range format from JSON
-    // Example:
-    // "my:level": {
-    //   "values": { "min": 0, "max": 15 }
-    // }
-    //
-    // This would require checking if value is Map and extracting min/max.
 }

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.IOException;
+import java.util.List;
 
 /* This component allows an entity to not spawn on a particular block. It includes a string or array of strings for the block they may not spawn on. */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -24,6 +25,7 @@ public sealed interface SpawnsOnBlockPreventedFilter {
     }
     @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
     record SpawnsOnBlockPreventedFilter_Variant1(
+        List<String> value
     ) implements SpawnsOnBlockPreventedFilter {
     }
 

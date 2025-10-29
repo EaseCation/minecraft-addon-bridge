@@ -7,7 +7,6 @@ import javax.annotation.Nullable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record Traits(
     @JsonProperty("minecraft:placement_direction") @Nullable PlacementDirection minecraft_placementDirection,
-    @JsonProperty("minecraft:placement_position") @Nullable PlacementPosition minecraft_placementPosition,
-    @JsonProperty("minecraft:connection") @Nullable Connection minecraft_connection
+    @JsonProperty("minecraft:placement_position") @Nullable PlacementPosition minecraft_placementPosition
 ) {
 }

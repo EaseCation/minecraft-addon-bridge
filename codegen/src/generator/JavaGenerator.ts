@@ -168,6 +168,7 @@ export class JavaGenerator {
           properties,
           jsonCreatorMethod,
           isValueWrapper: variant.isValueWrapper,  // 传递给模板
+          nestedTypes: this.prepareNestedTypes(variant.nestedTypes),  // 包含嵌套类型
         };
       }) || [],
     };

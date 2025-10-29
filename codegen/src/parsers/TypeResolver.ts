@@ -18,7 +18,7 @@ export class TypeResolver {
    * 解析 JSON Schema 类型到 Java 类型字符串
    */
   resolveType(schema: JSONSchema7, context?: { isRequired?: boolean; filePath?: string }): string {
-    // 优先处理 $ref - 使用 bundle() 后会保留内部引用
+    // 优先处理 $ref - bundle() 后所有引用都是内部引用 (#/definitions/X)
     if (schema.$ref && context?.filePath) {
       // 尝试从 TypeRegistry 解析引用
       const className = this.typeRegistry.resolveDefinitionRef(context.filePath, schema.$ref);
@@ -32,9 +32,16 @@ export class TypeResolver {
     }
 
     // 处理 oneOf/anyOf（多态类型）
+    // 但需要排除 type: array + oneOf 只约束 items 的情况
     if (schema.oneOf || schema.anyOf) {
-      // 这些需要生成 sealed interface，此处返回占位符
-      return 'Object';  // 实际类型将由 SchemaParser 生成
+      // 检查是否是类型参数化的 array（oneOf 只约束 items）
+      if (schema.type === 'array' && this.isItemsOnlyOneOf(schema)) {
+        // 继续下面的 array 处理逻辑
+        // 不在这里返回
+      } else {
+        // 这些需要生成 sealed interface，此处返回占位符
+        return 'Object';  // 实际类型将由 SchemaParser 生成
+      }
     }
 
     // 处理 allOf（通常是属性合并或继承）
@@ -235,7 +242,24 @@ export class TypeResolver {
     }
 
     // oneOf/anyOf -> sealed interface
+    // 但需要排除 type: array + oneOf 约束 items 的情况
     if (schema.oneOf || schema.anyOf) {
+      // 检查是否是 type: array + oneOf 只约束 items
+      if (schema.type === 'array' && schema.oneOf) {
+        // 检查 oneOf 中的所有分支是否都只约束 items
+        const allConstrainItems = schema.oneOf.every((variant: any) => {
+          if (typeof variant !== 'object') return false;
+          // 如果 variant 只有 items 属性（可能还有 description/title），则认为是约束 items
+          const keys = Object.keys(variant).filter(k => k !== 'description' && k !== 'title' && k !== '$comment');
+          return keys.length === 1 && keys[0] === 'items';
+        });
+
+        if (allConstrainItems) {
+          // 这是类型参数化的 array，不是 sealed interface
+          return JavaTypeKind.RECORD;
+        }
+      }
+
       return JavaTypeKind.SEALED_INTERFACE;
     }
 
@@ -262,5 +286,22 @@ export class TypeResolver {
       return schema.type.includes('null');
     }
     return false;
+  }
+
+  /**
+   * 检查 schema 是否是"类型参数化的 array"
+   * 即：type: array + oneOf/anyOf 仅用于约束 items 的类型
+   */
+  private isItemsOnlyOneOf(schema: JSONSchema7): boolean {
+    const variants = schema.oneOf || schema.anyOf || [];
+    return variants.every((variant: any) => {
+      if (typeof variant !== 'object') return false;
+      // 过滤掉元数据字段
+      const keys = Object.keys(variant).filter(k =>
+        k !== 'description' && k !== 'title' && k !== '$comment'
+      );
+      // 如果只有 items 字段，说明只是约束数组元素类型
+      return keys.length === 1 && keys[0] === 'items';
+    });
   }
 }

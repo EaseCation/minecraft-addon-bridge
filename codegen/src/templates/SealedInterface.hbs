@@ -23,6 +23,11 @@ public sealed interface {{{interfaceName}}} {
         {{#if jsonCreatorMethod}}
         {{{jsonCreatorMethod}}}
         {{/if}}
+        {{#if nestedTypes}}
+        {{#each nestedTypes}}
+        {{> NestedType this}}
+        {{/each}}
+        {{/if}}
     }
     {{/each}}
     {{#if needsCustomDeserializer}}

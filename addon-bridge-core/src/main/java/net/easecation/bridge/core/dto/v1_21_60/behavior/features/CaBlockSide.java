@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.IOException;
+import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = CaBlockSide.Deserializer.class)
@@ -25,6 +26,7 @@ public sealed interface CaBlockSide {
     }
     @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
     record CaBlockSide_Variant1(
+        List<BlockReference> value
     ) implements CaBlockSide {
     }
 

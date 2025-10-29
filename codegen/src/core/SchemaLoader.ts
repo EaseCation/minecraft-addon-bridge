@@ -14,8 +14,9 @@ export class SchemaLoader {
 
   /**
    * 加载并解引用单个 Schema 文件
+   * 混合策略：保留外部引用，展开内部引用
    * @param schemaPath - Schema 文件的绝对路径或相对路径
-   * @returns 完全解引用的 Schema 对象
+   * @returns 处理后的 Schema 对象
    */
   async loadSchema(schemaPath: string): Promise<JSONSchema7> {
     // 检查缓存
@@ -25,17 +26,105 @@ export class SchemaLoader {
     }
 
     try {
-      // 使用 bundle() 保留内部引用，只解引用外部文件
-      // 这样可以保留 #/definitions/X 形式的引用，便于类型推断
+      // 使用 bundle() 保留外部文件引用，但合并所有文件到 definitions
       const schema = await $RefParser.bundle(absolutePath) as JSONSchema7;
 
-      // 缓存结果
-      this.schemaCache.set(absolutePath, schema);
+      // 不展开内部引用！让 TypeResolver 通过 TypeRegistry 来解析
+      // bundle() 已经将所有引用（包括外部文件）都合并到 definitions 中
+      // 并且都是内部引用 (#/definitions/X) 的形式
+      // TypeResolver 会通过 TypeRegistry.resolveDefinitionRef() 来解析这些引用
+      const processedSchema = schema; // 直接使用 bundle 后的 schema
 
-      return schema;
+      // 缓存结果
+      this.schemaCache.set(absolutePath, processedSchema);
+
+      return processedSchema;
     } catch (error) {
       throw new Error(`无法加载 Schema 文件 ${schemaPath}: ${error}`);
     }
+  }
+
+  /**
+   * 递归解析内部引用 (#/definitions/X)，保留外部引用
+   * @param obj - 要处理的对象
+   * @param definitions - definitions 映射表
+   * @param visited - 已访问的引用，防止循环引用
+   * @returns 处理后的对象
+   */
+  private resolveInternalRefs(
+    obj: any,
+    definitions?: Record<string, any>,
+    visited: Set<string> = new Set()
+  ): any {
+    // 提取 definitions（第一次调用时）
+    if (definitions === undefined && obj && typeof obj === 'object' && obj.definitions) {
+      definitions = obj.definitions;
+      // 先递归处理 definitions 本身
+      obj.definitions = this.resolveInternalRefsInObject(obj.definitions, definitions, visited);
+    }
+
+    // 处理根对象
+    return this.resolveInternalRefsInObject(obj, definitions, visited);
+  }
+
+  private resolveInternalRefsInObject(
+    obj: any,
+    definitions?: Record<string, any>,
+    visited: Set<string> = new Set()
+  ): any {
+    if (typeof obj !== 'object' || obj === null) {
+      return obj;
+    }
+
+    // 处理数组
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.resolveInternalRefsInObject(item, definitions, visited));
+    }
+
+    // 处理 $ref
+    if (obj.$ref && typeof obj.$ref === 'string') {
+      // 只解析内部引用 (#/definitions/X 或 #/X)
+      if (obj.$ref.startsWith('#/definitions/') || obj.$ref.startsWith('#/$defs/')) {
+        const refPath = obj.$ref.substring(1); // 移除开头的 #
+        const refKey = obj.$ref;
+
+        // 防止循环引用
+        if (visited.has(refKey)) {
+          console.warn(`检测到循环引用: ${refKey}`);
+          return obj; // 保留原引用
+        }
+
+        visited.add(refKey);
+
+        // 从 definitions 中提取
+        const refName = obj.$ref.split('/').pop();
+        if (definitions && refName && definitions[refName]) {
+          // 递归解析引用的内容
+          const resolved = this.resolveInternalRefsInObject(
+            definitions[refName],
+            definitions,
+            new Set(visited) // 创建新的 visited 副本
+          );
+          visited.delete(refKey);
+          return resolved;
+        }
+
+        visited.delete(refKey);
+      }
+
+      // 外部引用保留不变
+      return obj;
+    }
+
+    // 递归处理对象的所有属性
+    const result: any = {};
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        result[key] = this.resolveInternalRefsInObject(obj[key], definitions, visited);
+      }
+    }
+
+    return result;
   }
 
   /**

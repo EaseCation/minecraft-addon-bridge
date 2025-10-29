@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.io.IOException;
+import java.util.List;
 
 /* Trigger to fire. */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -24,6 +25,7 @@ public sealed interface Trigger {
     }
     @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
     record Trigger_Variant2(
+        List<Trigger> value
     ) implements Trigger {
     }
 

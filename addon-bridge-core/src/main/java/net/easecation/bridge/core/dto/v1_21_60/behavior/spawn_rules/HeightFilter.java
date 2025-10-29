@@ -1,6 +1,7 @@
 package net.easecation.bridge.core.dto.v1_21_60.behavior.spawn_rules;
 
 import com.fasterxml.jackson.annotation.*;
+import java.util.List;
 
 /* This component allows players to determine the herd size of animals. */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.annotation.*;
 public sealed interface HeightFilter {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record HeightFilter_Variant1(
+        List<Herd> value
     ) implements HeightFilter {
     }
 }

@@ -1,6 +1,7 @@
 package net.easecation.bridge.core.dto.v1_21_60.behavior.spawn_rules;
 
 import com.fasterxml.jackson.annotation.*;
+import java.util.List;
 
 /* This component allows the players to specify the permutations of a mob that will spawn. */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.annotation.*;
 public sealed interface PermuteType {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record PermuteType_Variant1(
+        List<PermuteType> value
     ) implements PermuteType {
     }
 }

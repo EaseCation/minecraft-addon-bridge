@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
 public sealed interface UseAnimation {
-    @JsonIgnoreProperties(ignoreUnknown = true) 
+    
     record UseAnimation_Variant0(
     ) implements UseAnimation {
     }
