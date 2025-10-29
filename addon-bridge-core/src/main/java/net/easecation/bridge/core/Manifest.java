@@ -98,5 +98,16 @@ public record Manifest(
         return modules != null && modules.stream()
                 .anyMatch(m -> "resources".equals(m.type()));
     }
+
+    /**
+     * Determines the pack type based on the modules present in the manifest.
+     * Packs containing resource modules are classified as RESOURCE packs.
+     * All other packs (behavior-only or mixed) are classified as BEHAVIOR packs.
+     *
+     * @return PackType.RESOURCE if the pack contains resources, PackType.BEHAVIOR otherwise
+     */
+    public PackType getPackType() {
+        return isResourcePack() ? PackType.RESOURCE : PackType.BEHAVIOR;
+    }
 }
 

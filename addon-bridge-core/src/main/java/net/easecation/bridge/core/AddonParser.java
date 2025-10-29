@@ -23,6 +23,17 @@ import java.util.zip.ZipFile;
  */
 public class AddonParser {
     private static final ObjectMapper MAPPER = createObjectMapper();
+    private final BridgeLogger log;
+
+    public AddonParser(BridgeLogger log) {
+        this.log = log != null ? log : new BridgeLogger() {
+            @Override public void info(String msg) { System.out.println("[INFO] " + msg); }
+            @Override public void warning(String msg) { System.out.println("[WARN] " + msg); }
+            @Override public void error(String msg) { System.err.println("[ERROR] " + msg); }
+            @Override public void debug(String msg) { System.out.println("[DEBUG] " + msg); }
+            @Override public void trace(String msg) { System.out.println("[TRACE] " + msg); }
+        };
+    }
 
     private static ObjectMapper createObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
@@ -31,21 +42,20 @@ public class AddonParser {
     }
 
     public List<AddonPack> scanAndParse(File addonsRoot) throws IOException {
-        System.out.println("[AddonParser] ========================================");
-        System.out.println("[AddonParser] Scanning directory: " + (addonsRoot != null ? addonsRoot.getAbsolutePath() : "null"));
+        log.debug("Scanning directory: " + (addonsRoot != null ? addonsRoot.getAbsolutePath() : "null"));
 
         List<AddonPack> packs = new ArrayList<>();
         if (addonsRoot == null) {
-            System.out.println("[AddonParser] addonsRoot is null, returning empty list");
+            log.debug("addonsRoot is null, returning empty list");
             return packs;
         }
         if (!addonsRoot.isDirectory()) {
-            System.out.println("[AddonParser] addonsRoot is not a directory, returning empty list");
+            log.debug("addonsRoot is not a directory, returning empty list");
             return packs;
         }
 
-        System.out.println("[AddonParser] Directory exists: " + addonsRoot.exists());
-        System.out.println("[AddonParser] Is directory: " + addonsRoot.isDirectory());
+        log.debug("Directory exists: " + addonsRoot.exists());
+        log.debug("Is directory: " + addonsRoot.isDirectory());
 
         // Scan for ZIP files (.zip, .mcpack, .mcaddon)
         List<File> zipFiles = Files.walk(addonsRoot.toPath(), 1)
@@ -58,57 +68,55 @@ public class AddonParser {
                 .sorted(Comparator.comparing(File::getName))
                 .collect(Collectors.toList());
 
-        System.out.println("[AddonParser] Found " + zipFiles.size() + " ZIP/MCPACK/MCADDON files:");
+        log.debug("Found " + zipFiles.size() + " ZIP/MCPACK/MCADDON files");
         for (File zipFile : zipFiles) {
-            System.out.println("[AddonParser]   - " + zipFile.getName());
+            log.debug("  - " + zipFile.getName());
         }
 
         // Parse each ZIP file
         for (File zipFile : zipFiles) {
             try {
-                System.out.println("[AddonParser] Parsing ZIP: " + zipFile.getName());
+                log.debug("Parsing ZIP: " + zipFile.getName());
                 AddonPack pack = parseZipPack(zipFile);
                 boolean isBehavior = pack.manifest().isBehaviorPack();
-                System.out.println("[AddonParser]   Pack name: " + pack.manifest().getName());
-                System.out.println("[AddonParser]   Is behavior pack: " + isBehavior);
-                System.out.println("[AddonParser]   Blocks: " + pack.blocks().size());
-                System.out.println("[AddonParser]   Entities: " + pack.entities().size());
-                System.out.println("[AddonParser]   Items: " + pack.items().size());
+                log.debug("  Pack name: " + pack.manifest().getName());
+                log.debug("  Is behavior pack: " + isBehavior);
+                log.debug("  Blocks: " + pack.blocks().size());
+                log.debug("  Entities: " + pack.entities().size());
+                log.debug("  Items: " + pack.items().size());
                 packs.add(pack);
             } catch (Exception e) {
-                System.err.println("[AddonParser] Failed to parse pack: " + zipFile.getName());
-                System.err.println("[AddonParser]   Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                log.error("Failed to parse pack: " + zipFile.getName());
+                log.error("  Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
                 e.printStackTrace();
                 // Continue with next pack
             }
         }
 
         // Also scan for directory-based packs
-        System.out.println("[AddonParser] Scanning for directory-based packs...");
+        log.debug("Scanning for directory-based packs...");
         final int[] dirPackCount = {0};
         Files.walk(addonsRoot.toPath())
                 .filter(p -> p.getFileName().toString().equalsIgnoreCase("manifest.json"))
                 .filter(p -> !isInsideZip(p))
                 .forEach(manifestPath -> {
                     dirPackCount[0]++;
-                    System.out.println("[AddonParser] Found directory pack manifest: " + manifestPath);
+                    log.debug("Found directory pack manifest: " + manifestPath);
                     try {
                         AddonPack pack = parseDirectoryPack(manifestPath.getParent());
-                        System.out.println("[AddonParser]   Pack name: " + pack.manifest().getName());
-                        System.out.println("[AddonParser]   Is behavior pack: " + pack.manifest().isBehaviorPack());
-                        System.out.println("[AddonParser]   Blocks: " + pack.blocks().size());
+                        log.debug("  Pack name: " + pack.manifest().getName());
+                        log.debug("  Is behavior pack: " + pack.manifest().isBehaviorPack());
+                        log.debug("  Blocks: " + pack.blocks().size());
                         packs.add(pack);
                     } catch (IOException e) {
-                        System.err.println("[AddonParser] Failed to parse directory pack: " + manifestPath.getParent());
-                        System.err.println("[AddonParser]   Error: " + e.getMessage());
+                        log.error("Failed to parse directory pack: " + manifestPath.getParent());
+                        log.error("  Error: " + e.getMessage());
                         e.printStackTrace();
                     }
                 });
-        System.out.println("[AddonParser] Found " + dirPackCount[0] + " directory pack(s)");
+        log.debug("Found " + dirPackCount[0] + " directory pack(s)");
 
-        System.out.println("[AddonParser] ========================================");
-        System.out.println("[AddonParser] Total packs loaded: " + packs.size());
-        System.out.println("[AddonParser] ========================================");
+        log.info("Total packs loaded: " + packs.size());
         return packs;
     }
 
@@ -129,9 +137,13 @@ public class AddonParser {
                 manifest = MAPPER.readValue(is, Manifest.class);
             }
 
+            // For ZIP/MCPACK files, we don't need to package them again
+            Path originalPath = zipFile.toPath();
+            boolean needsPackaging = false;
+
             // Only parse behavior packs (data modules)
             if (!manifest.isBehaviorPack()) {
-                return new AddonPack(manifest, List.of(), List.of(), List.of(), List.of(), Map.of());
+                return new AddonPack(manifest, List.of(), List.of(), List.of(), List.of(), originalPath, needsPackaging);
             }
 
             // Parse blocks
@@ -151,7 +163,7 @@ public class AddonParser {
                             blocks.add(BlockDef.fromDTO(blockDef));
                         }
                     } catch (Exception e) {
-                        System.err.println("Failed to parse block: " + name + " - " + e.getMessage());
+                        log.debug("Failed to parse block: " + name + " - " + e.getMessage());
                     }
                 }
             }
@@ -173,7 +185,7 @@ public class AddonParser {
                             entities.add(EntityDef.fromDTO(entityDto));
                         }
                     } catch (Exception e) {
-                        System.err.println("Failed to parse entity: " + name + " - " + e.getMessage());
+                        log.debug("Failed to parse entity: " + name + " - " + e.getMessage());
                     }
                 }
             }
@@ -182,10 +194,7 @@ public class AddonParser {
             List<ItemDef> items = List.of();
             List<RecipeDef> recipes = List.of();
 
-            // Resource files not loaded yet
-            Map<String, byte[]> resourceFiles = Map.of();
-
-            return new AddonPack(manifest, items, blocks, entities, recipes, resourceFiles);
+            return new AddonPack(manifest, items, blocks, entities, recipes, originalPath, needsPackaging);
         }
     }
 
@@ -194,9 +203,16 @@ public class AddonParser {
         Path manifestPath = packRoot.resolve("manifest.json");
         Manifest manifest = MAPPER.readValue(manifestPath.toFile(), Manifest.class);
 
+        // Directory packs need to be packaged
+        Path originalPath = packRoot;
+        boolean needsPackaging = true;
+
+        // Resource files are NOT loaded into memory
+        // They will be streamed directly during packaging to avoid memory overhead
+
         // Only parse behavior packs
         if (!manifest.isBehaviorPack()) {
-            return new AddonPack(manifest, List.of(), List.of(), List.of(), List.of(), Map.of());
+            return new AddonPack(manifest, List.of(), List.of(), List.of(), List.of(), originalPath, needsPackaging);
         }
 
         // Parse blocks
@@ -215,7 +231,7 @@ public class AddonParser {
                                 blocks.add(BlockDef.fromDTO(blockDef));
                             }
                         } catch (Exception e) {
-                            System.err.println("Failed to parse block: " + blockFile + " - " + e.getMessage());
+                            log.debug("Failed to parse block: " + blockFile + " - " + e.getMessage());
                         }
                     });
         }
@@ -236,7 +252,7 @@ public class AddonParser {
                                 entities.add(EntityDef.fromDTO(entityDto));
                             }
                         } catch (Exception e) {
-                            System.err.println("Failed to parse entity: " + entityFile + " - " + e.getMessage());
+                            log.debug("Failed to parse entity: " + entityFile + " - " + e.getMessage());
                         }
                     });
         }
@@ -245,10 +261,7 @@ public class AddonParser {
         List<ItemDef> items = List.of();
         List<RecipeDef> recipes = List.of();
 
-        // Resource files not loaded yet
-        Map<String, byte[]> resourceFiles = Map.of();
-
-        return new AddonPack(manifest, items, blocks, entities, recipes, resourceFiles);
+        return new AddonPack(manifest, items, blocks, entities, recipes, originalPath, needsPackaging);
     }
 }
 

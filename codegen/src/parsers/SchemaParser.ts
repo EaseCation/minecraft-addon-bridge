@@ -88,12 +88,66 @@ export class SchemaParser {
             );
           }
         } else {
-          // defType 为 null 表示这是一个空对象，注册映射到 EmptyObject
-          this.typeRegistry.registerDefinitionRef(
-            context.filePath,
-            defName,
-            'net.easecation.bridge.core.dto.EmptyObject'
-          );
+          // defType 为 null，检查是否是 Map 类型（有 additionalProperties/patternProperties）
+          const hasAdditionalProps = def.additionalProperties === true ||
+                                     (typeof def.additionalProperties === 'object' &&
+                                      Object.keys(def.additionalProperties).length > 0);
+          const hasPatternProps = def.patternProperties &&
+                                 Object.keys(def.patternProperties).length > 0;
+
+          if (hasAdditionalProps || hasPatternProps) {
+            // 这是一个 Map 类型，需要为 value 类型生成定义
+            let valueType: string;
+
+            // 检查 additionalProperties 是否包含需要生成类型的复杂结构
+            const addlProps = def.additionalProperties;
+            if (typeof addlProps === 'object' && addlProps !== null) {
+              // 检查是否有 oneOf/anyOf（多态类型）或 properties（对象类型）
+              const needsTypeGeneration = addlProps.oneOf || addlProps.anyOf ||
+                                         (addlProps.properties && Object.keys(addlProps.properties).length > 0);
+
+              if (needsTypeGeneration) {
+                // 为 value 类型生成独立的类型定义
+                // 使用 定义名 + "Value" 作为类型名（例如：MaterialInstances -> MaterialInstancesValue）
+                const valueTypeName = `${prefixedClassName}Value`;
+                const valueTypeDef = this.parseSchema(
+                  addlProps,
+                  valueTypeName,
+                  {
+                    ...context,
+                    currentPath: [...(context.currentPath || []), 'definitions', defName, 'value']
+                  }
+                );
+
+                if (valueTypeDef && valueTypeDef.javaClassName) {
+                  results.push(valueTypeDef);
+                  valueType = valueTypeDef.javaClassName;
+                } else {
+                  // 生成失败，回退到 Object
+                  valueType = 'Object';
+                }
+              } else {
+                // 简单类型，使用 TypeResolver 解析
+                valueType = this.typeResolver.resolveAdditionalPropertiesType(def, { filePath: context.filePath });
+              }
+            } else {
+              // additionalProperties === true 或简单类型
+              valueType = this.typeResolver.resolveAdditionalPropertiesType(def, { filePath: context.filePath });
+            }
+
+            this.typeRegistry.registerDefinitionRef(
+              context.filePath,
+              defName,
+              `Map<String, ${valueType}>`
+            );
+          } else {
+            // 空对象，注册映射到 EmptyObject
+            this.typeRegistry.registerDefinitionRef(
+              context.filePath,
+              defName,
+              'net.easecation.bridge.core.dto.EmptyObject'
+            );
+          }
         }
       }
     }
@@ -327,6 +381,12 @@ export class SchemaParser {
         // 这是一个空对象，不生成类型定义（使用全局 EmptyObject）
         return null;
       }
+
+      // 如果只有 additionalProperties/patternProperties 没有 properties，也不生成类型定义
+      // 这种类型本质上就是 Map，应该在引用处直接使用 Map<String, ValueType>
+      if (hasAdditionalProps || hasPatternProps) {
+        return null;
+      }
     }
 
     // 对于纯基本类型的 variant，强制生成 wrapper 类
@@ -402,6 +462,12 @@ export class SchemaParser {
 
       if (!hasAdditionalProps && !hasPatternProps) {
         // 这是一个空对象，不生成类型定义（使用全局 EmptyObject）
+        return null;
+      }
+
+      // 如果只有 additionalProperties/patternProperties 没有 properties，也不生成类型定义
+      // 这种类型本质上就是 Map，应该在引用处直接使用 Map<String, ValueType>
+      if (hasAdditionalProps || hasPatternProps) {
         return null;
       }
     }

@@ -2,10 +2,13 @@ package net.easecation.bridge.adapter.easecation.block;
 
 import cn.nukkit.block.Block;
 import cn.nukkit.block.CustomBlock;
+import cn.nukkit.block.state.BlockStates;
 import cn.nukkit.math.AxisAlignedBB;
 import cn.nukkit.math.SimpleAxisAlignedBB;
 import net.easecation.bridge.core.BlockDef;
 import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Component;
+import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Geometry;
+import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.CollisionBox;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -64,6 +67,8 @@ public class BlockDataDriven extends CustomBlock {
                     0x000000, // mapColor
                     true, // solid
                     false, // replaceable
+                    null, // geometryIdentifier
+                    true, // unitCube
                     0.0f, // hardness
                     0.0f, // resistance
                     0, // flameOdds
@@ -79,7 +84,18 @@ public class BlockDataDriven extends CustomBlock {
                     traitStates[1], // stateFacingDirection
                     traitStates[2], // stateBlockFace
                     traitStates[3], // stateVerticalHalf
-                    traitStates[4]  // stateCardinalConnections
+                    traitStates[4], // stateCardinalConnections
+                    false, // hasCraftingTable
+                    false, // hasTickComponent
+                    null, // lootTable
+                    false, // hasCustomComponents
+                    false, // waterloggable
+                    true, // breathable
+                    false, // redstoneConductor
+                    0, // redstonePower
+                    false, // requiresCorrectTool
+                    null, // preferredTool
+                    0  // toolTier
             );
             return;
         }
@@ -90,6 +106,8 @@ public class BlockDataDriven extends CustomBlock {
         int mapColor = extractMapColor(components);
         boolean solid = extractSolid(components);
         boolean replaceable = extractReplaceable(components);
+        String geometryIdentifier = extractGeometryIdentifier(components);
+        boolean unitCube = extractUnitCube(components, geometryIdentifier);
         float hardness = extractHardness(components);
         float resistance = extractResistance(components, hardness);
         int flameOdds = extractFlameOdds(components);
@@ -103,6 +121,25 @@ public class BlockDataDriven extends CustomBlock {
         int allowedPlacementFaces = extractAllowedPlacementFaces(components);
         String displayName = extractDisplayName(components, blockDef.id());
 
+        // Extract functional components
+        boolean hasCraftingTable = extractHasCraftingTable(components);
+        boolean hasTickComponent = extractHasTickComponent(components);
+        String lootTable = extractLootTable(components);
+        boolean hasCustomComponents = extractHasCustomComponents(components);
+
+        // Extract liquid and environment properties
+        boolean waterloggable = extractWaterloggable(components);
+        boolean breathable = extractBreathable(components);
+
+        // Extract redstone properties
+        boolean redstoneConductor = extractRedstoneConductor(components);
+        int redstonePower = extractRedstonePower(components);
+
+        // Extract tool properties
+        boolean requiresCorrectTool = extractRequiresCorrectTool(components);
+        String preferredTool = extractPreferredTool(components);
+        int toolTier = extractToolTier(components);
+
         // Extract trait states from description
         boolean[] traitStates = extractTraitStates(blockDef.description() != null ? blockDef.description().traits() : null);
 
@@ -114,6 +151,8 @@ public class BlockDataDriven extends CustomBlock {
                 mapColor, // mapColor
                 solid, // solid
                 replaceable, // replaceable
+                geometryIdentifier, // geometryIdentifier
+                unitCube, // unitCube
                 hardness, // hardness
                 resistance, // resistance
                 flameOdds, // flameOdds
@@ -129,7 +168,18 @@ public class BlockDataDriven extends CustomBlock {
                 traitStates[1], // stateFacingDirection
                 traitStates[2], // stateBlockFace
                 traitStates[3], // stateVerticalHalf
-                traitStates[4]  // stateCardinalConnections
+                traitStates[4], // stateCardinalConnections
+                hasCraftingTable, // hasCraftingTable
+                hasTickComponent, // hasTickComponent
+                lootTable, // lootTable
+                hasCustomComponents, // hasCustomComponents
+                waterloggable, // waterloggable
+                breathable, // breathable
+                redstoneConductor, // redstoneConductor
+                redstonePower, // redstonePower
+                requiresCorrectTool, // requiresCorrectTool
+                preferredTool, // preferredTool
+                toolTier  // toolTier
             );
 
             // Debug: Log successful initialization
@@ -402,10 +452,117 @@ public class BlockDataDriven extends CustomBlock {
             }
         }
 
-        // TODO: Connection trait (not in v1_21_60 schema)
-        // states[4] = traits.minecraft_connection() != null;
+        // Connection trait (for fence-like blocks)
+        if (traits.minecraft_connection() != null) {
+            var enabledStates = traits.minecraft_connection().enabledStates();
+            if (enabledStates != null) {
+                states[4] = enabledStates.contains("minecraft:cardinal_connections");
+            }
+        }
 
         return states;
+    }
+
+    private String extractGeometryIdentifier(Component comp) {
+        if (comp.minecraft_geometry() == null) {
+            return null;
+        }
+        var geometry = comp.minecraft_geometry();
+        if (geometry instanceof Geometry.Geometry_Variant0 variant0) {
+            return variant0.value();
+        } else if (geometry instanceof Geometry.Geometry_Variant1 variant1) {
+            return variant1.identifier();
+        }
+        return null;
+    }
+
+    private boolean extractUnitCube(Component comp, String geometryId) {
+        // If no custom geometry, it's a unit cube
+        return geometryId == null || geometryId.equals("minecraft:geometry.full_block");
+    }
+
+    private boolean extractHasCraftingTable(Component comp) {
+        return comp.minecraft_craftingTable() != null;
+    }
+
+    private boolean extractHasTickComponent(Component comp) {
+        return comp.minecraft_tick() != null;
+    }
+
+    private String extractLootTable(Component comp) {
+        return comp.minecraft_loot();
+    }
+
+    private boolean extractHasCustomComponents(Component comp) {
+        return comp.minecraft_customComponents() != null;
+    }
+
+    private boolean extractWaterloggable(Component comp) {
+        if (comp.minecraft_liquidDetection() == null) {
+            return false;
+        }
+        var detection = comp.minecraft_liquidDetection();
+        if (detection.detectionRules() != null) {
+            for (var rule : detection.detectionRules()) {
+                if (rule.canContainLiquid() != null && rule.canContainLiquid()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean extractBreathable(Component comp) {
+        // Blocks are breathable if they don't have collision or aren't solid
+        if (comp.minecraft_collisionBox() != null) {
+            var box = comp.minecraft_collisionBox();
+            if (box instanceof CollisionBox.CollisionBox_Variant0 variant0) {
+                return !variant0.value(); // false collision = breathable
+            }
+        }
+        return !extractSolid(comp);
+    }
+
+    private boolean extractRedstoneConductor(Component comp) {
+        if (comp.minecraft_redstoneConductivity() == null) {
+            return false;
+        }
+        var conductivity = comp.minecraft_redstoneConductivity();
+        return conductivity.redstoneConductor() != null && conductivity.redstoneConductor();
+    }
+
+    private int extractRedstonePower(Component comp) {
+        // TODO: Implement redstone power extraction if there's a component for it
+        return 0;
+    }
+
+    private boolean extractRequiresCorrectTool(Component comp) {
+        // Check if any tool tier tags are present
+        return comp.tag_minecraft_diamondTierDestructible() != null ||
+               comp.tag_minecraft_ironTierDestructible() != null ||
+               comp.tag_minecraft_stoneTierDestructible() != null ||
+               comp.tag_minecraft_netheriteTierDestructible() != null;
+    }
+
+    private String extractPreferredTool(Component comp) {
+        // Determine preferred tool from tags
+        if (comp.tag_minecraft_isPickaxeItemDestructible() != null) return "pickaxe";
+        if (comp.tag_minecraft_isAxeItemDestructible() != null) return "axe";
+        if (comp.tag_minecraft_isShovelItemDestructible() != null) return "shovel";
+        if (comp.tag_minecraft_isHoeItemDestructible() != null) return "hoe";
+        if (comp.tag_minecraft_isSwordItemDestructible() != null) return "sword";
+        if (comp.tag_minecraft_isShearsItemDestructible() != null) return "shears";
+        if (comp.tag_minecraft_isMaceItemDestructible() != null) return "mace";
+        return null;
+    }
+
+    private int extractToolTier(Component comp) {
+        // Determine tool tier from tags (0=wood, 1=stone, 2=iron, 3=diamond, 4=netherite)
+        if (comp.tag_minecraft_netheriteTierDestructible() != null) return 4;
+        if (comp.tag_minecraft_diamondTierDestructible() != null) return 3;
+        if (comp.tag_minecraft_ironTierDestructible() != null) return 2;
+        if (comp.tag_minecraft_stoneTierDestructible() != null) return 1;
+        return 0;
     }
 
     // Override Nukkit Block methods (based on ECProEntity signatures)
@@ -462,6 +619,59 @@ public class BlockDataDriven extends CustomBlock {
     }
 
     /**
+     * Register block states based on traits and custom states defined in the block definition.
+     * This method is called by Nukkit during block initialization to set up the block's state properties.
+     *
+     * States include:
+     * - Cardinal connections (for fence-like blocks)
+     * - Cardinal direction (4 horizontal directions: north, south, east, west)
+     * - Facing direction (6 directions including up/down)
+     * - Block face (which face the block is attached to)
+     * - Vertical half (top/bottom half)
+     * - Custom states (defined in block JSON)
+     */
+    @Override
+    protected void addStates() {
+        tryInitBlockDefinition();
+
+        if (definition == null) {
+            return;
+        }
+
+        // Add trait states for cardinal connections (fence-like connections)
+        if (definition.stateCardinalConnections) {
+            addState(BlockStates.MINECRAFT_CONNECTION_EAST);
+            addState(BlockStates.MINECRAFT_CONNECTION_NORTH);
+            addState(BlockStates.MINECRAFT_CONNECTION_SOUTH);
+            addState(BlockStates.MINECRAFT_CONNECTION_WEST);
+        }
+
+        // Add trait states for cardinal direction (4 horizontal directions)
+        if (definition.stateCardinalDirection) {
+            addState(BlockStates.MINECRAFT_CARDINAL_DIRECTION);
+        }
+
+        // Add trait states for facing direction (6 directions including up/down)
+        if (definition.stateFacingDirection) {
+            addState(BlockStates.MINECRAFT_FACING_DIRECTION);
+        }
+
+        // Add trait states for block face (which face the block is attached to)
+        if (definition.stateBlockFace) {
+            addState(BlockStates.MINECRAFT_BLOCK_FACE);
+        }
+
+        // Add trait states for vertical half (top/bottom)
+        if (definition.stateVerticalHalf) {
+            addState(BlockStates.MINECRAFT_VERTICAL_HALF);
+        }
+
+        // TODO: Add custom states from definition.states
+        // This requires parsing BlockDef.states() Map to Nukkit BlockState objects
+        // For now, custom states from JSON are not yet supported
+    }
+
+    /**
      * Internal block definition holding all properties.
      * Expanded from 8 fields to match ECProEntity's complete implementation.
      */
@@ -478,6 +688,8 @@ public class BlockDataDriven extends CustomBlock {
         public final int mapColor; // RGB color for map display
         public final boolean solid; // Is the block solid/opaque
         public final boolean replaceable; // Can be replaced by other blocks
+        public final String geometryIdentifier; // Custom geometry model ID
+        public final boolean unitCube; // Is a full unit cube (no custom geometry)
 
         // === Physical Properties ===
         public final float hardness; // Mining time in seconds
@@ -503,12 +715,32 @@ public class BlockDataDriven extends CustomBlock {
         public final boolean stateVerticalHalf; // Has vertical_half state
         public final boolean stateCardinalConnections; // Has cardinal_connections states
 
+        // === Functional Components ===
+        public final boolean hasCraftingTable; // Is a crafting table
+        public final boolean hasTickComponent; // Has periodic tick events
+        public final String lootTable; // Loot table path
+        public final boolean hasCustomComponents; // Uses custom components
+
+        // === Liquid and Environment ===
+        public final boolean waterloggable; // Can contain water (waterlogging)
+        public final boolean breathable; // Is breathable (not suffocating)
+
+        // === Redstone and Circuit ===
+        public final boolean redstoneConductor; // Conducts redstone signal
+        public final int redstonePower; // Redstone power level (0-15)
+
+        // === Tool and Mining ===
+        public final boolean requiresCorrectTool; // Needs proper tool for drops
+        public final String preferredTool; // Preferred tool type (pickaxe, axe, etc.)
+        public final int toolTier; // Minimum tool tier (0=wood, 1=stone, etc.)
+
         // === Custom States ===
         // Note: Custom states are managed by BlockDataDriven's blockState field
 
         public BlockDefinition(String identifier, String displayName,
                              SimpleAxisAlignedBB collisionBox, SimpleAxisAlignedBB selectionBox,
                              int mapColor, boolean solid, boolean replaceable,
+                             String geometryIdentifier, boolean unitCube,
                              float hardness, float resistance,
                              int flameOdds, int burnOdds, float friction,
                              int lightEmission, int lightDampening,
@@ -516,7 +748,12 @@ public class BlockDataDriven extends CustomBlock {
                              boolean placementFilter, int allowedPlacementFaces,
                              boolean stateCardinalDirection, boolean stateFacingDirection,
                              boolean stateBlockFace, boolean stateVerticalHalf,
-                             boolean stateCardinalConnections) {
+                             boolean stateCardinalConnections,
+                             boolean hasCraftingTable, boolean hasTickComponent,
+                             String lootTable, boolean hasCustomComponents,
+                             boolean waterloggable, boolean breathable,
+                             boolean redstoneConductor, int redstonePower,
+                             boolean requiresCorrectTool, String preferredTool, int toolTier) {
             this.identifier = identifier;
             this.displayName = displayName;
             this.collisionBox = collisionBox;
@@ -524,6 +761,8 @@ public class BlockDataDriven extends CustomBlock {
             this.mapColor = mapColor;
             this.solid = solid;
             this.replaceable = replaceable;
+            this.geometryIdentifier = geometryIdentifier;
+            this.unitCube = unitCube;
             this.hardness = hardness;
             this.resistance = resistance;
             this.flameOdds = flameOdds;
@@ -540,6 +779,17 @@ public class BlockDataDriven extends CustomBlock {
             this.stateBlockFace = stateBlockFace;
             this.stateVerticalHalf = stateVerticalHalf;
             this.stateCardinalConnections = stateCardinalConnections;
+            this.hasCraftingTable = hasCraftingTable;
+            this.hasTickComponent = hasTickComponent;
+            this.lootTable = lootTable;
+            this.hasCustomComponents = hasCustomComponents;
+            this.waterloggable = waterloggable;
+            this.breathable = breathable;
+            this.redstoneConductor = redstoneConductor;
+            this.redstonePower = redstonePower;
+            this.requiresCorrectTool = requiresCorrectTool;
+            this.preferredTool = preferredTool;
+            this.toolTier = toolTier;
         }
     }
 }

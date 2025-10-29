@@ -23,11 +23,6 @@ public sealed interface Animationspec {
             return new Animationspec_AnimationSpecification(value);
         }
     }
-    /* A object specification on when to animate. */
-    @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
-    record Animationspec_AnimationSpecification0(
-    ) implements Animationspec {
-    }
 
     /* Custom deserializer to handle oneOf with primitive values */
     class Deserializer extends com.fasterxml.jackson.databind.JsonDeserializer<Animationspec> {
@@ -49,13 +44,6 @@ public sealed interface Animationspec {
             }
 
             // It's an object, try each variant
-            try {
-                com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
-                nodeParser.nextToken();
-                return ctxt.readValue(nodeParser, Animationspec_AnimationSpecification0.class);
-            } catch (Exception e) {
-                // Try next variant
-            }
 
             throw new com.fasterxml.jackson.databind.JsonMappingException(p,
                 "Cannot deserialize Animationspec: no matching variant found");

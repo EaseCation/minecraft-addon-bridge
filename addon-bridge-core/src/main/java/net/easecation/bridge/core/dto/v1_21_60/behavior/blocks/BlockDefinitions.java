@@ -2,6 +2,7 @@ package net.easecation.bridge.core.dto.v1_21_60.behavior.blocks;
 
 import com.fasterxml.jackson.annotation.*;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /* A custom block definition. */
@@ -21,7 +22,7 @@ public record BlockDefinitions(
             @JsonProperty("identifier") String identifier,
             /* Specifies the menu category and group for the block, which determine where this block is placed in the inventory and crafting table container screens. If this field is omitted, the block will not appear in the inventory or crafting table container screens. */
             @JsonProperty("menu_category") @Nullable MenuCategory menuCategory,
-            @JsonProperty("states") @Nullable States states,
+            @JsonProperty("states") @Nullable Map<String, StatesValue> states,
             @JsonProperty("traits") @Nullable Traits traits
         ) {
             

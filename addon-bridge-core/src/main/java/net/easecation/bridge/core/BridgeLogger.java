@@ -21,33 +21,33 @@ public interface BridgeLogger {
     void warning(String message);
 
     /**
-     * Log a severe/error message.
+     * Log an error message.
      *
      * @param message the message to log
      */
-    void severe(String message);
+    void error(String message);
 
     /**
-     * Log a fine/debug message.
+     * Log a debug message.
      *
      * @param message the message to log
      */
-    void fine(String message);
+    void debug(String message);
 
     /**
-     * Log a finest/trace message.
+     * Log a trace message.
      *
      * @param message the message to log
      */
-    void finest(String message);
+    void trace(String message);
 
     /**
-     * Log a severe/error message with throwable.
+     * Log an error message with throwable.
      *
      * @param message the message to log
      * @param throwable the exception to log
      */
-    default void severe(String message, Throwable throwable) {
-        severe(message + ": " + throwable.getMessage());
+    default void error(String message, Throwable throwable) {
+        error(message + ": " + throwable.getMessage());
     }
 }

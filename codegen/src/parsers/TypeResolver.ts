@@ -193,8 +193,9 @@ export class TypeResolver {
 
   /**
    * 解析 additionalProperties 的值类型
+   * 公开此方法以便 SchemaParser 可以在注册 Map 类型定义时使用
    */
-  private resolveAdditionalPropertiesType(schema: JSONSchema7, context?: { isRequired?: boolean; filePath?: string }): string {
+  public resolveAdditionalPropertiesType(schema: JSONSchema7, context?: { isRequired?: boolean; filePath?: string }): string {
     if (typeof schema.additionalProperties === 'object') {
       return this.resolveType(schema.additionalProperties, context);
     }

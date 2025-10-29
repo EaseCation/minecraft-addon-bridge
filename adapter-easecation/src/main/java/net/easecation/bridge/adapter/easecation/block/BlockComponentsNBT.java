@@ -165,6 +165,69 @@ public class BlockComponentsNBT {
             tag.putCompound("minecraft:item_visual", convertItemVisual(component.minecraft_itemVisual()));
         }
 
+        // Crafting Table
+        if (component.minecraft_craftingTable() != null) {
+            tag.putCompound("minecraft:crafting_table", convertCraftingTable(component.minecraft_craftingTable()));
+        }
+
+        // Loot
+        if (component.minecraft_loot() != null) {
+            tag.putCompound("minecraft:loot",
+                new CompoundTag().putString("value", component.minecraft_loot()));
+        }
+
+        // Tick
+        if (component.minecraft_tick() != null) {
+            tag.putCompound("minecraft:tick", convertTick(component.minecraft_tick()));
+        }
+
+        // Entity Fall On
+        if (component.minecraft_entityFallOn() != null) {
+            tag.putCompound("minecraft:entity_fall_on", convertEntityFallOn(component.minecraft_entityFallOn()));
+        }
+
+        // Custom Components (marker component)
+        if (component.minecraft_customComponents() != null) {
+            tag.putCompound("minecraft:custom_components", new CompoundTag());
+        }
+
+        // Tool Tier Tags - these are marker tags that don't have NBT content
+        if (component.tag_minecraft_diamondTierDestructible() != null) {
+            tag.putCompound("tag:minecraft:diamond_tier_destructible", new CompoundTag());
+        }
+        if (component.tag_minecraft_ironTierDestructible() != null) {
+            tag.putCompound("tag:minecraft:iron_tier_destructible", new CompoundTag());
+        }
+        if (component.tag_minecraft_stoneTierDestructible() != null) {
+            tag.putCompound("tag:minecraft:stone_tier_destructible", new CompoundTag());
+        }
+        if (component.tag_minecraft_netheriteTierDestructible() != null) {
+            tag.putCompound("tag:minecraft:netherite_tier_destructible", new CompoundTag());
+        }
+
+        // Tool Type Tags
+        if (component.tag_minecraft_isAxeItemDestructible() != null) {
+            tag.putCompound("tag:minecraft:is_axe_item_destructible", new CompoundTag());
+        }
+        if (component.tag_minecraft_isHoeItemDestructible() != null) {
+            tag.putCompound("tag:minecraft:is_hoe_item_destructible", new CompoundTag());
+        }
+        if (component.tag_minecraft_isMaceItemDestructible() != null) {
+            tag.putCompound("tag:minecraft:is_mace_item_destructible", new CompoundTag());
+        }
+        if (component.tag_minecraft_isPickaxeItemDestructible() != null) {
+            tag.putCompound("tag:minecraft:is_pickaxe_item_destructible", new CompoundTag());
+        }
+        if (component.tag_minecraft_isShearsItemDestructible() != null) {
+            tag.putCompound("tag:minecraft:is_shears_item_destructible", new CompoundTag());
+        }
+        if (component.tag_minecraft_isShovelItemDestructible() != null) {
+            tag.putCompound("tag:minecraft:is_shovel_item_destructible", new CompoundTag());
+        }
+        if (component.tag_minecraft_isSwordItemDestructible() != null) {
+            tag.putCompound("tag:minecraft:is_sword_item_destructible", new CompoundTag());
+        }
+
         return tag;
     }
 
@@ -354,13 +417,10 @@ public class BlockComponentsNBT {
     /**
      * Convert MaterialInstances to NBT.
      *
-     * NOTE: The MaterialInstances DTO is currently an empty record because it uses
-     * JSON Schema's additionalProperties for dynamic face/instance names.
-     *
-     * For now, we create an empty materials structure. Full implementation requires:
-     * 1. Either changing MaterialInstances to extend Map<String, Instance>
-     * 2. Or using Jackson's @JsonAnySetter to capture dynamic properties
-     * 3. Or passing the raw JSON Object through for conversion
+     * MaterialInstances is a Map where keys are face names (up/down/north/south/east/west/*) or custom instance names,
+     * and values are either:
+     * - A String reference to another instance
+     * - A MaterialInstancesValue_Variant1 object with full configuration
      *
      * Reference structure from ECProEntity:
      * {
@@ -372,14 +432,68 @@ public class BlockComponentsNBT {
      *   "mappings": {}
      * }
      */
-    private static CompoundTag convertMaterialInstances(MaterialInstances instances) {
+    private static CompoundTag convertMaterialInstances(Map<String, MaterialInstancesValue> instances) {
         CompoundTag result = new CompoundTag();
-
-        // Create empty materials structure
         CompoundTag materials = new CompoundTag();
-        // TODO: Parse dynamic material instances from JSON
-        // This requires MaterialInstances DTO to support additionalProperties
-        // or be changed to Map<String, MaterialInstance>
+
+        if (instances != null) {
+            for (Map.Entry<String, MaterialInstancesValue> entry : instances.entrySet()) {
+                String faceName = entry.getKey();
+                MaterialInstancesValue instanceValue = entry.getValue();
+
+                CompoundTag material = new CompoundTag();
+
+                if (instanceValue instanceof MaterialInstancesValue.MaterialInstancesValue_Variant0 variant0) {
+                    // String reference to another instance
+                    // In this case, we create a minimal material that references another instance
+                    // The reference is typically just the texture name or instance name
+                    material.putString("texture", variant0.value());
+                    // Set default values for other properties
+                    material.putFloat("ambient_occlusion", 1.0f);
+                    material.putBoolean("face_dimming", true);
+                    material.putString("render_method", "opaque");
+                    material.putString("tint_method", "none");
+                    material.putBoolean("isotropic", false);
+                } else if (instanceValue instanceof MaterialInstancesValue.MaterialInstancesValue_Variant1 variant1) {
+                    // Full material configuration
+
+                    // Ambient Occlusion: can be boolean or number (Object in DTO)
+                    if (variant1.ambientOcclusion() != null) {
+                        Object ao = variant1.ambientOcclusion();
+                        if (ao instanceof Boolean) {
+                            material.putFloat("ambient_occlusion", ((Boolean) ao) ? 1.0f : 0.0f);
+                        } else if (ao instanceof Number) {
+                            material.putFloat("ambient_occlusion", ((Number) ao).floatValue());
+                        } else {
+                            material.putFloat("ambient_occlusion", 1.0f);
+                        }
+                    } else {
+                        material.putFloat("ambient_occlusion", 1.0f);
+                    }
+
+                    // Face Dimming: default true
+                    material.putBoolean("face_dimming", variant1.faceDimming() != null ? variant1.faceDimming() : true);
+
+                    // Render Method: default "opaque"
+                    material.putString("render_method", variant1.renderMethod() != null ? variant1.renderMethod() : "opaque");
+
+                    // Texture: default empty string
+                    material.putString("texture", variant1.texture() != null ? variant1.texture() : "");
+
+                    // Tint Method: convert enum to string, default "none"
+                    if (variant1.tintMethod() != null) {
+                        material.putString("tint_method", variant1.tintMethod().toString());
+                    } else {
+                        material.putString("tint_method", "none");
+                    }
+
+                    // Isotropic: default false
+                    material.putBoolean("isotropic", variant1.isotropic() != null ? variant1.isotropic() : false);
+                }
+
+                materials.put(faceName, material);
+            }
+        }
 
         result.putCompound("materials", materials);
         result.putCompound("mappings", new CompoundTag());
@@ -669,6 +783,93 @@ public class BlockComponentsNBT {
         if (visual.materialInstances() != null) {
             CompoundTag materialNBT = convertMaterialInstances(visual.materialInstances());
             result.putCompound("materialInstancesDescription", materialNBT);
+        }
+
+        return result;
+    }
+
+    /**
+     * Convert CraftingTable to NBT.
+     *
+     * Makes the block into a custom crafting table with UI and recipe crafting ability.
+     *
+     * Structure:
+     * {
+     *   "crafting_tags": ["crafting_table", "custom_table"],
+     *   "table_name": "tile.my_table.name"
+     * }
+     */
+    private static CompoundTag convertCraftingTable(CraftingTable craftingTable) {
+        CompoundTag result = new CompoundTag();
+
+        // Crafting tags (limited to 64 tags, each limited to 64 characters)
+        if (craftingTable.craftingTags() != null && !craftingTable.craftingTags().isEmpty()) {
+            ListTag<StringTag> tags = new ListTag<>();
+            for (String tag : craftingTable.craftingTags()) {
+                if (tag.length() <= 64) {
+                    tags.add(new StringTag("", tag));
+                }
+            }
+            result.putList("crafting_tags", tags);
+        }
+
+        // Table name (display name in crafting UI)
+        if (craftingTable.tableName() != null) {
+            result.putString("table_name", craftingTable.tableName());
+        }
+
+        return result;
+    }
+
+    /**
+     * Convert Tick to NBT.
+     *
+     * Triggers an event at regular intervals.
+     *
+     * Structure:
+     * {
+     *   "looping": true,
+     *   "interval_range": [20, 40]
+     * }
+     */
+    private static CompoundTag convertTick(Tick tick) {
+        CompoundTag result = new CompoundTag();
+
+        // Looping behavior
+        if (tick.looping() != null) {
+            result.putBoolean("looping", tick.looping());
+        }
+
+        // Interval range [min, max] in ticks
+        if (tick.intervalRange() != null && tick.intervalRange().size() >= 2) {
+            ListTag<CompoundTag> range = new ListTag<>();
+            for (Object value : tick.intervalRange()) {
+                if (value instanceof Number) {
+                    range.add(new CompoundTag().putInt("", ((Number) value).intValue()));
+                }
+            }
+            result.putList("interval_range", range);
+        }
+
+        return result;
+    }
+
+    /**
+     * Convert EntityFallOn to NBT.
+     *
+     * Required component to use the custom component onEntityFallOn.
+     *
+     * Structure:
+     * {
+     *   "min_fall_distance": 5.0
+     * }
+     */
+    private static CompoundTag convertEntityFallOn(EntityFallOn entityFallOn) {
+        CompoundTag result = new CompoundTag();
+
+        // Minimum fall distance to trigger
+        if (entityFallOn.minFallDistance() != null) {
+            result.putFloat("min_fall_distance", entityFallOn.minFallDistance().floatValue());
         }
 
         return result;

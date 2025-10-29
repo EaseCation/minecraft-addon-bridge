@@ -24,23 +24,23 @@ public class NukkitLoggerAdapter implements BridgeLogger {
     }
 
     @Override
-    public void severe(String message) {
+    public void error(String message) {
         nukkitLogger.error(message);
     }
 
     @Override
-    public void fine(String message) {
+    public void debug(String message) {
         nukkitLogger.debug(message);
     }
 
     @Override
-    public void finest(String message) {
+    public void trace(String message) {
         // Nukkit doesn't have trace level, use debug
         nukkitLogger.debug(message);
     }
 
     @Override
-    public void severe(String message, Throwable throwable) {
+    public void error(String message, Throwable throwable) {
         nukkitLogger.error(message, throwable);
     }
 }

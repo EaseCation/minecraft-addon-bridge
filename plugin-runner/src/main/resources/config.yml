@@ -1,0 +1,44 @@
+# AddonBridge Configuration File
+#
+# This file controls how addon packs are processed and pushed to clients.
+#
+# For more information, visit: https://github.com/EaseCation/nukkit-addon-bridge
+
+# ============================================================
+# Resource Pack Pushing Settings
+# ============================================================
+resource-pack:
+  # Push resource packs (containing textures, models, sounds) to clients
+  # Resource packs are always required for custom content to display properly
+  push-resource-packs: true
+
+  # Push behavior packs to clients
+  # WARNING: Behavior packs contain server-side logic and usually should NOT be pushed to clients
+  # Only enable this if you have a specific reason (e.g., client-side scripts)
+  push-behavior-packs: false
+
+  # Force clients to accept resource packs before joining
+  # If true, players cannot join without accepting the resource packs
+  force-accept: true
+
+  # Resource pack push priority (0-10)
+  # Higher priority packs are applied later, overriding lower priority packs
+  # Use this to control the order of multiple resource packs
+  push-priority: 0
+
+  # Custom CDN base URL for resource pack downloads
+  # Leave empty to use local file:// URLs
+  # Example: "https://cdn.example.com/resourcepacks/"
+  base-url: ""
+
+# ============================================================
+# Plugin Behavior Settings
+# ============================================================
+plugin:
+  # Automatically scan the addons/ directory on server startup
+  # If disabled, you need to manually reload packs using /addonbridge reload
+  auto-scan: true
+
+  # Enable verbose logging for debugging
+  # Shows detailed information about pack loading, parsing, and deployment
+  verbose-logging: false

@@ -32,10 +32,13 @@ public final class DefaultAddonBridge implements AddonBridge {
             List<DeployedPack> deployed = deployer.deploy(p);
             allDeployedPacks.addAll(deployed);
 
-            registry.registerItems(p.items());
-            registry.registerBlocks(p.blocks());
-            registry.registerEntities(p.entities());
-            registry.registerRecipes(p.recipes());
+            // 纯资源包不需要服务端注册，只有行为包（或混合包）才需要
+            if (p.manifest().isBehaviorPack()) {
+                registry.registerItems(p.items());
+                registry.registerBlocks(p.blocks());
+                registry.registerEntities(p.entities());
+                registry.registerRecipes(p.recipes());
+            }
         }
 
         // 所有注册完成后，执行平台特定的后处理逻辑

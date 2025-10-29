@@ -2,6 +2,7 @@ package net.easecation.bridge.adapter.easecation.block;
 
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.nbt.tag.ListTag;
+import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Connection;
 import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.PlacementDirection;
 import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.PlacementPosition;
 import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Traits;
@@ -38,8 +39,10 @@ public class BlockTraitsNBT {
             listTag.add(convertPlacementPosition(traits.minecraft_placementPosition()));
         }
 
-        // TODO: minecraft:connection trait (not in v1_21_60 schema but in ECProEntity)
-        // ECProEntity supports cardinal_connections for fence-like blocks
+        // Connection Trait (for fence-like blocks)
+        if (traits.minecraft_connection() != null) {
+            listTag.add(convertConnection(traits.minecraft_connection()));
+        }
 
         return listTag;
     }
@@ -115,21 +118,37 @@ public class BlockTraitsNBT {
         return tag;
     }
 
-    // TODO: Implement minecraft:connection trait
-    // This would be used for fence-like blocks that connect to adjacent blocks
-    // Reference: ECProEntity BlockTraits.java:39-46
-    //
-    // Example structure:
-    // {
-    //   "name": "minecraft:connection",
-    //   "enabled_states": {
-    //     "cardinal_connections": true
-    //   }
-    // }
-    //
-    // This creates block states:
-    // - north_connection: boolean
-    // - south_connection: boolean
-    // - east_connection: boolean
-    // - west_connection: boolean
+    /**
+     * Convert Connection trait to NBT.
+     *
+     * This trait creates cardinal connection states for fence-like blocks that connect to adjacent blocks.
+     * Supported states:
+     * - minecraft:cardinal_connections: creates 4 boolean states (north, south, east, west)
+     *
+     * This creates block states:
+     * - north_connection: boolean
+     * - south_connection: boolean
+     * - east_connection: boolean
+     * - west_connection: boolean
+     *
+     * @param connection The connection configuration
+     * @return CompoundTag for connection trait
+     */
+    private static CompoundTag convertConnection(Connection connection) {
+        CompoundTag tag = new CompoundTag();
+
+        tag.putString("name", "minecraft:connection");
+
+        // Enabled states
+        CompoundTag enabledStates = new CompoundTag();
+
+        boolean hasCardinalConnections = connection.enabledStates() != null &&
+            connection.enabledStates().contains("minecraft:cardinal_connections");
+
+        enabledStates.putBoolean("cardinal_connections", hasCardinalConnections);
+
+        tag.putCompound("enabled_states", enabledStates);
+
+        return tag;
+    }
 }

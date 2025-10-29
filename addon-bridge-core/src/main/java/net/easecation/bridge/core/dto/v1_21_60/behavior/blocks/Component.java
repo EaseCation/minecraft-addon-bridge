@@ -1,6 +1,7 @@
 package net.easecation.bridge.core.dto.v1_21_60.behavior.blocks;
 
 import com.fasterxml.jackson.annotation.*;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /* The components of this block. */
@@ -21,7 +22,7 @@ public record Component(
     @JsonProperty("minecraft:liquid_detection") @Nullable LiquidDetection minecraft_liquidDetection,
     @JsonProperty("minecraft:loot") @Nullable String minecraft_loot,
     @JsonProperty("minecraft:map_color") @Nullable MapColor minecraft_mapColor,
-    @JsonProperty("minecraft:material_instances") @Nullable MaterialInstances minecraft_materialInstances,
+    @JsonProperty("minecraft:material_instances") @Nullable Map<String, MaterialInstancesValue> minecraft_materialInstances,
     @JsonProperty("minecraft:placement_filter") @Nullable PlacementFilter minecraft_placementFilter,
     @JsonProperty("minecraft:redstone_conductivity") @Nullable RedstoneConductivity minecraft_redstoneConductivity,
     @JsonProperty("minecraft:replaceable") @Nullable net.easecation.bridge.core.dto.EmptyObject minecraft_replaceable,

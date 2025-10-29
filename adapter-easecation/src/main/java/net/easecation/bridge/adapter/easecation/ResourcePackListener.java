@@ -4,6 +4,7 @@ import cn.nukkit.event.EventHandler;
 import cn.nukkit.event.Listener;
 import cn.nukkit.event.player.PlayerRequestResourcePackEvent;
 import cn.nukkit.resourcepacks.ZippedResourcePack;
+import net.easecation.bridge.core.BridgeConfig;
 import net.easecation.bridge.core.BridgeLogger;
 import net.easecation.bridge.core.DeployedPack;
 
@@ -16,10 +17,12 @@ import java.util.List;
  */
 public class ResourcePackListener implements Listener {
     private final List<DeployedPack> deployedPacks;
+    private final BridgeConfig config;
     private final BridgeLogger log;
 
-    public ResourcePackListener(List<DeployedPack> deployedPacks, BridgeLogger log) {
+    public ResourcePackListener(List<DeployedPack> deployedPacks, BridgeConfig config, BridgeLogger log) {
         this.deployedPacks = deployedPacks;
+        this.config = config;
         this.log = log;
     }
 
@@ -29,13 +32,21 @@ public class ResourcePackListener implements Listener {
             return;
         }
 
-        log.info("[ResourcePack] Player " + event.getPlayer().getName() + " requesting resource packs");
-        log.info("[ResourcePack] Total packs to push: " + deployedPacks.size());
+        log.debug("[ResourcePack] Player " + event.getPlayer().getName() + " requesting resource packs");
+        log.debug("[ResourcePack] Total deployed packs: " + deployedPacks.size());
 
         int successCount = 0;
         int failureCount = 0;
+        int skippedCount = 0;
 
         for (DeployedPack pack : deployedPacks) {
+            // Check if this pack should be pushed based on its type and configuration
+            if (!config.shouldPushPack(pack.packType())) {
+                log.debug("[ResourcePack] ⊘ Skipping " + pack.packType() + " pack (disabled in config): " + pack.url());
+                skippedCount++;
+                continue;
+            }
+
             try {
                 // 从 URL 中提取文件路径
                 // file:///path/to/pack.zip -> /path/to/pack.zip
@@ -66,17 +77,23 @@ public class ResourcePackListener implements Listener {
                 // 推送资源包给玩家
                 event.putResourcePack(resourcePack);
 
-                log.info("[ResourcePack] ✓ Pushed pack: " + resourcePack.getPackName() +
+                log.debug("[ResourcePack] ✓ Pushed pack: " + resourcePack.getPackName() +
                         " (id=" + resourcePack.getPackId() + ", version=" + resourcePack.getPackVersion() + ")");
                 successCount++;
 
             } catch (Exception e) {
-                log.severe("[ResourcePack] ✗ Failed to push pack: " + pack.url());
-                log.severe("[ResourcePack]   Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                log.error("[ResourcePack] ✗ Failed to push pack: " + pack.url());
+                log.error("[ResourcePack]   Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
                 failureCount++;
             }
         }
 
-        log.info("[ResourcePack] Push completed - Success: " + successCount + ", Failed: " + failureCount);
+        // Apply force accept configuration
+        if (config.isForceAccept()) {
+            event.setMustAccept(true);
+            log.debug("[ResourcePack] Force accept enabled - players must accept packs to join");
+        }
+
+        log.info("[ResourcePack] Push completed - Success: " + successCount + ", Failed: " + failureCount + ", Skipped: " + skippedCount);
     }
 }

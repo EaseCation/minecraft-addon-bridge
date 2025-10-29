@@ -3,12 +3,11 @@ package net.easecation.bridge.pack;
 import net.easecation.bridge.core.AddonPack;
 import net.easecation.bridge.core.BridgeLogger;
 import net.easecation.bridge.core.DeployedPack;
+import net.easecation.bridge.core.PackType;
 import net.easecation.bridge.core.ResourcePackDeployer;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.format.DateTimeFormatter;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,20 +33,69 @@ public class GenericResourceDeployer implements ResourcePackDeployer {
         Path packsDir = dataDir.resolve("packs");
         Files.createDirectories(packsDir);
 
-        String ts = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
-        String fileName = sanitize(pack.manifest().getName()) + "-" + ts + ".zip";
-        Path outZip = packsDir.resolve(fileName);
+        PackType packType = pack.manifest().getPackType();
+        String packName = pack.manifest().getName();
 
-        Map<String, byte[]> files = pack.resourceFiles();
-        ZipUtil.zipFromMap(files, outZip);
-        String sha1 = Sha1.hex(outZip);
+        if (!pack.needsPackaging()) {
+            // Use original ZIP/MCPACK file directly - no need to repackage
+            Path originalFile = pack.originalPath();
+            String sha1 = Sha1.hex(originalFile);
 
-        String url = baseUrl.isEmpty() ? outZip.toUri().toString() : joinUrl(baseUrl, fileName);
+            // For local files, use file:// URL; for HTTP deployment, construct full URL
+            String url = baseUrl.isEmpty()
+                ? originalFile.toUri().toString()
+                : joinUrl(baseUrl, originalFile.getFileName().toString());
+
+            log.info("Using original pack file: " + packName);
+            log.debug("  Path: " + originalFile);
+            log.debug("  SHA1: " + sha1);
+            log.debug("  Pack type: " + packType);
+
+            out.add(new DeployedPack(url, sha1, packType));
+        } else {
+            // Package directory-based pack
+            // Use version-based naming instead of timestamp to enable caching
+            String version = pack.manifest().getVersion();
+            String fileName = sanitize(packName) + "-" + version + ".zip";
+            Path outZip = packsDir.resolve(fileName);
+
+            // Check if already packaged with same content
+            boolean needsRepackaging = true;
+            if (Files.exists(outZip)) {
+                String existingSha1 = Sha1.hex(outZip);
+                log.debug("Found existing package: " + fileName + " (sha1=" + existingSha1 + ")");
+
+                // For now, we trust existing files with same version
+                // In the future, could add content hash checking
+                needsRepackaging = false;
+                log.debug("  Reusing existing package");
+            }
+
+            if (needsRepackaging) {
+                // Stream pack contents directly from directory to ZIP
+                // This avoids loading large resource packs into memory
+                log.info("Packaging directory to ZIP: " + packName);
+                ZipUtil.zipFromDirectory(pack.originalPath(), outZip);
+                log.debug("Created new package: " + fileName);
+            }
+
+            String sha1 = Sha1.hex(outZip);
+            String url = baseUrl.isEmpty() ? outZip.toUri().toString() : joinUrl(baseUrl, fileName);
+
+            log.info("Deployed packaged resource: " + packName);
+            log.debug("  URL: " + url);
+            log.debug("  SHA1: " + sha1);
+            log.debug("  Pack type: " + packType);
+
+            out.add(new DeployedPack(url, sha1, packType));
+        }
+
+        // Update resource_packs.yml
         Path yaml = dataDir.resolve("resource_packs.yml");
-        ResourcePacksYaml.updateOrAppend(yaml, url, sha1);
+        for (DeployedPack dp : out) {
+            ResourcePacksYaml.updateOrAppend(yaml, dp.url(), dp.sha1());
+        }
 
-        log.info("Deployed resource pack: " + url + " sha1=" + sha1);
-        out.add(new DeployedPack(url, sha1));
         return out;
     }
 

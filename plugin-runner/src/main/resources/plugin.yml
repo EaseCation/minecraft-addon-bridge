@@ -5,3 +5,8 @@ api: ["1.0.0", "2.0.0"]
 load: POSTWORLD
 author: EaseCation
 description: Bedrock Addon → Nukkit Bridge
+
+permissions:
+  addonbridge.admin:
+    description: Allows managing AddonBridge plugin (reload config, view status)
+    default: op
