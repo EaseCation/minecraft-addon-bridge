@@ -43,9 +43,9 @@ public sealed interface Flammable {
             if (node.isBoolean() || node.isNumber() || node.isTextual()) {
                 // Try to deserialize as value wrapper variants
                 try {
-                    com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
-                    nodeParser.nextToken();
-                    return ctxt.readValue(nodeParser, Flammable_Variant0.class);
+                    // For value wrapper, directly read the primitive value and call factory method
+                    Boolean value = node.asBoolean();
+                    return Flammable_Variant0.of(value);
                 } catch (Exception e) {
                     // Try next variant
                 }

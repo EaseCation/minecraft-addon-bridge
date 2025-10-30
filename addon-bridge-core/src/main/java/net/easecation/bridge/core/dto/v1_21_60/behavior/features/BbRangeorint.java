@@ -33,9 +33,9 @@ public sealed interface BbRangeorint {
             if (node.isBoolean() || node.isNumber() || node.isTextual()) {
                 // Try to deserialize as value wrapper variants
                 try {
-                    com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
-                    nodeParser.nextToken();
-                    return ctxt.readValue(nodeParser, BbRangeorint_Variant0.class);
+                    // For value wrapper, directly read the primitive value and call factory method
+                    Integer value = node.asInt();
+                    return BbRangeorint_Variant0.of(value);
                 } catch (Exception e) {
                     // Try next variant
                 }

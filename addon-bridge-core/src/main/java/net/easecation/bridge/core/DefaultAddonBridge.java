@@ -9,15 +9,18 @@ public final class DefaultAddonBridge implements AddonBridge {
     private final DependencyResolver deps;
     private final AddonRegistry registry;
     private final ResourcePackDeployer deployer;
+    private final BridgeConfig config;
 
     public DefaultAddonBridge(AddonParser parser,
                               DependencyResolver deps,
                               AddonRegistry registry,
-                              ResourcePackDeployer deployer) {
+                              ResourcePackDeployer deployer,
+                              BridgeConfig config) {
         this.parser = parser;
         this.deps = deps;
         this.registry = registry;
         this.deployer = deployer;
+        this.config = config;
     }
 
     @Override
@@ -34,9 +37,16 @@ public final class DefaultAddonBridge implements AddonBridge {
 
             // 纯资源包不需要服务端注册，只有行为包（或混合包）才需要
             if (p.manifest().isBehaviorPack()) {
-                registry.registerItems(p.items());
-                registry.registerBlocks(p.blocks());
-                registry.registerEntities(p.entities());
+                // 根据配置决定是否注册各类自定义内容
+                if (config.isRegisterItems()) {
+                    registry.registerItems(p.items());
+                }
+                if (config.isRegisterBlocks()) {
+                    registry.registerBlocks(p.blocks());
+                }
+                if (config.isRegisterEntities()) {
+                    registry.registerEntities(p.entities());
+                }
                 registry.registerRecipes(p.recipes());
             }
         }

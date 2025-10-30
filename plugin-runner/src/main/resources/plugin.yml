@@ -2,7 +2,7 @@ name: AddonBridge
 main: net.easecation.bridge.runner.BridgeBootstrap
 version: "0.1.0"
 api: ["1.0.0", "2.0.0"]
-load: POSTWORLD
+load: STARTUP
 author: EaseCation
 description: Bedrock Addon → Nukkit Bridge
 

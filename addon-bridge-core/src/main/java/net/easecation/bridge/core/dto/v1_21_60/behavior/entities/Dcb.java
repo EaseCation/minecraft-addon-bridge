@@ -38,9 +38,9 @@ public sealed interface Dcb {
             if (node.isBoolean() || node.isNumber() || node.isTextual()) {
                 // Try to deserialize as value wrapper variants
                 try {
-                    com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
-                    nodeParser.nextToken();
-                    return ctxt.readValue(nodeParser, Dcb_Value.class);
+                    // For value wrapper, directly read the primitive value and call factory method
+                    Double value = node.asDouble();
+                    return Dcb_Value.of(value);
                 } catch (Exception e) {
                     // Try next variant
                 }

@@ -14,6 +14,7 @@ import net.easecation.bridge.adapter.easecation.block.BlockTraitsNBT;
 import net.easecation.bridge.adapter.easecation.entity.EntityDataDriven;
 import net.easecation.bridge.core.*;
 import org.itxtech.synapseapi.multiprotocol.utils.AvailableEntityIdentifiersPalette;
+import org.itxtech.synapseapi.multiprotocol.utils.CreativeItemsPalette;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +34,74 @@ public class EasecationRegistry implements AddonRegistry {
 
     @Override
     public void registerItems(List<ItemDef> items) {
-        log.info("[EaseCation] registerItems size=" + items.size());
-        // TODO: Implement item registration
+        if (items.isEmpty()) {
+            return;
+        }
+
+        log.debug("[EaseCation] Starting item registration: " + items.size() + " items");
+
+        int successCount = 0;
+        int failureCount = 0;
+
+        for (ItemDef itemDef : items) {
+            String itemId = itemDef.id();
+            try {
+                log.debug("[EaseCation] Processing item: " + itemId);
+
+                // 1. Allocate custom item ID
+                int customItemId = cn.nukkit.item.Items.allocateCustomItemId();
+                log.debug("[EaseCation]   - Allocated custom item ID: " + customItemId);
+
+                // 2. Register to ItemDataDriven registry
+                log.debug("[EaseCation]   - Registering to ItemDataDriven registry...");
+                net.easecation.bridge.adapter.easecation.item.ItemDataDriven.registerItemDef(customItemId, itemDef);
+
+                // 3. Build NBT data
+                log.debug("[EaseCation]   - Building NBT data...");
+                CompoundTag nbt = buildItemNBT(itemDef);
+
+                // 4. Register custom item with Nukkit
+                log.debug("[EaseCation]   - Registering custom item to Nukkit...");
+                cn.nukkit.item.Items.registerCustomItem(
+                    itemId,
+                    customItemId,
+                    net.easecation.bridge.adapter.easecation.item.ItemDataDriven.class,
+                    (meta, count) -> new net.easecation.bridge.adapter.easecation.item.ItemDataDriven(customItemId, meta, count),
+                    nbt
+                );
+
+                // 5. Register to creative mode inventory
+                log.debug("[EaseCation]   - Registering to creative mode inventory...");
+                CreativeItemsPalette.registerCustomItem(cn.nukkit.item.Item.get(customItemId));
+
+                log.debug("[EaseCation] ✓ Successfully registered: " + itemId + " (customItemId=" + customItemId + ")");
+                successCount++;
+
+            } catch (Exception e) {
+                failureCount++;
+                log.error("[EaseCation] ✗ Failed to register item: " + itemId);
+                log.error("[EaseCation]   Error type: " + e.getClass().getSimpleName());
+                log.error("[EaseCation]   Error message: " + e.getMessage());
+
+                // Log stack trace with more context
+                log.error("[EaseCation]   Stack trace:");
+                for (StackTraceElement element : e.getStackTrace()) {
+                    log.error("[EaseCation]     at " + element.toString());
+                    if (element.getClassName().contains("easecation.bridge")) {
+                        break; // Only show our own code in the stack trace
+                    }
+                }
+
+                // Log item definition details for debugging
+                if (itemDef.components() != null) {
+                    log.error("[EaseCation]   Item has components: YES");
+                } else {
+                    log.error("[EaseCation]   Item has components: NO");
+                }
+            }
+        }
+
+        log.info("[EaseCation] Item registration completed - Success: " + successCount + ", Failed: " + failureCount);
     }
 
     @Override
@@ -209,6 +276,13 @@ public class EasecationRegistry implements AddonRegistry {
     }
 
     @Override
+    public boolean requiresEarlyRegistration() {
+        // EaseCation平台没有closeRegistry限制，可以在onEnable阶段注册
+        // 这样更符合插件生命周期的最佳实践
+        return false;
+    }
+
+    @Override
     public void setupResourcePackPushing(List<DeployedPack> deployedPacks, BridgeConfig config, Object plugin) {
         if (!(plugin instanceof PluginBase pluginBase)) {
             log.warning("[EaseCation] setupResourcePackPushing: plugin is not a PluginBase, skipping");
@@ -243,6 +317,11 @@ public class EasecationRegistry implements AddonRegistry {
             // 这会更新物品ID映射，确保玩家可以获取和放置自定义方块
             cn.nukkit.item.ItemSerializer.rebuildRuntimeMapping();
             log.debug("[EaseCation] ✓ Item runtime mapping rebuilt");
+
+            // 缓存物品组件数据包（必须，用于自定义物品）
+            // 这会缓存所有物品组件定义，用于发送给客户端
+            org.itxtech.synapseapi.multiprotocol.utils.ItemComponentDefinitions.cachePackets();
+            log.debug("[EaseCation] ✓ Item component definitions cached");
 
             // 注册自定义实体标识符到网络协议层（必须）
             // 这让客户端能够识别和渲染自定义实体
@@ -376,6 +455,74 @@ public class EasecationRegistry implements AddonRegistry {
             log.error("[EaseCation]     Failed to build NBT for block: " + blockDef.id());
             log.error("[EaseCation]     Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             throw new RuntimeException("Failed to build NBT for block " + blockDef.id(), e);
+        }
+    }
+
+    /**
+     * Build NBT data for item registration.
+     * The NBT contains item definition including properties and components.
+     *
+     * @param itemDef The item definition
+     * @return CompoundTag containing the item NBT data
+     */
+    private CompoundTag buildItemNBT(ItemDef itemDef) {
+        try {
+            log.trace("[EaseCation]     Building NBT for: " + itemDef.id());
+
+            // Basic identifier
+            CompoundTag nbt = new CompoundTag();
+            nbt.putString("identifier", itemDef.id());
+
+            // Menu category (for creative inventory) - same as block implementation
+            if (itemDef.menuCategory() != null) {
+                log.trace("[EaseCation]       - Adding menu category");
+                CompoundTag menuCategory = new CompoundTag();
+                var mc = itemDef.menuCategory();
+
+                menuCategory.putString("category", mc.category() != null ? mc.category() : "items");
+                if (mc.group() != null && !mc.group().isEmpty()) {
+                    menuCategory.putString("group", mc.group());
+                }
+                if (mc.isHiddenInCommands() != null) {
+                    menuCategory.putBoolean("is_hidden_in_commands", mc.isHiddenInCommands());
+                }
+
+                nbt.putCompound("menu_category", menuCategory);
+            } else {
+                // Default: add default menu_category (category="items")
+                log.trace("[EaseCation]       - Adding default menu category");
+                nbt.putCompound("menu_category", new CompoundTag()
+                    .putString("category", "items")
+                    .putString("group", "")
+                    .putBoolean("is_hidden_in_commands", false)
+                );
+            }
+
+            // Add components NBT
+            if (itemDef.components() != null) {
+                log.trace("[EaseCation]       - Adding components");
+                try {
+                    CompoundTag componentsNBT = net.easecation.bridge.adapter.easecation.item.ItemComponentsNBT.toNBT(
+                        itemDef,  // Pass the full ItemDef (includes menu_category)
+                        itemDef.id()
+                    );
+                    // Merge all component tags into the main NBT
+                    for (String key : componentsNBT.getTags().keySet()) {
+                        nbt.put(key, componentsNBT.get(key));
+                    }
+                } catch (Exception e) {
+                    log.warning("[EaseCation]       - Failed to convert components: " + e.getMessage());
+                    throw new RuntimeException("Failed to convert item components for " + itemDef.id(), e);
+                }
+            }
+
+            log.trace("[EaseCation]     NBT build completed for: " + itemDef.id());
+            return nbt;
+
+        } catch (Exception e) {
+            log.error("[EaseCation]     Failed to build NBT for item: " + itemDef.id());
+            log.error("[EaseCation]     Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            throw new RuntimeException("Failed to build NBT for item " + itemDef.id(), e);
         }
     }
 }

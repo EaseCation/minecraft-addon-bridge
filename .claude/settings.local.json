@@ -18,7 +18,9 @@
       "Bash(gradle installToWorkspaces:*)",
       "WebFetch(domain:stackoverflow.com)",
       "Bash(npm run:*)",
-      "Bash(xargs -I {} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && head -30 {}')"
+      "Bash(xargs -I {} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && head -30 {}')",
+      "Bash(jar -tf:*)",
+      "Bash(javap:*)"
     ],
     "deny": [],
     "ask": []

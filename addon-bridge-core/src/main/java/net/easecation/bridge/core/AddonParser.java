@@ -171,10 +171,13 @@ public class AddonParser {
             // Parse entities
             List<EntityDef> entities = new ArrayList<>();
             entries = zip.entries();
+            int entityFileCount = 0;
+            int entityParsedCount = 0;
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
                 String name = entry.getName();
                 if (name.startsWith("entities/") && name.endsWith(".json")) {
+                    entityFileCount++;
                     try (InputStream is = zip.getInputStream(entry)) {
                         String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
                         // Parse wrapper: {"format_version": "1.21.60", "minecraft:entity": {...}}
@@ -183,15 +186,77 @@ public class AddonParser {
                             Object entityData = wrapper.get("minecraft:entity");
                             Entity entityDto = MAPPER.convertValue(entityData, Entity.class);
                             entities.add(EntityDef.fromDTO(entityDto));
+                            entityParsedCount++;
+                        } else {
+                            log.warning("Entity file missing 'minecraft:entity' key: " + name);
                         }
                     } catch (Exception e) {
-                        log.debug("Failed to parse entity: " + name + " - " + e.getMessage());
+                        log.error("Failed to parse entity: " + name);
+                        log.error("  Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                        if (e.getCause() != null) {
+                            log.error("  Cause: " + e.getCause().getClass().getSimpleName() + " - " + e.getCause().getMessage());
+                        }
+                    }
+                }
+            }
+            if (entityFileCount > 0) {
+                log.info("Entity parsing: found " + entityFileCount + " files, successfully parsed " + entityParsedCount);
+            }
+
+            // Parse items
+            List<ItemDef> items = new ArrayList<>();
+            entries = zip.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                String name = entry.getName();
+                if (name.startsWith("items/") && name.endsWith(".json")) {
+                    try (InputStream is = zip.getInputStream(entry)) {
+                        String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                        // Parse wrapper: {"format_version": "1.21.60", "minecraft:item": {...}}
+                        Map<String, Object> wrapper = MAPPER.readValue(json, Map.class);
+                        if (wrapper.containsKey("minecraft:item")) {
+                            Object itemData = wrapper.get("minecraft:item");
+                            Map<String, Object> itemMap = MAPPER.convertValue(itemData, Map.class);
+
+                            // Extract identifier, components, and menu_category
+                            String identifier = null;
+                            Map<String, Object> components = null;
+                            ItemDef.MenuCategoryInfo menuCategoryInfo = null;
+
+                            if (itemMap.containsKey("description")) {
+                                @SuppressWarnings("unchecked")
+                                Map<String, Object> description = (Map<String, Object>) itemMap.get("description");
+                                identifier = (String) description.get("identifier");
+
+                                // Extract menu_category for creative mode
+                                if (description.containsKey("menu_category")) {
+                                    @SuppressWarnings("unchecked")
+                                    Map<String, Object> mc = (Map<String, Object>) description.get("menu_category");
+                                    menuCategoryInfo = new ItemDef.MenuCategoryInfo(
+                                        mc.get("category") != null ? mc.get("category").toString() : null,
+                                        (String) mc.get("group"),
+                                        (Boolean) mc.get("is_hidden_in_commands")
+                                    );
+                                }
+                            }
+
+                            if (itemMap.containsKey("components")) {
+                                @SuppressWarnings("unchecked")
+                                Map<String, Object> comps = (Map<String, Object>) itemMap.get("components");
+                                components = comps;
+                            }
+
+                            if (identifier != null) {
+                                items.add(new ItemDef(identifier, components, menuCategoryInfo));
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.debug("Failed to parse item: " + name + " - " + e.getMessage());
                     }
                 }
             }
 
-            // Items and recipes not implemented yet
-            List<ItemDef> items = List.of();
+            // Recipes not implemented yet
             List<RecipeDef> recipes = List.of();
 
             return new AddonPack(manifest, items, blocks, entities, recipes, originalPath, needsPackaging);
@@ -240,9 +305,12 @@ public class AddonParser {
         List<EntityDef> entities = new ArrayList<>();
         Path entitiesDir = packRoot.resolve("entities");
         if (Files.isDirectory(entitiesDir)) {
+            final int[] entityFileCount = {0};
+            final int[] entityParsedCount = {0};
             Files.walk(entitiesDir)
                     .filter(p -> p.toString().endsWith(".json"))
                     .forEach(entityFile -> {
+                        entityFileCount[0]++;
                         try {
                             String json = Files.readString(entityFile, StandardCharsets.UTF_8);
                             Map<String, Object> wrapper = MAPPER.readValue(json, Map.class);
@@ -250,15 +318,76 @@ public class AddonParser {
                                 Object entityData = wrapper.get("minecraft:entity");
                                 Entity entityDto = MAPPER.convertValue(entityData, Entity.class);
                                 entities.add(EntityDef.fromDTO(entityDto));
+                                entityParsedCount[0]++;
+                            } else {
+                                log.warning("Entity file missing 'minecraft:entity' key: " + entityFile);
                             }
                         } catch (Exception e) {
-                            log.debug("Failed to parse entity: " + entityFile + " - " + e.getMessage());
+                            log.error("Failed to parse entity: " + entityFile);
+                            log.error("  Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                            if (e.getCause() != null) {
+                                log.error("  Cause: " + e.getCause().getClass().getSimpleName() + " - " + e.getCause().getMessage());
+                            }
+                        }
+                    });
+            if (entityFileCount[0] > 0) {
+                log.info("Entity parsing: found " + entityFileCount[0] + " files, successfully parsed " + entityParsedCount[0]);
+            }
+        }
+
+        // Parse items
+        List<ItemDef> items = new ArrayList<>();
+        Path itemsDir = packRoot.resolve("items");
+        if (Files.isDirectory(itemsDir)) {
+            Files.walk(itemsDir)
+                    .filter(p -> p.toString().endsWith(".json"))
+                    .forEach(itemFile -> {
+                        try {
+                            String json = Files.readString(itemFile, StandardCharsets.UTF_8);
+                            Map<String, Object> wrapper = MAPPER.readValue(json, Map.class);
+                            if (wrapper.containsKey("minecraft:item")) {
+                                Object itemData = wrapper.get("minecraft:item");
+                                Map<String, Object> itemMap = MAPPER.convertValue(itemData, Map.class);
+
+                                // Extract identifier, components, and menu_category
+                                String identifier = null;
+                                Map<String, Object> components = null;
+                                ItemDef.MenuCategoryInfo menuCategoryInfo = null;
+
+                                if (itemMap.containsKey("description")) {
+                                    @SuppressWarnings("unchecked")
+                                    Map<String, Object> description = (Map<String, Object>) itemMap.get("description");
+                                    identifier = (String) description.get("identifier");
+
+                                    // Extract menu_category for creative mode
+                                    if (description.containsKey("menu_category")) {
+                                        @SuppressWarnings("unchecked")
+                                        Map<String, Object> mc = (Map<String, Object>) description.get("menu_category");
+                                        menuCategoryInfo = new ItemDef.MenuCategoryInfo(
+                                            mc.get("category") != null ? mc.get("category").toString() : null,
+                                            (String) mc.get("group"),
+                                            (Boolean) mc.get("is_hidden_in_commands")
+                                        );
+                                    }
+                                }
+
+                                if (itemMap.containsKey("components")) {
+                                    @SuppressWarnings("unchecked")
+                                    Map<String, Object> comps = (Map<String, Object>) itemMap.get("components");
+                                    components = comps;
+                                }
+
+                                if (identifier != null) {
+                                    items.add(new ItemDef(identifier, components, menuCategoryInfo));
+                                }
+                            }
+                        } catch (Exception e) {
+                            log.debug("Failed to parse item: " + itemFile + " - " + e.getMessage());
                         }
                     });
         }
 
-        // Items and recipes not implemented yet
-        List<ItemDef> items = List.of();
+        // Recipes not implemented yet
         List<RecipeDef> recipes = List.of();
 
         return new AddonPack(manifest, items, blocks, entities, recipes, originalPath, needsPackaging);

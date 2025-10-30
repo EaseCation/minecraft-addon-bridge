@@ -42,3 +42,9 @@ plugin:
   # Enable verbose logging for debugging
   # Shows detailed information about pack loading, parsing, and deployment
   verbose-logging: false
+
+  # Control custom content registration
+  # You can disable specific types of custom content if needed
+  register-blocks: true
+  register-entities: true
+  register-items: true

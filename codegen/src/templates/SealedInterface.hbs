@@ -45,9 +45,26 @@ public sealed interface {{{interfaceName}}} {
                 {{#each variants}}
                 {{#if isValueWrapper}}
                 try {
+                    // For value wrapper, directly read the primitive value and call factory method
+                    {{#each properties}}
+                    {{#if (eq type "Double")}}
+                    Double value = node.asDouble();
+                    {{else if (eq type "Integer")}}
+                    Integer value = node.asInt();
+                    {{else if (eq type "Long")}}
+                    Long value = node.asLong();
+                    {{else if (eq type "Boolean")}}
+                    Boolean value = node.asBoolean();
+                    {{else if (eq type "String")}}
+                    String value = node.asText();
+                    {{else}}
+                    // Fallback for complex types
                     com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
                     nodeParser.nextToken();
-                    return ctxt.readValue(nodeParser, {{{className}}}.class);
+                    {{{type}}} value = ctxt.readValue(nodeParser, {{{type}}}.class);
+                    {{/if}}
+                    {{/each}}
+                    return {{{className}}}.of(value);
                 } catch (Exception e) {
                     // Try next variant
                 }

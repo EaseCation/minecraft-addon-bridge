@@ -34,9 +34,9 @@ public sealed interface CanFly {
             if (node.isBoolean() || node.isNumber() || node.isTextual()) {
                 // Try to deserialize as value wrapper variants
                 try {
-                    com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
-                    nodeParser.nextToken();
-                    return ctxt.readValue(nodeParser, CanFly_Variant1.class);
+                    // For value wrapper, directly read the primitive value and call factory method
+                    Boolean value = node.asBoolean();
+                    return CanFly_Variant1.of(value);
                 } catch (Exception e) {
                     // Try next variant
                 }

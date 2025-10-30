@@ -11,12 +11,17 @@ import java.util.List;
 public final class BridgeBootstrap extends PluginBase {
     private AddonBridge bridge;
     private BridgeConfig config;
+    private AddonRegistry registry;
+    private List<DeployedPack> deployedPacks;
+    private File addonsRoot;
 
     @Override
-    public void onEnable() {
-        var nukkitLogger = getLogger(); // Plugin logger (Nukkit type)
+    public void onLoad() {
+        var nukkitLogger = getLogger();
         try {
-            // 保存并加载配置文件
+            nukkitLogger.info("AddonBridge loading...");
+
+            // 1. 保存并加载配置文件
             saveDefaultConfig();
             this.config = loadBridgeConfig();
             nukkitLogger.info("AddonBridge configuration loaded:");
@@ -24,9 +29,10 @@ public final class BridgeBootstrap extends PluginBase {
             nukkitLogger.info("  Push behavior packs: " + config.isPushBehaviorPacks());
             nukkitLogger.info("  Force accept: " + config.isForceAccept());
 
-            // 根据服务端品牌信息与类特征选择适配器
-            AddonRegistry registry = AdapterFactory.detectRegistryOrNoop(getServer(), nukkitLogger);
+            // 2. 根据服务端品牌信息与类特征选择适配器
+            this.registry = AdapterFactory.detectRegistryOrNoop(getServer(), nukkitLogger);
 
+            // 3. 初始化Bridge和资源部署器
             Path dataDir = getDataFolder().toPath();
             BridgeLogger logger = new NukkitLoggerAdapter(nukkitLogger);
             ResourcePackDeployer deployer = new GenericResourceDeployer(
@@ -36,10 +42,11 @@ public final class BridgeBootstrap extends PluginBase {
             );
 
             this.bridge = new DefaultAddonBridge(
-                    new AddonParser(logger), new DependencyResolver(), registry, deployer
+                    new AddonParser(logger), new DependencyResolver(), registry, deployer, config
             );
 
-            File addonsRoot = dataDir.resolve("addons").toFile();
+            // 4. 准备addons目录
+            this.addonsRoot = dataDir.resolve("addons").toFile();
             if (!addonsRoot.exists()) {
                 //noinspection ResultOfMethodCallIgnored
                 addonsRoot.mkdirs();
@@ -59,12 +66,40 @@ public final class BridgeBootstrap extends PluginBase {
                 nukkitLogger.warning("  Cannot list files in directory");
             }
 
-            // 加载并注册所有插件包，获取已部署的资源包列表
-            List<DeployedPack> deployedPacks = bridge.loadAndRegisterAll(addonsRoot);
-            nukkitLogger.info("AddonBridge: Total deployed packs: " + deployedPacks.size());
+            // 5. 判断是否需要在onLoad阶段提前注册
+            // 某些平台（如MOT）会在enablePlugins(STARTUP)后调用closeRegistry()，必须在onLoad中注册
+            // 其他平台（如EaseCation）可以延迟到onEnable阶段注册，更符合插件生命周期
+            if (registry.requiresEarlyRegistration()) {
+                nukkitLogger.info("AddonBridge: Platform requires early registration (onLoad phase)");
+                performRegistration(nukkitLogger);
+            } else {
+                nukkitLogger.info("AddonBridge: Deferring registration to onEnable phase (platform allows flexible timing)");
+            }
+
+            nukkitLogger.info("AddonBridge loaded successfully.");
+
+        } catch (Throwable t) {
+            nukkitLogger.error("AddonBridge failed to load: " + t.getMessage(), t);
+            throw new RuntimeException("AddonBridge failed to load", t);
+        }
+    }
+
+    @Override
+    public void onEnable() {
+        var nukkitLogger = getLogger();
+        try {
+            nukkitLogger.info("AddonBridge enabling...");
+
+            // 如果在onLoad中没有注册（延迟注册模式），现在执行注册
+            if (deployedPacks == null) {
+                nukkitLogger.info("AddonBridge: Performing deferred registration (onEnable phase)");
+                performRegistration(nukkitLogger);
+            }
 
             // 设置资源包推送功能（各适配器根据平台能力自行决定是否实现）
-            registry.setupResourcePackPushing(deployedPacks, config, this);
+            if (deployedPacks != null) {
+                registry.setupResourcePackPushing(deployedPacks, config, this);
+            }
 
             // 注册管理命令
             getServer().getCommandMap().register("addonbridge", new AddonBridgeCommand(this));
@@ -74,6 +109,18 @@ public final class BridgeBootstrap extends PluginBase {
         } catch (Throwable t) {
             nukkitLogger.error("AddonBridge failed to enable: " + t.getMessage(), t);
         }
+    }
+
+    /**
+     * 执行实际的插件包扫描、解析和注册流程。
+     * 该方法会在onLoad或onEnable中被调用，具体取决于平台适配器的要求。
+     *
+     * @param nukkitLogger Nukkit日志记录器
+     * @throws Exception 如果注册过程中发生错误
+     */
+    private void performRegistration(cn.nukkit.utils.Logger nukkitLogger) throws Exception {
+        this.deployedPacks = bridge.loadAndRegisterAll(addonsRoot);
+        nukkitLogger.info("AddonBridge: Total deployed packs: " + deployedPacks.size());
     }
 
     /**
@@ -94,6 +141,11 @@ public final class BridgeBootstrap extends PluginBase {
         // Load plugin behavior settings
         config.setAutoScan(getConfig().getBoolean("plugin.auto-scan", true));
         config.setVerboseLogging(getConfig().getBoolean("plugin.verbose-logging", false));
+
+        // Load custom content registration settings
+        config.setRegisterBlocks(getConfig().getBoolean("plugin.register-blocks", true));
+        config.setRegisterEntities(getConfig().getBoolean("plugin.register-entities", true));
+        config.setRegisterItems(getConfig().getBoolean("plugin.register-items", true));
 
         return config;
     }

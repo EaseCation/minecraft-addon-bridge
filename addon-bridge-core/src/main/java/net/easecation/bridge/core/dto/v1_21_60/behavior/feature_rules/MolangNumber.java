@@ -43,16 +43,16 @@ public sealed interface MolangNumber {
             if (node.isBoolean() || node.isNumber() || node.isTextual()) {
                 // Try to deserialize as value wrapper variants
                 try {
-                    com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
-                    nodeParser.nextToken();
-                    return ctxt.readValue(nodeParser, MolangNumber_Variant0.class);
+                    // For value wrapper, directly read the primitive value and call factory method
+                    String value = node.asText();
+                    return MolangNumber_Variant0.of(value);
                 } catch (Exception e) {
                     // Try next variant
                 }
                 try {
-                    com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
-                    nodeParser.nextToken();
-                    return ctxt.readValue(nodeParser, MolangNumber_Variant1.class);
+                    // For value wrapper, directly read the primitive value and call factory method
+                    Double value = node.asDouble();
+                    return MolangNumber_Variant1.of(value);
                 } catch (Exception e) {
                     // Try next variant
                 }

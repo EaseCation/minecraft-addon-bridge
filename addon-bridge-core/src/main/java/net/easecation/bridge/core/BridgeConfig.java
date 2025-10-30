@@ -16,6 +16,11 @@ public class BridgeConfig {
     private boolean autoScan;
     private boolean verboseLogging;
 
+    // Custom content registration settings
+    private boolean registerBlocks;
+    private boolean registerEntities;
+    private boolean registerItems;
+
     /**
      * Creates a default configuration with recommended settings.
      */
@@ -27,6 +32,9 @@ public class BridgeConfig {
         this.baseUrl = "";
         this.autoScan = true;
         this.verboseLogging = false;
+        this.registerBlocks = true;
+        this.registerEntities = true;
+        this.registerItems = true;
     }
 
     // Getters
@@ -58,6 +66,18 @@ public class BridgeConfig {
         return verboseLogging;
     }
 
+    public boolean isRegisterBlocks() {
+        return registerBlocks;
+    }
+
+    public boolean isRegisterEntities() {
+        return registerEntities;
+    }
+
+    public boolean isRegisterItems() {
+        return registerItems;
+    }
+
     // Setters (for builder pattern or config loading)
     public void setPushResourcePacks(boolean pushResourcePacks) {
         this.pushResourcePacks = pushResourcePacks;
@@ -87,6 +107,18 @@ public class BridgeConfig {
         this.verboseLogging = verboseLogging;
     }
 
+    public void setRegisterBlocks(boolean registerBlocks) {
+        this.registerBlocks = registerBlocks;
+    }
+
+    public void setRegisterEntities(boolean registerEntities) {
+        this.registerEntities = registerEntities;
+    }
+
+    public void setRegisterItems(boolean registerItems) {
+        this.registerItems = registerItems;
+    }
+
     /**
      * Determines if a pack should be pushed to clients based on its type and configuration.
      *
@@ -110,6 +142,9 @@ public class BridgeConfig {
                 ", baseUrl='" + baseUrl + '\'' +
                 ", autoScan=" + autoScan +
                 ", verboseLogging=" + verboseLogging +
+                ", registerBlocks=" + registerBlocks +
+                ", registerEntities=" + registerEntities +
+                ", registerItems=" + registerItems +
                 '}';
     }
 }

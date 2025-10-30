@@ -41,9 +41,12 @@ public sealed interface CaBlockSide {
             if (node.isBoolean() || node.isNumber() || node.isTextual()) {
                 // Try to deserialize as value wrapper variants
                 try {
+                    // For value wrapper, directly read the primitive value and call factory method
+                    // Fallback for complex types
                     com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
                     nodeParser.nextToken();
-                    return ctxt.readValue(nodeParser, CaBlockSide_Block.class);
+                    BlockReference value = ctxt.readValue(nodeParser, BlockReference.class);
+                                        return CaBlockSide_Block.of(value);
                 } catch (Exception e) {
                     // Try next variant
                 }
