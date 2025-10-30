@@ -27,7 +27,7 @@ public class EntityDataDriven extends Entity implements CustomEntity {
     private EntityDefinition definition;
 
     // Component state fields
-    private net.easecation.bridge.core.dto.v1_21_60.behavior.entities.Components components;
+    private net.easecation.bridge.core.dto.entity.v1_21_60.Components components;
     private float width = 0.6f;
     private float height = 1.8f;
     private boolean hasGravity = true;
@@ -244,17 +244,17 @@ public class EntityDataDriven extends Entity implements CustomEntity {
     }
 
     /**
-     * Extract a numeric value from Range_a_B_ sealed interface.
+     * Extract a numeric value from Range_a_B sealed interface.
      * This handles the different variants of the Range type used in entity attributes.
      */
-    private Double extractRangeValue(net.easecation.bridge.core.dto.v1_21_60.behavior.entities.Range_a_B_ range) {
+    private Double extractRangeValue(net.easecation.bridge.core.dto.entity.v1_21_60.Range_a_B range) {
         if (range == null) {
             return null;
         }
 
-        if (range instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.entities.Range_a_B_.Range_a_B__Variant0 variant0) {
+        if (range instanceof net.easecation.bridge.core.dto.entity.v1_21_60.Range_a_B.Range_a_BVariant0 variant0) {
             return variant0.value();
-        } else if (range instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.entities.Range_a_B_.Range_a_B__Variant2 variant2) {
+        } else if (range instanceof net.easecation.bridge.core.dto.entity.v1_21_60.Range_a_B.Range_a_BVariant2 variant2) {
             // For range, use min value
             if (variant2.rangeMin() != null) {
                 return variant2.rangeMin();

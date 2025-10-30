@@ -20,7 +20,9 @@
       "Bash(npm run:*)",
       "Bash(xargs -I {} sh -c 'echo \"\"\"\"=== {} ===\"\"\"\" && head -30 {}')",
       "Bash(jar -tf:*)",
-      "Bash(javap:*)"
+      "Bash(javap:*)",
+      "Bash(git log:*)",
+      "Bash(git checkout tags/v1.20.0-0)"
     ],
     "deny": [],
     "ask": []

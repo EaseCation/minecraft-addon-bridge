@@ -4,7 +4,7 @@ import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.nbt.tag.IntTag;
 import cn.nukkit.nbt.tag.ListTag;
 import cn.nukkit.nbt.tag.StringTag;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.StatesValue;
+import net.easecation.bridge.core.dto.block.v1_21_60.StatesValue;
 
 import java.util.ArrayList;
 import java.util.List;

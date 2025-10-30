@@ -5,7 +5,7 @@ import cn.nukkit.block.custom.properties.BlockProperty;
 import cn.nukkit.block.custom.properties.BooleanBlockProperty;
 import cn.nukkit.block.custom.properties.IntBlockProperty;
 import cn.nukkit.block.custom.properties.EnumBlockProperty;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.StatesValue;
+import net.easecation.bridge.core.dto.block.v1_21_60.StatesValue;
 
 import java.util.ArrayList;
 import java.util.List;

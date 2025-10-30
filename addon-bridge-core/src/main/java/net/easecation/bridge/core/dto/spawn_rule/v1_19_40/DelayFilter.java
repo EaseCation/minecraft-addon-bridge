@@ -1,0 +1,18 @@
+package net.easecation.bridge.core.dto.spawn_rule.v1_19_40;
+
+import com.fasterxml.jackson.annotation.*;
+import javax.annotation.Nullable;
+
+/* This component allows players to set mobs spawn with certain time delays before they will spawn. */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record DelayFilter(
+    /* This is the minimum delay that a mob spawns. */
+    @JsonProperty("min") @Nullable Integer min,
+    /* This is the maximum delay that a mob spawns. */
+    @JsonProperty("max") @Nullable Integer max,
+    /* The identifier of the mob that will spawn. */
+    @JsonProperty("identifier") String identifier,
+    /* The percent chance that this entity will spawn. */
+    @JsonProperty("spawn_chance") @Nullable Double spawnChance
+) {
+}

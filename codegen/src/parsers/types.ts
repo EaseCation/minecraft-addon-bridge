@@ -91,6 +91,7 @@ export interface GenerateOptions {
   dryRun?: boolean;        // 干运行
   clean?: boolean;         // 清理已有文件
   schemaDir?: string;      // Schema 目录
+  force?: boolean;         // 强制重新生成已存在的版本
 }
 
 /**

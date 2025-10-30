@@ -1,15 +1,15 @@
 package net.easecation.bridge.core;
 
-import net.easecation.bridge.core.dto.v1_21_60.behavior.entities.Entity;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.entities.Components;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.entities.Events;
+import net.easecation.bridge.core.dto.entity.v1_21_60.Entity;
+import net.easecation.bridge.core.dto.entity.v1_21_60.Components;
+import net.easecation.bridge.core.dto.entity.v1_21_60.Events;
 
 import javax.annotation.Nullable;
 import java.util.Map;
 
 /**
  * Represents a custom entity definition parsed from behavior pack.
- * Contains full entity description, components, component groups and events from DTO.
+ * Uses the LATEST version (v1_21_60) - old versions will be auto-upgraded in the future.
  */
 public record EntityDef(
         String id,
@@ -27,7 +27,7 @@ public record EntityDef(
         this(id, null, null, null, null, health, speed, ai);
     }
 
-    // Constructor from DTO
+    // Constructor from DTO (always uses latest version)
     public static EntityDef fromDTO(Entity dto) {
         String identifier = dto.description() != null && dto.description().identifier() != null
                 ? dto.description().identifier().toString()
@@ -44,5 +44,13 @@ public record EntityDef(
                 null
         );
     }
+
+    // TODO: In the future, add auto-upgrade support:
+    // public static EntityDef fromJSON(String json) {
+    //     // 1. Detect format_version
+    //     // 2. Load corresponding DTO version
+    //     // 3. Upgrade to latest version (v1_21_60)
+    //     // 4. Create EntityDef from latest DTO
+    // }
 }
 

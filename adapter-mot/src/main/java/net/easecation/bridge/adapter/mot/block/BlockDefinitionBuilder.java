@@ -5,7 +5,7 @@ import cn.nukkit.block.custom.container.BlockContainer;
 import cn.nukkit.block.custom.properties.BlockProperties;
 import cn.nukkit.math.Vector3f;
 import net.easecation.bridge.core.BlockDef;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.*;
+import net.easecation.bridge.core.dto.block.v1_21_60.*;
 
 import java.util.List;
 import java.util.Map;

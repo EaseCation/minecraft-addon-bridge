@@ -2,8 +2,9 @@ package net.easecation.bridge.core;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.BlockDefinitions;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.entities.Entity;
+import net.easecation.bridge.core.dto.block.v1_21_60.BlockDefinitions;
+import net.easecation.bridge.core.dto.entity.v1_21_60.Entity;
+import net.easecation.bridge.core.dto.item.v1_21_60.Item;
 
 import java.io.File;
 import java.io.IOException;
@@ -203,7 +204,7 @@ public class AddonParser {
                 log.info("Entity parsing: found " + entityFileCount + " files, successfully parsed " + entityParsedCount);
             }
 
-            // Parse items (including Netease edition items)
+            // Parse items (including Netease edition items) - using v1_21_60 DTO
             List<ItemDef> items = new ArrayList<>();
             entries = zip.entries();
             while (entries.hasMoreElements()) {
@@ -212,44 +213,13 @@ public class AddonParser {
                 if ((name.startsWith("items/") || name.startsWith("netease_items_beh/")) && name.endsWith(".json")) {
                     try (InputStream is = zip.getInputStream(entry)) {
                         String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-                        // Parse wrapper: {"format_version": "1.21.60", "minecraft:item": {...}}
-                        Map<String, Object> wrapper = MAPPER.readValue(json, Map.class);
-                        if (wrapper.containsKey("minecraft:item")) {
-                            Object itemData = wrapper.get("minecraft:item");
-                            Map<String, Object> itemMap = MAPPER.convertValue(itemData, Map.class);
 
-                            // Extract identifier, components, and menu_category
-                            String identifier = null;
-                            Map<String, Object> components = null;
-                            ItemDef.MenuCategoryInfo menuCategoryInfo = null;
+                        // Parse using Jackson to v1_21_60.Item DTO
+                        Item item = MAPPER.readValue(json, Item.class);
 
-                            if (itemMap.containsKey("description")) {
-                                @SuppressWarnings("unchecked")
-                                Map<String, Object> description = (Map<String, Object>) itemMap.get("description");
-                                identifier = (String) description.get("identifier");
-
-                                // Extract menu_category for creative mode
-                                if (description.containsKey("menu_category")) {
-                                    @SuppressWarnings("unchecked")
-                                    Map<String, Object> mc = (Map<String, Object>) description.get("menu_category");
-                                    menuCategoryInfo = new ItemDef.MenuCategoryInfo(
-                                        mc.get("category") != null ? mc.get("category").toString() : null,
-                                        (String) mc.get("group"),
-                                        (Boolean) mc.get("is_hidden_in_commands")
-                                    );
-                                }
-                            }
-
-                            if (itemMap.containsKey("components")) {
-                                @SuppressWarnings("unchecked")
-                                Map<String, Object> comps = (Map<String, Object>) itemMap.get("components");
-                                components = comps;
-                            }
-
-                            if (identifier != null) {
-                                items.add(new ItemDef(identifier, components, menuCategoryInfo));
-                            }
-                        }
+                        // Convert to ItemDef (using latest version)
+                        ItemDef itemDef = ItemDef.fromDTO(item);
+                        items.add(itemDef);
                     } catch (Exception e) {
                         log.debug("Failed to parse item: " + name + " - " + e.getMessage());
                     }
@@ -363,43 +333,10 @@ public class AddonParser {
                     .forEach(itemFile -> {
                         try {
                             String json = Files.readString(itemFile, StandardCharsets.UTF_8);
-                            Map<String, Object> wrapper = MAPPER.readValue(json, Map.class);
-                            if (wrapper.containsKey("minecraft:item")) {
-                                Object itemData = wrapper.get("minecraft:item");
-                                Map<String, Object> itemMap = MAPPER.convertValue(itemData, Map.class);
-
-                                // Extract identifier, components, and menu_category
-                                String identifier = null;
-                                Map<String, Object> components = null;
-                                ItemDef.MenuCategoryInfo menuCategoryInfo = null;
-
-                                if (itemMap.containsKey("description")) {
-                                    @SuppressWarnings("unchecked")
-                                    Map<String, Object> description = (Map<String, Object>) itemMap.get("description");
-                                    identifier = (String) description.get("identifier");
-
-                                    // Extract menu_category for creative mode
-                                    if (description.containsKey("menu_category")) {
-                                        @SuppressWarnings("unchecked")
-                                        Map<String, Object> mc = (Map<String, Object>) description.get("menu_category");
-                                        menuCategoryInfo = new ItemDef.MenuCategoryInfo(
-                                            mc.get("category") != null ? mc.get("category").toString() : null,
-                                            (String) mc.get("group"),
-                                            (Boolean) mc.get("is_hidden_in_commands")
-                                        );
-                                    }
-                                }
-
-                                if (itemMap.containsKey("components")) {
-                                    @SuppressWarnings("unchecked")
-                                    Map<String, Object> comps = (Map<String, Object>) itemMap.get("components");
-                                    components = comps;
-                                }
-
-                                if (identifier != null) {
-                                    items.add(new ItemDef(identifier, components, menuCategoryInfo));
-                                }
-                            }
+                            // Parse using Jackson to v1_21_60.Item DTO
+                            Item item = MAPPER.readValue(json, Item.class);
+                            ItemDef itemDef = ItemDef.fromDTO(item);
+                            items.add(itemDef);
                         } catch (Exception e) {
                             log.debug("Failed to parse item: " + itemFile + " - " + e.getMessage());
                         }
@@ -413,43 +350,10 @@ public class AddonParser {
                     .forEach(itemFile -> {
                         try {
                             String json = Files.readString(itemFile, StandardCharsets.UTF_8);
-                            Map<String, Object> wrapper = MAPPER.readValue(json, Map.class);
-                            if (wrapper.containsKey("minecraft:item")) {
-                                Object itemData = wrapper.get("minecraft:item");
-                                Map<String, Object> itemMap = MAPPER.convertValue(itemData, Map.class);
-
-                                // Extract identifier, components, and menu_category
-                                String identifier = null;
-                                Map<String, Object> components = null;
-                                ItemDef.MenuCategoryInfo menuCategoryInfo = null;
-
-                                if (itemMap.containsKey("description")) {
-                                    @SuppressWarnings("unchecked")
-                                    Map<String, Object> description = (Map<String, Object>) itemMap.get("description");
-                                    identifier = (String) description.get("identifier");
-
-                                    // Extract menu_category for creative mode
-                                    if (description.containsKey("menu_category")) {
-                                        @SuppressWarnings("unchecked")
-                                        Map<String, Object> mc = (Map<String, Object>) description.get("menu_category");
-                                        menuCategoryInfo = new ItemDef.MenuCategoryInfo(
-                                            mc.get("category") != null ? mc.get("category").toString() : null,
-                                            (String) mc.get("group"),
-                                            (Boolean) mc.get("is_hidden_in_commands")
-                                        );
-                                    }
-                                }
-
-                                if (itemMap.containsKey("components")) {
-                                    @SuppressWarnings("unchecked")
-                                    Map<String, Object> comps = (Map<String, Object>) itemMap.get("components");
-                                    components = comps;
-                                }
-
-                                if (identifier != null) {
-                                    items.add(new ItemDef(identifier, components, menuCategoryInfo));
-                                }
-                            }
+                            // Parse using Jackson to v1_21_60.Item DTO
+                            Item item = MAPPER.readValue(json, Item.class);
+                            ItemDef itemDef = ItemDef.fromDTO(item);
+                            items.add(itemDef);
                         } catch (Exception e) {
                             log.debug("Failed to parse Netease item: " + itemFile + " - " + e.getMessage());
                         }

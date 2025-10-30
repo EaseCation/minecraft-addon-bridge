@@ -383,7 +383,7 @@ public class EasecationRegistry implements AddonRegistry {
                 CompoundTag menuCategory = new CompoundTag();
                 var mc = blockDef.description().menuCategory();
 
-                menuCategory.putString("category", mc.category() != null ? mc.category().toString() : "none");
+                menuCategory.putString("category", mc.category() != null ? mc.category() : "none");
                 if (mc.group() != null) {
                     menuCategory.putString("group", mc.group());
                 }

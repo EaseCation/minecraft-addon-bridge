@@ -49,9 +49,9 @@ export class TypeResolver {
       return 'Object';  // 实际类型将由 SchemaParser 处理
     }
 
-    // 处理 enum
+    // 处理 enum - 直接使用 String，不生成 Java enum（简化类型，提高灵活性）
     if (schema.enum && schema.enum.length > 0) {
-      return 'String';  // 默认枚举类型，实际将生成 Java enum
+      return 'String';
     }
 
     // 处理基本类型
@@ -165,16 +165,23 @@ export class TypeResolver {
           return 'net.easecation.bridge.core.dto.EmptyObject';
         }
 
-        // 检查是否有 patternProperties 或 additionalProperties
-        // additionalProperties 可以是 true 或者对象（如 {$ref: ...}）
-        if (schema.patternProperties ||
-            schema.additionalProperties === true ||
-            (typeof schema.additionalProperties === 'object' && Object.keys(schema.additionalProperties).length > 0)) {
+        // 优先级调整：如果有明确的 properties 定义，优先生成结构化对象
+        // 这样可以保留强类型信息，即使同时存在 additionalProperties
+        if (hasProperties) {
+          // 有明确定义的字段，生成结构化对象（record）
+          // additionalProperties 会被忽略，因为我们优先使用明确定义的类型
+          return 'Object';  // 占位符，实际将生成新类
+        }
+
+        // 只有 patternProperties/additionalProperties 没有 properties 时，才使用 Map
+        // 这表示这是一个真正的"字典"类型，而不是带有已知字段的对象
+        if (hasAdditionalProps || hasPatternProps) {
           // 使用 Map
           const valueType = this.resolveAdditionalPropertiesType(schema, context);
           return `Map<String, ${valueType}>`;
         }
-        // 普通对象，需要生成新类
+
+        // 默认返回 Object（理论上不应该到达这里）
         return 'Object';  // 占位符，实际将生成新类
 
       case 'null':
@@ -236,10 +243,8 @@ export class TypeResolver {
    * 判断 Schema 应该生成什么类型的 Java 类
    */
   determineJavaTypeKind(schema: JSONSchema7): JavaTypeKind {
-    // enum -> Java enum
-    if (schema.enum && schema.enum.length > 0) {
-      return JavaTypeKind.ENUM;
-    }
+    // enum 已在 resolveType() 中处理为 String，不再生成 enum 类
+    // 因此这里移除了 enum 判断
 
     // oneOf/anyOf -> sealed interface
     // 但需要排除 type: array + oneOf 约束 items 的情况

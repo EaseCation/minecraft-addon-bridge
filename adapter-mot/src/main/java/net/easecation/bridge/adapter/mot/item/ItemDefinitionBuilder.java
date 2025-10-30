@@ -4,8 +4,7 @@ import cn.nukkit.item.customitem.CustomItemDefinition;
 import cn.nukkit.item.customitem.ItemCustom;
 import cn.nukkit.item.customitem.data.ItemCreativeCategory;
 import net.easecation.bridge.core.ItemDef;
-
-import java.util.Map;
+import net.easecation.bridge.core.dto.item.v1_21_60.Item;
 
 /**
  * Builder utility to convert ItemDef components to MOT's CustomItemDefinition.
@@ -20,7 +19,7 @@ public class ItemDefinitionBuilder {
      * @return Configured CustomItemDefinition
      */
     public static CustomItemDefinition build(ItemCustom item, ItemDef itemDef) {
-        Map<String, Object> components = itemDef.components();
+        Item.Components components = itemDef.components();
 
         if (components == null) {
             // Minimal item with default properties
@@ -48,7 +47,7 @@ public class ItemDefinitionBuilder {
     /**
      * Determine the item type based on components.
      */
-    private static ItemType determineItemType(Map<String, Object> components) {
+    private static ItemType determineItemType(Item.Components components) {
         // For now, always use SIMPLE builder as it's the most compatible
         // MOT's specialized builders may have different APIs than expected
         return ItemType.SIMPLE;
@@ -57,8 +56,8 @@ public class ItemDefinitionBuilder {
     /**
      * Build a simple item definition.
      */
-    private static CustomItemDefinition buildSimple(ItemCustom item, Map<String, Object> components) {
-        ItemCreativeCategory category = extractCreativeCategory(components);
+    private static CustomItemDefinition buildSimple(ItemCustom item, Item.Components components) {
+        ItemCreativeCategory category = ItemCreativeCategory.ITEMS; // Default category
         CustomItemDefinition.SimpleBuilder builder = CustomItemDefinition.simpleBuilder(item, category);
 
         // Apply common properties
@@ -70,7 +69,7 @@ public class ItemDefinitionBuilder {
     /**
      * Build a food item definition.
      */
-    private static CustomItemDefinition buildFood(ItemCustom item, Map<String, Object> components) {
+    private static CustomItemDefinition buildFood(ItemCustom item, Item.Components components) {
         // Use simple builder for food items as well
         return buildSimple(item, components);
     }
@@ -78,7 +77,7 @@ public class ItemDefinitionBuilder {
     /**
      * Build a tool item definition.
      */
-    private static CustomItemDefinition buildTool(ItemCustom item, Map<String, Object> components) {
+    private static CustomItemDefinition buildTool(ItemCustom item, Item.Components components) {
         // Use simple builder for tool items as well
         return buildSimple(item, components);
     }
@@ -86,7 +85,7 @@ public class ItemDefinitionBuilder {
     /**
      * Build an armor item definition.
      */
-    private static CustomItemDefinition buildArmor(ItemCustom item, Map<String, Object> components) {
+    private static CustomItemDefinition buildArmor(ItemCustom item, Item.Components components) {
         // Use simple builder for armor items as well
         return buildSimple(item, components);
     }
@@ -94,60 +93,33 @@ public class ItemDefinitionBuilder {
     /**
      * Apply common properties that work across all builder types.
      */
-    private static void applyCommonProperties(CustomItemDefinition.SimpleBuilder builder, Map<String, Object> components) {
+    private static void applyCommonProperties(CustomItemDefinition.SimpleBuilder builder, Item.Components components) {
         // Allow off-hand
-        Object allowOffHand = components.get("minecraft:allow_off_hand");
-        if (allowOffHand instanceof Boolean) {
-            builder.allowOffHand((Boolean) allowOffHand);
+        if (components.minecraft_allowOffHand() != null) {
+            // AllowOffHand component exists, item can be used off-hand
+            builder.allowOffHand(true);
         }
 
         // Hand equipped
-        Object handEquipped = components.get("minecraft:hand_equipped");
-        if (handEquipped instanceof Boolean) {
-            builder.handEquipped((Boolean) handEquipped);
+        if (components.minecraft_handEquipped() != null) {
+            // HandEquipped component exists, item is hand equipped
+            builder.handEquipped(true);
         }
 
         // Glint (foil effect)
-        Object glint = components.get("minecraft:glint");
-        if (glint instanceof Boolean) {
-            builder.foil((Boolean) glint);
-        }
-
-        // Creative group
-        Object creativeGroup = components.get("minecraft:creative_group");
-        if (creativeGroup instanceof String) {
-            builder.creativeGroup((String) creativeGroup);
+        if (components.minecraft_glint() != null) {
+            // Glint component exists, item has foil effect
+            builder.foil(true);
         }
 
         // Can destroy in creative
-        Object canDestroyInCreative = components.get("minecraft:can_destroy_in_creative");
-        if (canDestroyInCreative instanceof Boolean) {
-            builder.canDestroyInCreative((Boolean) canDestroyInCreative);
+        if (components.minecraft_canDestroyInCreative() != null) {
+            // CanDestroyInCreative component exists
+            builder.canDestroyInCreative(true);
         }
 
         // Max stack size (handled in ItemDataDriven.getMaxStackSize())
         // Durability (handled in specific builders or ItemDataDriven.getMaxDurability())
-    }
-
-    /**
-     * Extract creative category from components.
-     */
-    private static ItemCreativeCategory extractCreativeCategory(Map<String, Object> components) {
-        Object categoryObj = components.get("minecraft:creative_category");
-        if (categoryObj instanceof String) {
-            String category = (String) categoryObj;
-            // Map string to enum - use available MOT categories
-            switch (category.toLowerCase()) {
-                case "equipment":
-                    return ItemCreativeCategory.EQUIPMENT;
-                case "nature":
-                    return ItemCreativeCategory.NATURE;
-                case "items":
-                default:
-                    return ItemCreativeCategory.ITEMS;
-            }
-        }
-        return ItemCreativeCategory.ITEMS;
     }
 
     /**

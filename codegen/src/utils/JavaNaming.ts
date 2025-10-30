@@ -68,6 +68,9 @@ export function toUpperSnakeCase(str: string): string {
     return operatorMap[str];
   }
 
+  // 先将点号、连字符等分隔符统一替换为下划线
+  str = str.replace(/[.\-\s]+/g, '_');
+
   // 处理已经是 snake_case 的情况
   if (str.includes('_')) {
     return str.toUpperCase();
@@ -85,17 +88,52 @@ export function toUpperSnakeCase(str: string): string {
  * 移除非法字符，处理 Java 保留字
  */
 export function sanitizeIdentifier(str: string): string {
+  // 特殊字符映射（用于属性名）
+  const specialChars: Record<string, string> = {
+    '*': 'all',           // 通配符
+    '@': 'at',
+    '#': 'hash',
+    '$': 'dollar',
+    '%': 'percent',
+    '&': 'and',
+    '|': 'or',
+    '^': 'xor',
+    '~': 'tilde',
+    '?': 'question',
+    ':': 'colon',
+    '.': 'dot',
+    ',': 'comma',
+    ';': 'semicolon',
+    '!': 'exclamation',
+  };
+
+  // 如果是纯特殊字符，直接映射
+  if (specialChars[str]) {
+    return specialChars[str];
+  }
+
   // 移除非法字符（只保留字母、数字、下划线）
   let cleaned = str.replace(/[^a-zA-Z0-9_]/g, '_');
 
-  // 如果以数字开头，添加下划线前缀
+  // 移除连续的下划线
+  cleaned = cleaned.replace(/_+/g, '_');
+
+  // 移除首尾下划线
+  cleaned = cleaned.replace(/^_+|_+$/g, '');
+
+  // 如果清理后为空或只有下划线，使用默认名称
+  if (!cleaned || cleaned === '_') {
+    return 'value';
+  }
+
+  // 如果以数字开头，添加前缀
   if (/^\d/.test(cleaned)) {
-    cleaned = '_' + cleaned;
+    cleaned = 'field_' + cleaned;
   }
 
   // 处理 Java 保留字
   if (isJavaKeyword(cleaned)) {
-    cleaned = cleaned + '_';
+    cleaned = cleaned + 'Field';
   }
 
   return cleaned;
@@ -139,8 +177,10 @@ export function fileNameToClassName(fileName: string, suffix: string = 'Definiti
 }
 
 /**
- * 从 schema 路径提取模块名
- * 例如: "behavior/blocks/blocks.json" -> "blocks"
+ * 从 schema 路径提取模块名（单数形式）
+ * 例如: "behavior/blocks/blocks.json" -> "block"
+ * 例如: "behavior/items/items.json" -> "item"
+ * 例如: "behavior/entities/entities.json" -> "entity"
  */
 export function extractModuleName(filePath: string): string {
   const parts = filePath.split('/').filter(p => p && p !== '.' && p !== '..');
@@ -150,20 +190,32 @@ export function extractModuleName(filePath: string): string {
   const resourceIndex = parts.indexOf('resource');
   const baseIndex = Math.max(behaviorIndex, resourceIndex);
 
+  let moduleName: string;
+
   if (baseIndex >= 0 && baseIndex < parts.length - 1) {
-    return parts[baseIndex + 1];
+    moduleName = parts[baseIndex + 1];
+  } else if (parts.length >= 2) {
+    // 如果没有找到，返回文件所在目录名
+    moduleName = parts[parts.length - 2];
+  } else {
+    return 'unknown';
   }
 
-  // 如果没有找到，返回文件所在目录名
-  if (parts.length >= 2) {
-    return parts[parts.length - 2];
-  }
+  // 转换为单数形式
+  if (moduleName === 'items') return 'item';
+  if (moduleName === 'blocks') return 'block';
+  if (moduleName === 'entities') return 'entity';
+  if (moduleName === 'recipes') return 'recipe';
 
-  return 'unknown';
+  // 通用规则：移除末尾的 's'
+  return moduleName.replace(/s$/, '');
 }
 
 /**
  * 生成 Java 包名
+ * 新结构: dto.{module}.v{version}
+ * 例如: dto.item.v1_21_60, dto.block.v1_20_81
+ *
  * @param schemaPath - Schema 文件路径
  * @param version - 版本号，如 "1.21.60"
  * @param basePackage - 基础包名
@@ -173,22 +225,12 @@ export function getJavaPackage(
   version: string,
   basePackage: string = 'net.easecation.bridge.core.dto'
 ): string {
+  // 提取模块名（单数形式）: "behavior/items/items.json" -> "item"
+  const module = extractModuleName(schemaPath);
+
+  // 版本号格式化: "1.21.60" -> "v1_21_60"
   const versionSegment = `v${version.replace(/\./g, '_')}`;
 
-  // 提取相对路径（从 behavior 或 resource 开始）
-  const parts = schemaPath.split('/').filter(p => p && p !== '.' && p !== '..');
-  const behaviorIndex = parts.indexOf('behavior');
-  const resourceIndex = parts.indexOf('resource');
-  const baseIndex = Math.max(behaviorIndex, resourceIndex);
-
-  if (baseIndex < 0) {
-    // 如果没有找到 behavior 或 resource，使用默认路径
-    return `${basePackage}.${versionSegment}`;
-  }
-
-  // 提取从 behavior/resource 到文件所在目录的路径
-  const relativeParts = parts.slice(baseIndex, parts.length - 1);
-  const pathSegment = relativeParts.join('.');
-
-  return `${basePackage}.${versionSegment}.${pathSegment}`;
+  // 生成包名: dto.{module}.{version}
+  return `${basePackage}.${module}.${versionSegment}`;
 }

@@ -1,0 +1,11 @@
+package net.easecation.bridge.core.dto.entity.v1_21_50;
+
+import com.fasterxml.jackson.annotation.*;
+import javax.annotation.Nullable;
+
+/* Allows the villager to look for a mate to spawn other villagers with. Can only be used by Villagers. */
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record MakeLove(
+    @JsonProperty("priority") @Nullable Integer priority
+) {
+}

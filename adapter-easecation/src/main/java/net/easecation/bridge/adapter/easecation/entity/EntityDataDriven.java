@@ -9,17 +9,16 @@ import cn.nukkit.item.Item;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.network.protocol.AddEntityPacket;
-import cn.nukkit.network.protocol.ProtocolInfo;
 import cn.nukkit.network.protocol.UpdateAttributesPacket;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.entities.Components;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.entities.Range_a_B_;
+import net.easecation.bridge.core.dto.entity.v1_21_60.Components;
+import net.easecation.bridge.core.dto.entity.v1_21_60.Range_a_B;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Data-driven custom entity implementation for EaseCation Nukkit.
- * Based on ECProEntity's EntityDataDriven implementation.
+ * Uses the LATEST version (v1_21_60) - old versions will be auto-upgraded before registration.
  */
 public class EntityDataDriven extends EntityCreature {
 
@@ -196,16 +195,16 @@ public class EntityDataDriven extends EntityCreature {
     }
 
     /**
-     * Extract a numeric value from Range_a_B_ sealed interface.
+     * Extract a numeric value from Range_a_B sealed interface.
      */
-    private Double extractRangeValue(Range_a_B_ range) {
+    private Double extractRangeValue(Range_a_B range) {
         if (range == null) {
             return null;
         }
 
-        if (range instanceof Range_a_B_.Range_a_B__Variant0 variant0) {
+        if (range instanceof Range_a_B.Range_a_BVariant0 variant0) {
             return variant0.value();
-        } else if (range instanceof Range_a_B_.Range_a_B__Variant2 variant2) {
+        } else if (range instanceof Range_a_B.Range_a_BVariant2 variant2) {
             // For range, use min value
             if (variant2.rangeMin() != null) {
                 return variant2.rangeMin();

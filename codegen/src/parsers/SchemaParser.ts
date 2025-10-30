@@ -218,8 +218,8 @@ export class SchemaParser {
     }
 
     // 只检查改变类型语义的约束，忽略纯验证性质的约束（pattern, min/max等）
-    const hasSemanticConstraints = schema.enum ||
-                                    schema.const !== undefined ||
+    // enum 只是值约束，不改变类型本质（String 仍然是 String），因此不视为语义约束
+    const hasSemanticConstraints = schema.const !== undefined ||
                                     schema.oneOf ||
                                     schema.anyOf ||
                                     schema.allOf;
@@ -245,8 +245,9 @@ export class SchemaParser {
 
     // 根据类型种类调用相应的解析方法
     switch (kind) {
-      case JavaTypeKind.ENUM:
-        return this.parseEnum(schema, suggestedName, context);
+      // ENUM 已移除，enum 值直接使用 String 类型
+      // case JavaTypeKind.ENUM:
+      //   return this.parseEnum(schema, suggestedName, context);
 
       case JavaTypeKind.SEALED_INTERFACE:
         return this.parseSealedInterface(schema, suggestedName, context);
@@ -557,10 +558,10 @@ export class SchemaParser {
     if (properties.length === 0 && (mergedSchema.type === 'string' || mergedSchema.type === 'boolean' ||
         mergedSchema.type === 'number' || mergedSchema.type === 'integer')) {
 
-      // 只检查改变类型语义的约束（enum, const, oneOf/anyOf/allOf）
-      // 忽略纯验证性质的约束（pattern, minLength, maxLength, minimum, maximum等）
-      const hasSemanticConstraints = mergedSchema.enum ||
-                                      mergedSchema.const !== undefined ||
+      // 只检查改变类型语义的约束（const, oneOf/anyOf/allOf）
+      // 忽略纯验证性质的约束（enum, pattern, minLength, maxLength, minimum, maximum等）
+      // enum 只是值约束，不改变类型本质（String 仍然是 String），因此不视为语义约束
+      const hasSemanticConstraints = mergedSchema.const !== undefined ||
                                       mergedSchema.oneOf ||
                                       mergedSchema.anyOf ||
                                       mergedSchema.allOf;
@@ -571,7 +572,7 @@ export class SchemaParser {
         return null;
       }
 
-      // 如果有语义约束，生成包装类（暂时保留，未来可能需要更好的处理）
+      // 如果有语义约束，生成包装类
       const javaType = this.typeResolver.resolveType(mergedSchema, { filePath: context.filePath });
       properties = [{
         name: 'value',
@@ -654,13 +655,13 @@ export class SchemaParser {
 
     // 检测内联对象定义（需要满足所有条件）
     // JSON Schema 允许省略 type: "object"，只要有 properties 就隐含为 object
+    // 优先级：如果有明确的 properties 定义，优先生成结构化对象
+    // additionalProperties 会被忽略，因为我们关注已知字段的强类型
     const isInlineObject = (schema.type === 'object' || !schema.type)
       && schema.properties
       && Object.keys(schema.properties).length > 0
       && !schema.$ref
-      // additionalProperties: false 是可以的，只排除 true 或有定义的对象
-      && !(schema.additionalProperties === true || (typeof schema.additionalProperties === 'object' && schema.additionalProperties !== null))
-      && !schema.patternProperties;    // 避免模式属性对象
+      && !schema.patternProperties;    // 只排除 patternProperties（真正的模式匹配类型）
 
     if (isInlineObject) {
       // 生成内联类型名称（使用属性名的 PascalCase，并 sanitize）

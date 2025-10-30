@@ -102,24 +102,15 @@ public class MotRegistry implements AddonRegistry {
      * Extract texture name from item definition.
      */
     private String extractTextureName(ItemDef itemDef) {
-        if (itemDef.components() != null) {
-            Object iconObj = itemDef.components().get("minecraft:icon");
-            if (iconObj instanceof String) {
-                return (String) iconObj;
-            } else if (iconObj instanceof java.util.Map) {
-                @SuppressWarnings("unchecked")
-                java.util.Map<String, Object> iconMap = (java.util.Map<String, Object>) iconObj;
-                Object texturesObj = iconMap.get("textures");
-                if (texturesObj instanceof java.util.Map) {
-                    @SuppressWarnings("unchecked")
-                    java.util.Map<String, String> texturesMap = (java.util.Map<String, String>) texturesObj;
-                    String texture = texturesMap.get("default");
-                    if (texture != null) {
-                        return texture;
-                    }
-                    if (!texturesMap.isEmpty()) {
-                        return texturesMap.values().iterator().next();
-                    }
+        if (itemDef.components() != null && itemDef.components().minecraft_icon() != null) {
+            net.easecation.bridge.core.dto.item.v1_21_60.Icon icon = itemDef.components().minecraft_icon();
+
+            // Icon can be either a simple string or a complex object
+            if (icon instanceof net.easecation.bridge.core.dto.item.v1_21_60.Icon.Icon_Variant0 variant0) {
+                return variant0.value();
+            } else if (icon instanceof net.easecation.bridge.core.dto.item.v1_21_60.Icon.Icon_Variant1 variant1) {
+                if (variant1.textures() != null && variant1.textures().defaultField() != null) {
+                    return variant1.textures().defaultField();
                 }
             }
         }

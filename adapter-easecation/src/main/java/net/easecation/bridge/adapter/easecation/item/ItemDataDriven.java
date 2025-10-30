@@ -2,7 +2,7 @@ package net.easecation.bridge.adapter.easecation.item;
 
 import cn.nukkit.item.Item;
 import net.easecation.bridge.core.ItemDef;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.items.*;
+import net.easecation.bridge.core.dto.item.v1_21_60.*;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,7 +60,7 @@ public class ItemDataDriven extends Item {
 
         String identifier = itemDef.id();
         try {
-            Map<String, Object> components = itemDef.components();
+            var components = itemDef.components();
 
             if (components == null) {
                 // Minimal item with default properties
@@ -92,30 +92,24 @@ public class ItemDataDriven extends Item {
             String usingConvertsTo = null;
             boolean hasFood = false;
 
-            Object foodObj = components.get("minecraft:food");
-            if (foodObj instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> foodMap = (Map<String, Object>) foodObj;
+            if (components.minecraft_food() != null) {
+                var food = components.minecraft_food();
                 hasFood = true;
 
-                Object canAlwaysEatObj = foodMap.get("can_always_eat");
-                if (canAlwaysEatObj instanceof Boolean) {
-                    canAlwaysEat = (Boolean) canAlwaysEatObj;
+                if (food.canAlwaysEat() != null) {
+                    canAlwaysEat = food.canAlwaysEat();
                 }
 
-                Object nutritionObj = foodMap.get("nutrition");
-                if (nutritionObj instanceof Number) {
-                    nutrition = ((Number) nutritionObj).intValue();
+                if (food.nutrition() != null) {
+                    nutrition = food.nutrition().intValue();
                 }
 
-                Object saturationObj = foodMap.get("saturation_modifier");
-                if (saturationObj instanceof Number) {
-                    saturationModifier = ((Number) saturationObj).floatValue();
+                if (food.saturationModifier() != null) {
+                    saturationModifier = food.saturationModifier().floatValue();
                 }
 
-                Object convertsToObj = foodMap.get("using_converts_to");
-                if (convertsToObj instanceof String) {
-                    usingConvertsTo = (String) convertsToObj;
+                if (food.usingConvertsTo() != null) {
+                    usingConvertsTo = food.usingConvertsTo();
                 }
             }
 
@@ -123,19 +117,15 @@ public class ItemDataDriven extends Item {
             int armorProtection = 0;
             String armorSlot = null;
 
-            Object wearableObj = components.get("minecraft:wearable");
-            if (wearableObj instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> wearableMap = (Map<String, Object>) wearableObj;
+            if (components.minecraft_wearable() != null) {
+                var wearable = components.minecraft_wearable();
 
-                Object protectionObj = wearableMap.get("protection");
-                if (protectionObj instanceof Number) {
-                    armorProtection = ((Number) protectionObj).intValue();
+                if (wearable.protection() != null) {
+                    armorProtection = wearable.protection();
                 }
 
-                Object slotObj = wearableMap.get("slot");
-                if (slotObj instanceof String) {
-                    armorSlot = (String) slotObj;
+                if (wearable.slot() != null) {
+                    armorSlot = wearable.slot();
                 }
             }
 
@@ -170,46 +160,59 @@ public class ItemDataDriven extends Item {
         }
     }
 
-    private String extractDisplayName(Map<String, Object> components, String fallback) {
-        Object displayName = components.get("minecraft:display_name");
-        if (displayName instanceof Map) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> displayNameMap = (Map<String, Object>) displayName;
-            Object value = displayNameMap.get("value");
-            if (value instanceof String) {
-                return (String) value;
+    private String extractDisplayName(net.easecation.bridge.core.dto.item.v1_21_60.Item.Components components, String fallback) {
+        if (components.minecraft_displayName() != null) {
+            var displayName = components.minecraft_displayName();
+            if (displayName.value() != null) {
+                return displayName.value();
             }
-        } else if (displayName instanceof String) {
-            return (String) displayName;
         }
         return fallback;
     }
 
-    private int extractMaxStackSize(Map<String, Object> components) {
-        Object maxStackSize = components.get("minecraft:max_stack_size");
-        if (maxStackSize instanceof Number) {
-            // Direct number value (Variant0)
-            return ((Number) maxStackSize).intValue();
-        } else if (maxStackSize instanceof Map) {
-            // Object with value field (Variant1)
-            @SuppressWarnings("unchecked")
-            Map<String, Object> maxStackSizeMap = (Map<String, Object>) maxStackSize;
-            Object value = maxStackSizeMap.get("value");
-            if (value instanceof Number) {
-                return ((Number) value).intValue();
+    private int extractMaxStackSize(net.easecation.bridge.core.dto.item.v1_21_60.Item.Components components) {
+        if (components.minecraft_maxStackSize() != null) {
+            Double value = extractDoubleValue(components.minecraft_maxStackSize());
+            if (value != null) {
+                return value.intValue();
             }
         }
         return 64; // Default stack size
     }
 
-    private int extractMaxDurability(Map<String, Object> components) {
-        Object durability = components.get("minecraft:durability");
-        if (durability instanceof Map) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> durabilityMap = (Map<String, Object>) durability;
-            Object maxDurability = durabilityMap.get("max_durability");
-            if (maxDurability instanceof Number) {
-                return ((Number) maxDurability).intValue();
+    private Double extractDoubleValue(Object component) {
+        // Handle sealed interfaces with Variant0/Variant1 that have a Double value
+        try {
+            var method = component.getClass().getMethod("value");
+            Object result = method.invoke(component);
+            if (result instanceof Double) {
+                return (Double) result;
+            }
+        } catch (Exception e) {
+            // Ignore and return null
+        }
+        return null;
+    }
+
+    private String extractStringValue(Object component) {
+        // Handle sealed interfaces with Variant0 that have a String value
+        try {
+            var method = component.getClass().getMethod("value");
+            Object result = method.invoke(component);
+            if (result instanceof String) {
+                return (String) result;
+            }
+        } catch (Exception e) {
+            // Ignore and return null
+        }
+        return null;
+    }
+
+    private int extractMaxDurability(net.easecation.bridge.core.dto.item.v1_21_60.Item.Components components) {
+        if (components.minecraft_durability() != null) {
+            var durability = components.minecraft_durability();
+            if (durability.maxDurability() != null) {
+                return durability.maxDurability();
             }
         }
         return 0; // No durability

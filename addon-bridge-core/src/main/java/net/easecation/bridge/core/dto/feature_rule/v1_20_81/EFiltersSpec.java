@@ -1,0 +1,23 @@
+package net.easecation.bridge.core.dto.feature_rule.v1_20_81;
+
+import com.fasterxml.jackson.annotation.*;
+import javax.annotation.Nullable;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
+public sealed interface EFiltersSpec {
+    @JsonIgnoreProperties(ignoreUnknown = true) 
+    record EFiltersSpec_Variant0(
+        /* All tests in an {@code all_of} group must pass in order for the group to pass. */
+        @JsonProperty("all_of") @Nullable EGroupsSpec allOf,
+        /* One or more tests in an {@code any_of} group must pass in order for the group to pass. */
+        @JsonProperty("any_of") @Nullable EGroupsSpec anyOf,
+        /* All tests in a {@code none_of} group must fail in order for the group to pass. */
+        @JsonProperty("none_of") @Nullable EGroupsSpec noneOf
+    ) implements EFiltersSpec {
+    }
+    @JsonIgnoreProperties(ignoreUnknown = true) 
+    record EFiltersSpec_Variant1(
+    ) implements EFiltersSpec {
+    }
+}

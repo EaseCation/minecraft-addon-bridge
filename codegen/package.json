@@ -5,6 +5,10 @@
   "main": "dist/index.js",
   "scripts": {
     "generate": "ts-node src/index.ts",
+    "generate:all": "ts-node src/generate-all.ts",
+    "generate:item": "ts-node src/generate-all.ts --module item",
+    "generate:block": "ts-node src/generate-all.ts --module block",
+    "generate:preview": "ts-node src/generate-all.ts --dry-run",
     "dev": "ts-node --watch src/index.ts",
     "build": "tsc",
     "test": "jest"

@@ -1,7 +1,7 @@
 package net.easecation.bridge.core;
 
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.BlockDefinitions;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Component;
+import net.easecation.bridge.core.dto.block.v1_21_60.BlockDefinitions;
+import net.easecation.bridge.core.dto.block.v1_21_60.Component;
 
 import javax.annotation.Nullable;
 import java.util.List;

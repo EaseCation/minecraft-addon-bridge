@@ -15,6 +15,8 @@ import { JavaGenerator } from './generator/JavaGenerator';
 import { FileWriter } from './utils/FileWriter';
 import { GenerateOptions, TypeInfo } from './parsers/types';
 import { extractModuleName, getJavaPackage } from './utils/JavaNaming';
+import { detectVersionFromSchema } from './utils/VersionDetector';
+import { getModuleVersions } from './utils/VersionMapping';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -25,8 +27,9 @@ async function main(options: GenerateOptions) {
   console.log('🚀 JSON Schema 到 Java DTO 代码生成器');
   console.log('=====================================\n');
 
-  // 1. 检测版本号
-  const version = (options as any).mcVersion || detectVersion(options.schemaDir);
+  // 1. 确定目录和版本
+  const schemaDir = options.schemaDir || path.resolve(__dirname, '../../schemas/minecraft-bedrock-json-schemas/behavior');
+  const version = (options as any).mcVersion || detectVersion(schemaDir);
   console.log(`📦 目标版本: ${version}`);
 
   // 2. 确定输出目录（只到 java 目录，让 FileWriter 根据包名创建子目录）
@@ -36,9 +39,38 @@ async function main(options: GenerateOptions) {
     '../../addon-bridge-core/src/main/java'
   );
 
-  console.log(`📁 输出目录: ${outputDir}\n`);
+  console.log(`📁 输出目录: ${outputDir}`);
 
-  // 3. 清理旧文件（如果需要）
+  // 3. 检查版本是否已存在（检查 item 和 block 模块）
+  // 注意：batch 脚本（generate-all.ts）会在调用前做检查，这里只是额外的安全检查
+  const criticalModules = ['item', 'block'];
+  const existingModules: string[] = [];
+
+  for (const moduleName of criticalModules) {
+    const versionOutputPath = path.join(
+      outputDir,
+      'net/easecation/bridge/core/dto',
+      moduleName,
+      versionSegment
+    );
+
+    if (fs.existsSync(versionOutputPath)) {
+      const javaFiles = fs.readdirSync(versionOutputPath).filter(f => f.endsWith('.java'));
+      if (javaFiles.length > 0) {
+        existingModules.push(`${moduleName}(${javaFiles.length})`);
+      }
+    }
+  }
+
+  if (existingModules.length > 0 && !options.force) {
+    console.log(`⏭️  版本 ${version} 已存在: ${existingModules.join(', ')}`);
+    console.log(`   使用 --force 参数强制重新生成\n`);
+    return;
+  }
+
+  console.log('');
+
+  // 4. 清理旧文件（如果需要）
   if (options.clean) {
     console.log('🧹 清理旧文件...');
     const fileWriter = new FileWriter(outputDir);
@@ -46,14 +78,13 @@ async function main(options: GenerateOptions) {
     console.log('');
   }
 
-  // 4. 加载所有 Schema
+  // 5. 加载所有 Schema
   console.log('📂 加载 Schema 文件...');
-  const schemaDir = options.schemaDir || path.resolve(__dirname, '../../schemas/minecraft-bedrock-json-schemas/behavior');
   const schemaLoader = new SchemaLoader();
   const schemas = await schemaLoader.loadDirectory(schemaDir);
   console.log(`✓ 加载了 ${schemas.size} 个 schema 文件\n`);
 
-  // 5. 解析并注册类型
+  // 6. 解析并注册类型
   console.log('📝 解析类型定义...');
   const typeRegistry = new TypeRegistry();
   const schemaParser = new SchemaParser(typeRegistry, version);
@@ -91,7 +122,7 @@ async function main(options: GenerateOptions) {
 
   console.log(`✓ 解析了 ${typeRegistry.size()} 个类型定义\n`);
 
-  // 6. 公共类型检测（跨模块去重）
+  // 7. 公共类型检测（跨模块去重）
   console.log('🔍 检测公共类型...');
   const commonTypeDetector = new CommonTypeDetector();
   for (const [module, types] of typeRegistry.getByModule()) {
@@ -106,7 +137,7 @@ async function main(options: GenerateOptions) {
     typeRegistry.replaceWithCommonTypes(commonTypes);
   }
 
-  // 7. 依赖分析
+  // 8. 依赖分析
   console.log('🔗 分析类型依赖关系...');
   const dependencyAnalyzer = new DependencyAnalyzer();
   let sortedTypes: TypeInfo[];
@@ -122,7 +153,7 @@ async function main(options: GenerateOptions) {
     process.exit(1);
   }
 
-  // 8. 生成代码
+  // 9. 生成代码
   console.log('⚙️  生成 Java 代码...');
 
   if (options.dryRun) {
@@ -132,7 +163,7 @@ async function main(options: GenerateOptions) {
   const javaGenerator = new JavaGenerator();
   const fileWriter = new FileWriter(outputDir);
 
-  // 8.1 生成公共类型（到版本内 common 包）
+  // 9.1 生成公共类型（到版本内 common 包）
   if (commonTypes.length > 0 && !options.dryRun) {
     const commonPackage = `net.easecation.bridge.core.dto.${versionSegment}.common`;
     console.log(`\n📦 生成公共类型到 ${commonPackage}:`);
@@ -143,7 +174,7 @@ async function main(options: GenerateOptions) {
     }
   }
 
-  // 8.2 生成版本化类型
+  // 9.2 生成版本化类型
   console.log(`\n📦 生成版本化类型:`);
   let generatedCount = 0;
 
@@ -201,9 +232,8 @@ async function main(options: GenerateOptions) {
  * 检测 Schema 版本
  */
 function detectVersion(schemaDir?: string): string {
-  // TODO: 从 schema 文件中检测版本号
-  // 暂时返回默认版本
-  return '1.21.60';
+  const dir = schemaDir || path.resolve(__dirname, '../../schemas/minecraft-bedrock-json-schemas/behavior');
+  return detectVersionFromSchema(dir);
 }
 
 /**
@@ -226,6 +256,7 @@ program
   .option('-d, --debug', '调试模式')
   .option('--dry-run', '干运行（不写入文件）')
   .option('--clean', '清理已有文件')
+  .option('--force', '强制重新生成已存在的版本')
   .action(async (options: GenerateOptions) => {
     try {
       await main(options);

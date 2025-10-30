@@ -3,6 +3,7 @@ package net.easecation.bridge.adapter.easecation.item;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.nbt.tag.ListTag;
 import net.easecation.bridge.core.ItemDef;
+import net.easecation.bridge.core.dto.item.v1_21_60.*;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,7 @@ public class ItemComponentsNBT {
      * @return CompoundTag containing all component NBT data
      */
     public static CompoundTag toNBT(ItemDef itemDef, String identifier) {
-        Map<String, Object> components = itemDef.components();
+        var components = itemDef.components();
         if (components == null) {
             return new CompoundTag();
         }
@@ -42,27 +43,30 @@ public class ItemComponentsNBT {
         }
 
         // Icon
-        Object iconObj = components.get("minecraft:icon");
-        if (iconObj != null) {
-            CompoundTag iconTag = convertIcon(iconObj, identifier);
+        if (components.minecraft_icon() != null) {
+            CompoundTag iconTag = convertIcon(components.minecraft_icon(), identifier);
             tag.putCompound("minecraft:icon", iconTag);
             // Also add to item_properties for legacy compatibility
             itemProperties.putCompound("minecraft:icon", iconTag);
         }
 
         // Allow Off Hand
-        Object allowOffHandObj = components.get("minecraft:allow_off_hand");
-        if (allowOffHandObj instanceof Boolean) {
-            itemProperties.putBoolean("allow_off_hand", (Boolean) allowOffHandObj);
+        if (components.minecraft_allowOffHand() != null) {
+            Boolean value = extractBooleanValue(components.minecraft_allowOffHand());
+            if (value != null) {
+                itemProperties.putBoolean("allow_off_hand", value);
+            }
         }
 
         // Max Stack Size
-        Object maxStackSizeObj = components.get("minecraft:max_stack_size");
-        if (maxStackSizeObj != null) {
-            int stackSize = extractMaxStackSize(maxStackSizeObj);
-            tag.putCompound("minecraft:max_stack_size",
-                new CompoundTag().putByte("value", (byte) stackSize));
-            itemProperties.putInt("max_stack_size", stackSize);
+        if (components.minecraft_maxStackSize() != null) {
+            Double value = extractDoubleValue(components.minecraft_maxStackSize());
+            if (value != null) {
+                int stackSize = value.intValue();
+                tag.putCompound("minecraft:max_stack_size",
+                    new CompoundTag().putByte("value", (byte) stackSize));
+                itemProperties.putInt("max_stack_size", stackSize);
+            }
         }
 
         // Add item_properties to main tag if not empty
@@ -73,204 +77,203 @@ public class ItemComponentsNBT {
         // === Core Components ===
 
         // Display Name
-        Object displayNameObj = components.get("minecraft:display_name");
-        if (displayNameObj != null) {
-            String displayName = extractDisplayName(displayNameObj);
-            if (displayName != null) {
-                tag.putCompound("minecraft:display_name",
-                    new CompoundTag().putString("value", displayName));
-            }
+        if (components.minecraft_displayName() != null && components.minecraft_displayName().value() != null) {
+            tag.putCompound("minecraft:display_name",
+                new CompoundTag().putString("value", components.minecraft_displayName().value()));
         }
 
         // Durability
-        Object durabilityObj = components.get("minecraft:durability");
-        if (durabilityObj instanceof Map) {
-            tag.putCompound("minecraft:durability", convertDurability(durabilityObj));
+        if (components.minecraft_durability() != null) {
+            tag.putCompound("minecraft:durability", convertDurability(components.minecraft_durability()));
         }
 
         // Food
-        Object foodObj = components.get("minecraft:food");
-        if (foodObj instanceof Map) {
-            tag.putCompound("minecraft:food", convertFood(foodObj));
+        if (components.minecraft_food() != null) {
+            tag.putCompound("minecraft:food", convertFood(components.minecraft_food()));
         }
 
         // Wearable (Armor)
-        Object wearableObj = components.get("minecraft:wearable");
-        if (wearableObj instanceof Map) {
-            tag.putCompound("minecraft:wearable", convertWearable(wearableObj));
+        if (components.minecraft_wearable() != null) {
+            tag.putCompound("minecraft:wearable", convertWearable(components.minecraft_wearable()));
         }
 
         // Damage
-        Object damageObj = components.get("minecraft:damage");
-        if (damageObj instanceof Number) {
-            tag.putCompound("minecraft:damage",
-                new CompoundTag().putInt("value", ((Number) damageObj).intValue()));
+        if (components.minecraft_damage() != null) {
+            Integer value = extractIntValue(components.minecraft_damage());
+            if (value != null) {
+                tag.putCompound("minecraft:damage",
+                    new CompoundTag().putInt("value", value));
+            }
         }
 
         // Enchantable
-        Object enchantableObj = components.get("minecraft:enchantable");
-        if (enchantableObj instanceof Map) {
-            tag.putCompound("minecraft:enchantable", convertEnchantable(enchantableObj));
+        if (components.minecraft_enchantable() != null) {
+            tag.putCompound("minecraft:enchantable", convertEnchantable(components.minecraft_enchantable()));
         }
 
         // Repairable
-        Object repairableObj = components.get("minecraft:repairable");
-        if (repairableObj instanceof Map) {
-            tag.putCompound("minecraft:repairable", convertRepairable(repairableObj));
+        if (components.minecraft_repairable() != null) {
+            tag.putCompound("minecraft:repairable", convertRepairable(components.minecraft_repairable()));
         }
 
         // Cooldown
-        Object cooldownObj = components.get("minecraft:cooldown");
-        if (cooldownObj instanceof Map) {
-            tag.putCompound("minecraft:cooldown", convertCooldown(cooldownObj));
+        if (components.minecraft_cooldown() != null) {
+            tag.putCompound("minecraft:cooldown", convertCooldown(components.minecraft_cooldown()));
         }
 
-        // Throwable
-        Object throwableObj = components.get("minecraft:throwable");
-        if (throwableObj instanceof Map) {
-            tag.putCompound("minecraft:throwable", convertThrowable(throwableObj));
+        // Throwable (now Shooter in v1_21_60)
+        if (components.minecraft_shooter() != null) {
+            tag.putCompound("minecraft:throwable", convertShooter(components.minecraft_shooter()));
         }
 
         // Projectile
-        Object projectileObj = components.get("minecraft:projectile");
-        if (projectileObj instanceof Map) {
-            tag.putCompound("minecraft:projectile", convertProjectile(projectileObj));
+        if (components.minecraft_projectile() != null) {
+            tag.putCompound("minecraft:projectile", convertProjectile(components.minecraft_projectile()));
         }
 
         // Fuel
-        Object fuelObj = components.get("minecraft:fuel");
-        if (fuelObj instanceof Map) {
-            tag.putCompound("minecraft:fuel", convertFuel(fuelObj));
+        if (components.minecraft_fuel() != null) {
+            tag.putCompound("minecraft:fuel", convertFuel(components.minecraft_fuel()));
         }
 
         // Block Placer
-        Object blockPlacerObj = components.get("minecraft:block_placer");
-        if (blockPlacerObj instanceof Map) {
-            tag.putCompound("minecraft:block_placer", convertBlockPlacer(blockPlacerObj));
+        if (components.minecraft_blockPlacer() != null) {
+            tag.putCompound("minecraft:block_placer", convertBlockPlacer(components.minecraft_blockPlacer()));
         }
 
         // Entity Placer
-        Object entityPlacerObj = components.get("minecraft:entity_placer");
-        if (entityPlacerObj instanceof Map) {
-            tag.putCompound("minecraft:entity_placer", convertEntityPlacer(entityPlacerObj));
+        if (components.minecraft_entityPlacer() != null) {
+            tag.putCompound("minecraft:entity_placer", convertEntityPlacer(components.minecraft_entityPlacer()));
         }
 
         // Digger
-        Object diggerObj = components.get("minecraft:digger");
-        if (diggerObj instanceof Map) {
-            tag.putCompound("minecraft:digger", convertDigger(diggerObj));
+        if (components.minecraft_digger() != null) {
+            tag.putCompound("minecraft:digger", convertDigger(components.minecraft_digger()));
         }
 
-        // Use Animation
-        Object useAnimationObj = components.get("minecraft:use_animation");
-        if (useAnimationObj instanceof String) {
-            tag.putCompound("minecraft:use_animation",
-                new CompoundTag().putString("value", (String) useAnimationObj));
-        }
+        // Use Animation (not in v1_21_60 schema)
+        // Skipped
 
         // Hand Equipped
-        Object handEquippedObj = components.get("minecraft:hand_equipped");
-        if (handEquippedObj instanceof Boolean) {
-            tag.putCompound("minecraft:hand_equipped",
-                new CompoundTag().putBoolean("value", (Boolean) handEquippedObj));
+        if (components.minecraft_handEquipped() != null) {
+            Boolean value = extractBooleanValue(components.minecraft_handEquipped());
+            if (value != null) {
+                tag.putCompound("minecraft:hand_equipped",
+                    new CompoundTag().putBoolean("value", value));
+            }
         }
 
         // Stacked By Data
-        Object stackedByDataObj = components.get("minecraft:stacked_by_data");
-        if (stackedByDataObj instanceof Boolean) {
-            tag.putCompound("minecraft:stacked_by_data",
-                new CompoundTag().putBoolean("value", (Boolean) stackedByDataObj));
+        if (components.minecraft_stackedByData() != null) {
+            Boolean value = extractBooleanValue(components.minecraft_stackedByData());
+            if (value != null) {
+                tag.putCompound("minecraft:stacked_by_data",
+                    new CompoundTag().putBoolean("value", value));
+            }
         }
 
         // Can Destroy In Creative
-        Object canDestroyInCreativeObj = components.get("minecraft:can_destroy_in_creative");
-        if (canDestroyInCreativeObj instanceof Boolean) {
-            tag.putCompound("minecraft:can_destroy_in_creative",
-                new CompoundTag().putBoolean("value", (Boolean) canDestroyInCreativeObj));
+        if (components.minecraft_canDestroyInCreative() != null) {
+            Boolean value = extractBooleanValue(components.minecraft_canDestroyInCreative());
+            if (value != null) {
+                tag.putCompound("minecraft:can_destroy_in_creative",
+                    new CompoundTag().putBoolean("value", value));
+            }
         }
 
         // Liquid Clipped
-        Object liquidClippedObj = components.get("minecraft:liquid_clipped");
-        if (liquidClippedObj instanceof Boolean) {
-            tag.putCompound("minecraft:liquid_clipped",
-                new CompoundTag().putBoolean("value", (Boolean) liquidClippedObj));
+        if (components.minecraft_liquidClipped() != null) {
+            Boolean value = extractBooleanValue(components.minecraft_liquidClipped());
+            if (value != null) {
+                tag.putCompound("minecraft:liquid_clipped",
+                    new CompoundTag().putBoolean("value", value));
+            }
         }
 
         // Should Despawn
-        Object shouldDespawnObj = components.get("minecraft:should_despawn");
-        if (shouldDespawnObj instanceof Boolean) {
-            tag.putCompound("minecraft:should_despawn",
-                new CompoundTag().putBoolean("value", (Boolean) shouldDespawnObj));
+        if (components.minecraft_shouldDespawn() != null) {
+            Boolean value = extractBooleanValue(components.minecraft_shouldDespawn());
+            if (value != null) {
+                tag.putCompound("minecraft:should_despawn",
+                    new CompoundTag().putBoolean("value", value));
+            }
         }
 
         // Glint
-        Object glintObj = components.get("minecraft:glint");
-        if (glintObj instanceof Boolean) {
-            tag.putCompound("minecraft:glint",
-                new CompoundTag().putBoolean("value", (Boolean) glintObj));
+        if (components.minecraft_glint() != null) {
+            Boolean value = extractBooleanValue(components.minecraft_glint());
+            if (value != null) {
+                tag.putCompound("minecraft:glint",
+                    new CompoundTag().putBoolean("value", value));
+            }
         }
 
         return tag;
     }
 
-    // === Helper Methods for Component Extraction ===
+    // === Helper Methods for Sealed Interface Extraction ===
 
-    private static int extractMaxStackSize(Object maxStackSizeObj) {
-        if (maxStackSizeObj instanceof Number) {
-            // Direct number value (Variant0)
-            return ((Number) maxStackSizeObj).intValue();
-        } else if (maxStackSizeObj instanceof Map) {
-            // Object with value field (Variant1)
-            @SuppressWarnings("unchecked")
-            Map<String, Object> map = (Map<String, Object>) maxStackSizeObj;
-            Object value = map.get("value");
-            if (value instanceof Number) {
-                return ((Number) value).intValue();
+    private static Boolean extractBooleanValue(Object component) {
+        // Handle sealed interfaces with Variant0 that have a Boolean value
+        try {
+            var method = component.getClass().getMethod("value");
+            Object result = method.invoke(component);
+            if (result instanceof Boolean) {
+                return (Boolean) result;
             }
+        } catch (Exception e) {
+            // Ignore and return null
         }
-        return 64;
+        return null;
     }
 
-    private static String extractDisplayName(Object displayNameObj) {
-        if (displayNameObj instanceof String) {
-            return (String) displayNameObj;
-        } else if (displayNameObj instanceof Map) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> map = (Map<String, Object>) displayNameObj;
-            Object value = map.get("value");
-            if (value instanceof String) {
-                return (String) value;
+    private static Integer extractIntValue(Object component) {
+        // Handle sealed interfaces with Variant0 that have an Integer value
+        try {
+            var method = component.getClass().getMethod("value");
+            Object result = method.invoke(component);
+            if (result instanceof Integer) {
+                return (Integer) result;
             }
+        } catch (Exception e) {
+            // Ignore and return null
+        }
+        return null;
+    }
+
+    private static Double extractDoubleValue(Object component) {
+        // Handle sealed interfaces with Variant0/Variant1 that have a Double value
+        try {
+            var method = component.getClass().getMethod("value");
+            Object result = method.invoke(component);
+            if (result instanceof Double) {
+                return (Double) result;
+            }
+        } catch (Exception e) {
+            // Ignore and return null
+        }
+        return null;
+    }
+
+    private static String extractStringValue(Object component) {
+        // Handle sealed interfaces with Variant0 that have a String value
+        try {
+            var method = component.getClass().getMethod("value");
+            Object result = method.invoke(component);
+            if (result instanceof String) {
+                return (String) result;
+            }
+        } catch (Exception e) {
+            // Ignore and return null
         }
         return null;
     }
 
     // === Component Converters ===
 
-    private static CompoundTag convertIcon(Object iconObj, String identifier) {
+    private static CompoundTag convertIcon(Icon icon, String identifier) {
         CompoundTag tag = new CompoundTag();
-        String textureName = null;
-
-        if (iconObj instanceof String) {
-            // Simple string texture name (Variant0)
-            textureName = (String) iconObj;
-        } else if (iconObj instanceof Map) {
-            // Object with textures map (Variant1)
-            @SuppressWarnings("unchecked")
-            Map<String, Object> iconMap = (Map<String, Object>) iconObj;
-            Object texturesObj = iconMap.get("textures");
-
-            if (texturesObj instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, String> texturesMap = (Map<String, String>) texturesObj;
-                // Use the default texture or first available
-                String texture = texturesMap.get("default");
-                if (texture == null && !texturesMap.isEmpty()) {
-                    texture = texturesMap.values().iterator().next();
-                }
-                textureName = texture;
-            }
-        }
+        String textureName = extractStringValue(icon);
 
         // Fallback: use identifier as texture name
         if (textureName == null || textureName.isEmpty()) {
@@ -278,7 +281,6 @@ public class ItemComponentsNBT {
         }
 
         // Set both texture string and textures object to satisfy EaseCation requirements
-        // Reference: CustomItemSample.java lines 44-49
         tag.putString("texture", textureName);
         tag.putCompound("textures", new CompoundTag()
             .putString("default", textureName)
@@ -287,262 +289,172 @@ public class ItemComponentsNBT {
         return tag;
     }
 
-    private static CompoundTag convertDurability(Object durabilityObj) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> durabilityMap = (Map<String, Object>) durabilityObj;
+    private static CompoundTag convertDurability(Durability durability) {
         CompoundTag tag = new CompoundTag();
 
-        Object maxDurability = durabilityMap.get("max_durability");
-        if (maxDurability instanceof Number) {
-            tag.putInt("max_durability", ((Number) maxDurability).intValue());
+        if (durability.maxDurability() != null) {
+            tag.putInt("max_durability", durability.maxDurability());
         }
 
-        Object damageChanceObj = durabilityMap.get("damage_chance");
-        if (damageChanceObj instanceof Map) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> damageChanceMap = (Map<String, Object>) damageChanceObj;
+        if (durability.damageChance() != null) {
             CompoundTag damageChanceTag = new CompoundTag();
-
-            Object min = damageChanceMap.get("min");
-            if (min instanceof Number) {
-                damageChanceTag.putInt("min", ((Number) min).intValue());
+            if (durability.damageChance().min() != null) {
+                damageChanceTag.putInt("min", durability.damageChance().min());
             }
-
-            Object max = damageChanceMap.get("max");
-            if (max instanceof Number) {
-                damageChanceTag.putInt("max", ((Number) max).intValue());
+            if (durability.damageChance().max() != null) {
+                damageChanceTag.putInt("max", durability.damageChance().max());
             }
-
             tag.putCompound("damage_chance", damageChanceTag);
         }
 
         return tag;
     }
 
-    private static CompoundTag convertFood(Object foodObj) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> foodMap = (Map<String, Object>) foodObj;
+    private static CompoundTag convertFood(Food food) {
         CompoundTag tag = new CompoundTag();
 
-        Object canAlwaysEat = foodMap.get("can_always_eat");
-        if (canAlwaysEat instanceof Boolean) {
-            tag.putBoolean("can_always_eat", (Boolean) canAlwaysEat);
+        if (food.canAlwaysEat() != null) {
+            tag.putBoolean("can_always_eat", food.canAlwaysEat());
         }
 
-        Object nutrition = foodMap.get("nutrition");
-        if (nutrition instanceof Number) {
-            tag.putInt("nutrition", ((Number) nutrition).intValue());
+        if (food.nutrition() != null) {
+            tag.putInt("nutrition", food.nutrition().intValue());
         }
 
-        Object saturationModifier = foodMap.get("saturation_modifier");
-        if (saturationModifier instanceof Number) {
-            tag.putFloat("saturation_modifier", ((Number) saturationModifier).floatValue());
+        if (food.saturationModifier() != null) {
+            tag.putFloat("saturation_modifier", food.saturationModifier().floatValue());
         }
 
-        Object usingConvertsTo = foodMap.get("using_converts_to");
-        if (usingConvertsTo instanceof String) {
-            tag.putString("using_converts_to", (String) usingConvertsTo);
+        if (food.usingConvertsTo() != null) {
+            tag.putString("using_converts_to", food.usingConvertsTo());
         }
 
         return tag;
     }
 
-    private static CompoundTag convertWearable(Object wearableObj) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> wearableMap = (Map<String, Object>) wearableObj;
+    private static CompoundTag convertWearable(Wearable wearable) {
         CompoundTag tag = new CompoundTag();
 
-        Object slot = wearableMap.get("slot");
-        if (slot instanceof String) {
-            tag.putString("slot", (String) slot);
+        if (wearable.slot() != null) {
+            tag.putString("slot", wearable.slot());
         }
 
-        Object protection = wearableMap.get("protection");
-        if (protection instanceof Number) {
-            tag.putInt("protection", ((Number) protection).intValue());
+        if (wearable.protection() != null) {
+            tag.putInt("protection", wearable.protection());
         }
 
-        Object dispensable = wearableMap.get("dispensable");
-        if (dispensable instanceof Boolean) {
-            tag.putBoolean("dispensable", (Boolean) dispensable);
+        if (wearable.dispensable() != null) {
+            tag.putBoolean("dispensable", wearable.dispensable());
         }
 
         return tag;
     }
 
-    private static CompoundTag convertEnchantable(Object enchantableObj) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> enchantableMap = (Map<String, Object>) enchantableObj;
+    private static CompoundTag convertEnchantable(Enchantable enchantable) {
         CompoundTag tag = new CompoundTag();
 
-        Object slot = enchantableMap.get("slot");
-        if (slot instanceof String) {
-            tag.putString("slot", (String) slot);
+        if (enchantable.slot() != null) {
+            tag.putString("slot", enchantable.slot());
         }
 
-        Object value = enchantableMap.get("value");
-        if (value instanceof Number) {
-            tag.putInt("value", ((Number) value).intValue());
+        if (enchantable.value() != null) {
+            tag.putInt("value", enchantable.value().intValue());
         }
 
         return tag;
     }
 
-    private static CompoundTag convertRepairable(Object repairableObj) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> repairableMap = (Map<String, Object>) repairableObj;
+    private static CompoundTag convertRepairable(Repairable repairable) {
+        CompoundTag tag = new CompoundTag();
+        // TODO: Convert repair_items if needed
+        return tag;
+    }
+
+    private static CompoundTag convertCooldown(Cooldown cooldown) {
         CompoundTag tag = new CompoundTag();
 
-        Object repairItems = repairableMap.get("repair_items");
-        if (repairItems instanceof List) {
-            // TODO: Convert list of repair items if needed
+        if (cooldown.category() != null) {
+            tag.putString("category", cooldown.category());
+        }
+
+        if (cooldown.duration() != null) {
+            tag.putFloat("duration", cooldown.duration().floatValue());
         }
 
         return tag;
     }
 
-    private static CompoundTag convertCooldown(Object cooldownObj) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> cooldownMap = (Map<String, Object>) cooldownObj;
+    private static CompoundTag convertShooter(Shooter shooter) {
         CompoundTag tag = new CompoundTag();
 
-        Object category = cooldownMap.get("category");
-        if (category instanceof String) {
-            tag.putString("category", (String) category);
+        // Map Shooter fields to Throwable format
+        if (shooter.maxDrawDuration() != null) {
+            tag.putFloat("max_draw_duration", shooter.maxDrawDuration().floatValue());
         }
 
-        Object duration = cooldownMap.get("duration");
-        if (duration instanceof Number) {
-            tag.putFloat("duration", ((Number) duration).floatValue());
+        if (shooter.scalePowerByDrawDuration() != null) {
+            tag.putBoolean("scale_power_by_draw_duration", shooter.scalePowerByDrawDuration());
         }
 
         return tag;
     }
 
-    private static CompoundTag convertThrowable(Object throwableObj) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> throwableMap = (Map<String, Object>) throwableObj;
+    private static CompoundTag convertProjectile(Projectile projectile) {
         CompoundTag tag = new CompoundTag();
 
-        Object doSwingAnimation = throwableMap.get("do_swing_animation");
-        if (doSwingAnimation instanceof Boolean) {
-            tag.putBoolean("do_swing_animation", (Boolean) doSwingAnimation);
+        if (projectile.projectileEntity() != null) {
+            tag.putString("projectile_entity", projectile.projectileEntity());
         }
 
-        Object launchPowerScale = throwableMap.get("launch_power_scale");
-        if (launchPowerScale instanceof Number) {
-            tag.putFloat("launch_power_scale", ((Number) launchPowerScale).floatValue());
-        }
-
-        Object maxDrawDuration = throwableMap.get("max_draw_duration");
-        if (maxDrawDuration instanceof Number) {
-            tag.putFloat("max_draw_duration", ((Number) maxDrawDuration).floatValue());
-        }
-
-        Object maxLaunchPower = throwableMap.get("max_launch_power");
-        if (maxLaunchPower instanceof Number) {
-            tag.putFloat("max_launch_power", ((Number) maxLaunchPower).floatValue());
-        }
-
-        Object minDrawDuration = throwableMap.get("min_draw_duration");
-        if (minDrawDuration instanceof Number) {
-            tag.putFloat("min_draw_duration", ((Number) minDrawDuration).floatValue());
-        }
-
-        Object scalePowerByDrawDuration = throwableMap.get("scale_power_by_draw_duration");
-        if (scalePowerByDrawDuration instanceof Boolean) {
-            tag.putBoolean("scale_power_by_draw_duration", (Boolean) scalePowerByDrawDuration);
+        if (projectile.minimumCriticalPower() != null) {
+            tag.putFloat("minimum_critical_power", projectile.minimumCriticalPower().floatValue());
         }
 
         return tag;
     }
 
-    private static CompoundTag convertProjectile(Object projectileObj) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> projectileMap = (Map<String, Object>) projectileObj;
+    private static CompoundTag convertFuel(Fuel fuel) {
         CompoundTag tag = new CompoundTag();
 
-        Object projectileEntity = projectileMap.get("projectile_entity");
-        if (projectileEntity instanceof String) {
-            tag.putString("projectile_entity", (String) projectileEntity);
-        }
-
-        Object minimumCriticalPower = projectileMap.get("minimum_critical_power");
-        if (minimumCriticalPower instanceof Number) {
-            tag.putFloat("minimum_critical_power", ((Number) minimumCriticalPower).floatValue());
+        if (fuel.duration() != null) {
+            tag.putFloat("duration", fuel.duration().floatValue());
         }
 
         return tag;
     }
 
-    private static CompoundTag convertFuel(Object fuelObj) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> fuelMap = (Map<String, Object>) fuelObj;
+    private static CompoundTag convertBlockPlacer(BlockPlacer blockPlacer) {
         CompoundTag tag = new CompoundTag();
 
-        Object duration = fuelMap.get("duration");
-        if (duration instanceof Number) {
-            tag.putFloat("duration", ((Number) duration).floatValue());
+        if (blockPlacer.block() != null) {
+            tag.putString("block", blockPlacer.block());
         }
+
+        // TODO: Convert use_on if needed
 
         return tag;
     }
 
-    private static CompoundTag convertBlockPlacer(Object blockPlacerObj) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> blockPlacerMap = (Map<String, Object>) blockPlacerObj;
+    private static CompoundTag convertEntityPlacer(EntityPlacer entityPlacer) {
         CompoundTag tag = new CompoundTag();
 
-        Object block = blockPlacerMap.get("block");
-        if (block instanceof String) {
-            tag.putString("block", (String) block);
+        if (entityPlacer.entity() != null) {
+            tag.putString("entity", entityPlacer.entity());
         }
 
-        Object useOn = blockPlacerMap.get("use_on");
-        if (useOn instanceof List) {
-            // TODO: Convert list of blocks if needed
-        }
+        // TODO: Convert use_on and dispense_on if needed
 
         return tag;
     }
 
-    private static CompoundTag convertEntityPlacer(Object entityPlacerObj) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> entityPlacerMap = (Map<String, Object>) entityPlacerObj;
+    private static CompoundTag convertDigger(Digger digger) {
         CompoundTag tag = new CompoundTag();
 
-        Object entity = entityPlacerMap.get("entity");
-        if (entity instanceof String) {
-            tag.putString("entity", (String) entity);
+        if (digger.useEfficiency() != null) {
+            tag.putBoolean("use_efficiency", digger.useEfficiency());
         }
 
-        Object useOn = entityPlacerMap.get("use_on");
-        if (useOn instanceof List) {
-            // TODO: Convert list of blocks if needed
-        }
-
-        Object dispenseOn = entityPlacerMap.get("dispense_on");
-        if (dispenseOn instanceof List) {
-            // TODO: Convert list of blocks if needed
-        }
-
-        return tag;
-    }
-
-    private static CompoundTag convertDigger(Object diggerObj) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> diggerMap = (Map<String, Object>) diggerObj;
-        CompoundTag tag = new CompoundTag();
-
-        Object useEfficiency = diggerMap.get("use_efficiency");
-        if (useEfficiency instanceof Boolean) {
-            tag.putBoolean("use_efficiency", (Boolean) useEfficiency);
-        }
-
-        Object destroySpeeds = diggerMap.get("destroy_speeds");
-        if (destroySpeeds instanceof List) {
-            // TODO: Convert list of destroy speeds if needed
-        }
+        // TODO: Convert destroy_speeds if needed
 
         return tag;
     }

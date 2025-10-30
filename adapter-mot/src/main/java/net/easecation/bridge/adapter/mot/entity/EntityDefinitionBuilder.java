@@ -17,7 +17,7 @@ public class EntityDefinitionBuilder {
      * @return Configured EntityDefinition
      */
     public static EntityDefinition build(EntityDef entityDef, Class<? extends Entity> implClass) {
-        net.easecation.bridge.core.dto.v1_21_60.behavior.entities.Entity.Description description = entityDef.description();
+        net.easecation.bridge.core.dto.entity.v1_21_60.Entity.Description description = entityDef.description();
         if (description == null) {
             throw new RuntimeException("EntityDef must have a description");
         }

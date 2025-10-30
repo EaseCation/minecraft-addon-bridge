@@ -2,10 +2,9 @@ package net.easecation.bridge.adapter.easecation.block;
 
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.nbt.tag.ListTag;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Connection;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.PlacementDirection;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.PlacementPosition;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Traits;
+import net.easecation.bridge.core.dto.block.v1_21_60.PlacementDirection;
+import net.easecation.bridge.core.dto.block.v1_21_60.PlacementPosition;
+import net.easecation.bridge.core.dto.block.v1_21_60.Traits;
 
 /**
  * Utility class for converting Traits DTO to NBT format.

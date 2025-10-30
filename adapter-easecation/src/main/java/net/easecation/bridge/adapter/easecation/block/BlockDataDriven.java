@@ -6,10 +6,10 @@ import cn.nukkit.block.state.BlockStates;
 import cn.nukkit.math.AxisAlignedBB;
 import cn.nukkit.math.SimpleAxisAlignedBB;
 import net.easecation.bridge.core.BlockDef;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Component;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Geometry;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.CollisionBox;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.StatesValue;
+import net.easecation.bridge.core.dto.block.v1_21_60.Component;
+import net.easecation.bridge.core.dto.block.v1_21_60.Geometry;
+import net.easecation.bridge.core.dto.block.v1_21_60.CollisionBox;
+import net.easecation.bridge.core.dto.block.v1_21_60.StatesValue;
 
 import java.util.List;
 import java.util.Map;
@@ -213,10 +213,10 @@ public class BlockDataDriven extends CustomBlock {
         var collisionBox = comp.minecraft_collisionBox();
 
         // CollisionBox is a sealed interface with variants
-        if (collisionBox instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.CollisionBox.CollisionBox_Variant0 variant0) {
+        if (collisionBox instanceof net.easecation.bridge.core.dto.block.v1_21_60.CollisionBox.CollisionBox_Variant0 variant0) {
             // Boolean value: true = default cube, false = no collision
             return variant0.value() ? CUBE : null;
-        } else if (collisionBox instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.CollisionBox.CollisionBox_Variant1 variant1) {
+        } else if (collisionBox instanceof net.easecation.bridge.core.dto.block.v1_21_60.CollisionBox.CollisionBox_Variant1 variant1) {
             // Detailed config with origin and size
             // Origin is specified as [x, y, z] in range (-8, 0, -8) to (8, 16, 8)
             // Size is specified as [x, y, z]
@@ -264,10 +264,10 @@ public class BlockDataDriven extends CustomBlock {
         if (comp.minecraft_destructibleByMining() != null) {
             var destructible = comp.minecraft_destructibleByMining();
             // DestructibleByMining is a sealed interface with variants
-            if (destructible instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.DestructibleByMining.DestructibleByMining_Variant0 variant0) {
+            if (destructible instanceof net.easecation.bridge.core.dto.block.v1_21_60.DestructibleByMining.DestructibleByMining_Variant0 variant0) {
                 // Boolean value: true = default hardness, false = unbreakable
                 return variant0.value() ? 1.0f : -1.0f;
-            } else if (destructible instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.DestructibleByMining.DestructibleByMining_Variant1 variant1) {
+            } else if (destructible instanceof net.easecation.bridge.core.dto.block.v1_21_60.DestructibleByMining.DestructibleByMining_Variant1 variant1) {
                 // Detailed config with seconds_to_destroy
                 if (variant1.secondsToDestroy() != null) {
                     return variant1.secondsToDestroy().floatValue();
@@ -281,10 +281,10 @@ public class BlockDataDriven extends CustomBlock {
         if (comp.minecraft_destructibleByExplosion() != null) {
             var explosion = comp.minecraft_destructibleByExplosion();
             // DestructibleByExplosion is a sealed interface with variants
-            if (explosion instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.DestructibleByExplosion.DestructibleByExplosion_Variant0 variant0) {
+            if (explosion instanceof net.easecation.bridge.core.dto.block.v1_21_60.DestructibleByExplosion.DestructibleByExplosion_Variant0 variant0) {
                 // Boolean value: true = default resistance, false = immune
                 return variant0.value() ? hardness * 5.0f : Float.MAX_VALUE;
-            } else if (explosion instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.DestructibleByExplosion.DestructibleByExplosion_Variant1 variant1) {
+            } else if (explosion instanceof net.easecation.bridge.core.dto.block.v1_21_60.DestructibleByExplosion.DestructibleByExplosion_Variant1 variant1) {
                 // Detailed config with explosion_resistance
                 if (variant1.explosionResistance() != null) {
                     return variant1.explosionResistance().floatValue();
@@ -328,9 +328,9 @@ public class BlockDataDriven extends CustomBlock {
         }
 
         var selectionBox = comp.minecraft_selectionBox();
-        if (selectionBox instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.SelectionBox.SelectionBox_Variant0 variant0) {
+        if (selectionBox instanceof net.easecation.bridge.core.dto.block.v1_21_60.SelectionBox.SelectionBox_Variant0 variant0) {
             return variant0.value() ? CUBE : null;
-        } else if (selectionBox instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.SelectionBox.SelectionBox_Variant1 variant1) {
+        } else if (selectionBox instanceof net.easecation.bridge.core.dto.block.v1_21_60.SelectionBox.SelectionBox_Variant1 variant1) {
             float[] origin = new float[]{-8, 0, -8};
             float[] size = new float[]{16, 16, 16};
 
@@ -375,18 +375,20 @@ public class BlockDataDriven extends CustomBlock {
     }
 
     private boolean extractReplaceable(Component comp) {
-        return comp.minecraft_replaceable() != null;
+        // Note: minecraft:replaceable component was removed from v1_21_60 schema
+        // Replaceable blocks should be identified through other means
+        return false;
     }
 
     private int extractFlameOdds(Component comp) {
         if (comp.minecraft_flammable() != null) {
             var flammable = comp.minecraft_flammable();
-            if (flammable instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Flammable.Flammable_Variant1 variant1) {
+            if (flammable instanceof net.easecation.bridge.core.dto.block.v1_21_60.Flammable.Flammable_Variant1 variant1) {
                 if (variant1.catchChanceModifier() != null) {
                     return variant1.catchChanceModifier().intValue();
                 }
                 return 5; // Default catch chance
-            } else if (flammable instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Flammable.Flammable_Variant0 variant0) {
+            } else if (flammable instanceof net.easecation.bridge.core.dto.block.v1_21_60.Flammable.Flammable_Variant0 variant0) {
                 return variant0.value() ? 5 : 0;
             }
         }
@@ -396,12 +398,12 @@ public class BlockDataDriven extends CustomBlock {
     private int extractBurnOdds(Component comp) {
         if (comp.minecraft_flammable() != null) {
             var flammable = comp.minecraft_flammable();
-            if (flammable instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Flammable.Flammable_Variant1 variant1) {
+            if (flammable instanceof net.easecation.bridge.core.dto.block.v1_21_60.Flammable.Flammable_Variant1 variant1) {
                 if (variant1.destroyChanceModifier() != null) {
                     return variant1.destroyChanceModifier().intValue();
                 }
                 return 20; // Default destroy chance
-            } else if (flammable instanceof net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Flammable.Flammable_Variant0 variant0) {
+            } else if (flammable instanceof net.easecation.bridge.core.dto.block.v1_21_60.Flammable.Flammable_Variant0 variant0) {
                 return variant0.value() ? 20 : 0;
             }
         }
@@ -429,7 +431,7 @@ public class BlockDataDriven extends CustomBlock {
         return 0b111111; // Default: all faces
     }
 
-    private boolean[] extractTraitStates(net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Traits traits) {
+    private boolean[] extractTraitStates(net.easecation.bridge.core.dto.block.v1_21_60.Traits traits) {
         // Returns: [cardinalDirection, facingDirection, blockFace, verticalHalf, cardinalConnections]
         boolean[] states = new boolean[5];
         if (traits == null) {

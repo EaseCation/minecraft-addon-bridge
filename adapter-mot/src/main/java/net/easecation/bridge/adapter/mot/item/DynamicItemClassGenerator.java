@@ -83,24 +83,12 @@ public class DynamicItemClassGenerator {
      * Extract display name from ItemDef components.
      */
     private static String extractDisplayName(ItemDef itemDef) {
-        if (itemDef.components() == null) {
+        if (itemDef.components() == null || itemDef.components().minecraft_displayName() == null) {
             return null;
         }
 
-        Object displayNameObj = itemDef.components().get("minecraft:display_name");
-        if (displayNameObj instanceof String) {
-            return (String) displayNameObj;
-        } else if (displayNameObj instanceof Map) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> displayNameMap = (Map<String, Object>) displayNameObj;
-            Object value = displayNameMap.get("value");
-            if (value instanceof String) {
-                return (String) value;
-            }
-        }
-
-        // Fallback to identifier
-        return null;
+        net.easecation.bridge.core.dto.item.v1_21_60.DisplayName displayName = itemDef.components().minecraft_displayName();
+        return displayName.value();
     }
 
     /**

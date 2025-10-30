@@ -82,17 +82,10 @@ public class ItemDataDriven extends ItemCustom {
     public int getMaxStackSize() {
         // Get from ItemDef if available
         ItemDef itemDef = ITEM_DEF_REGISTRY.get(identifier);
-        if (itemDef != null && itemDef.components() != null) {
-            Object maxStackSize = itemDef.components().get("minecraft:max_stack_size");
-            if (maxStackSize instanceof Number) {
-                return ((Number) maxStackSize).intValue();
-            } else if (maxStackSize instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> map = (Map<String, Object>) maxStackSize;
-                Object value = map.get("value");
-                if (value instanceof Number) {
-                    return ((Number) value).intValue();
-                }
+        if (itemDef != null && itemDef.components() != null && itemDef.components().minecraft_maxStackSize() != null) {
+            net.easecation.bridge.core.dto.item.v1_21_60.MaxStackSize maxStackSize = itemDef.components().minecraft_maxStackSize();
+            if (maxStackSize instanceof net.easecation.bridge.core.dto.item.v1_21_60.MaxStackSize.MaxStackSize_Variant0 variant0) {
+                return variant0.value().intValue();
             }
         }
         return super.getMaxStackSize();
@@ -102,15 +95,10 @@ public class ItemDataDriven extends ItemCustom {
     public int getMaxDurability() {
         // Get from ItemDef if available
         ItemDef itemDef = ITEM_DEF_REGISTRY.get(identifier);
-        if (itemDef != null && itemDef.components() != null) {
-            Object durability = itemDef.components().get("minecraft:durability");
-            if (durability instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> durabilityMap = (Map<String, Object>) durability;
-                Object maxDurability = durabilityMap.get("max_durability");
-                if (maxDurability instanceof Number) {
-                    return ((Number) maxDurability).intValue();
-                }
+        if (itemDef != null && itemDef.components() != null && itemDef.components().minecraft_durability() != null) {
+            net.easecation.bridge.core.dto.item.v1_21_60.Durability durability = itemDef.components().minecraft_durability();
+            if (durability.maxDurability() != null) {
+                return durability.maxDurability();
             }
         }
         return super.getMaxDurability();

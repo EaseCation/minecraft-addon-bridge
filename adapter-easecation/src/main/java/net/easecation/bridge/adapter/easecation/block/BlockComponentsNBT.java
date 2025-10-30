@@ -3,7 +3,7 @@ package net.easecation.bridge.adapter.easecation.block;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.nbt.tag.ListTag;
 import cn.nukkit.nbt.tag.StringTag;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.*;
+import net.easecation.bridge.core.dto.block.v1_21_60.*;
 
 import java.util.List;
 import java.util.Map;
@@ -150,15 +150,15 @@ public class BlockComponentsNBT {
         }
 
         // Destruction Particles
-        if (component.minecraft_destructionParticles() != null) {
-            tag.putCompound("minecraft:destruction_particles",
-                convertDestructionParticles(component.minecraft_destructionParticles()));
-        }
+        // Note: minecraft:destruction_particles not in v1_21_60 schema
+        // if (component.minecraft_destructionParticles() != null) {
+        //     tag.putCompound("minecraft:destruction_particles",
+        //         convertDestructionParticles(component.minecraft_destructionParticles()));
+        // }
 
         // Replaceable
-        if (component.minecraft_replaceable() != null) {
-            tag.putCompound("minecraft:replaceable", new CompoundTag());
-        }
+        // Note: minecraft:replaceable component was removed from v1_21_60 schema
+        // This component is no longer supported in the latest version
 
         // Item Visual
         if (component.minecraft_itemVisual() != null) {
@@ -480,15 +480,11 @@ public class BlockComponentsNBT {
                     // Texture: default empty string
                     material.putString("texture", variant1.texture() != null ? variant1.texture() : "");
 
-                    // Tint Method: convert enum to string, default "none"
-                    if (variant1.tintMethod() != null) {
-                        material.putString("tint_method", variant1.tintMethod().toString());
-                    } else {
-                        material.putString("tint_method", "none");
-                    }
+                    // Tint Method: 使用默认值（behavior schema 中不包含此字段）
+                    material.putString("tint_method", "none");
 
-                    // Isotropic: default false
-                    material.putBoolean("isotropic", variant1.isotropic() != null ? variant1.isotropic() : false);
+                    // Isotropic: 使用默认值（behavior schema 中不包含此字段）
+                    material.putBoolean("isotropic", false);
                 }
 
                 materials.put(faceName, material);
@@ -746,18 +742,19 @@ public class BlockComponentsNBT {
         return result;
     }
 
-    private static CompoundTag convertDestructionParticles(DestructionParticles particles) {
-        CompoundTag result = new CompoundTag();
-        if (particles.texture() != null) {
-            result.putString("texture", particles.texture());
-        }
-        if (particles.tintMethod() != null) {
-            result.putString("tint_method", particles.tintMethod().toString());
-        }
-        // Note: particle_count is not in the v1_21_60 schema, using default
-        result.putInt("particle_count", 100);
-        return result;
-    }
+    // Note: DestructionParticles class not in v1_21_60 schema
+    // private static CompoundTag convertDestructionParticles(DestructionParticles particles) {
+    //     CompoundTag result = new CompoundTag();
+    //     if (particles.texture() != null) {
+    //         result.putString("texture", particles.texture());
+    //     }
+    //     if (particles.tintMethod() != null) {
+    //         result.putString("tint_method", particles.tintMethod().toString());
+    //     }
+    //     // Note: particle_count is not in the v1_21_60 schema, using default
+    //     result.putInt("particle_count", 100);
+    //     return result;
+    // }
 
     /**
      * Convert ItemVisual to NBT.

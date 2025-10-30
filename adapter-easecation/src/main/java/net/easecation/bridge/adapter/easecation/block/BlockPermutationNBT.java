@@ -4,7 +4,7 @@ import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.nbt.tag.ListTag;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.easecation.bridge.core.dto.v1_21_60.behavior.blocks.Component;
+import net.easecation.bridge.core.dto.block.v1_21_60.Component;
 
 import java.util.List;
 import java.util.Map;
