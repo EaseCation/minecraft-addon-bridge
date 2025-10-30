@@ -2,6 +2,7 @@ package net.easecation.bridge.adapter.easecation;
 
 import cn.nukkit.block.Blocks;
 import cn.nukkit.entity.Entity;
+import cn.nukkit.entity.EntityFullNames;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.nbt.tag.ListTag;
 import cn.nukkit.plugin.PluginBase;
@@ -12,7 +13,9 @@ import net.easecation.bridge.adapter.easecation.block.BlockStatesNBT;
 import net.easecation.bridge.adapter.easecation.block.BlockTraitsNBT;
 import net.easecation.bridge.adapter.easecation.entity.EntityDataDriven;
 import net.easecation.bridge.core.*;
+import org.itxtech.synapseapi.multiprotocol.utils.AvailableEntityIdentifiersPalette;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -22,6 +25,7 @@ import java.util.List;
 public class EasecationRegistry implements AddonRegistry {
     private final BridgeLogger log;
     private static final Capabilities CAPS = new Capabilities(true);
+    private final List<String> registeredEntityIds = new ArrayList<>();
 
     public EasecationRegistry(BridgeLogger log) {
         this.log = log;
@@ -53,22 +57,54 @@ public class EasecationRegistry implements AddonRegistry {
                 int runtimeId = Blocks.allocateCustomBlockId();
                 log.debug("[EaseCation]   - Allocated runtime ID: " + runtimeId);
 
-                // 2. Build NBT data
-                log.debug("[EaseCation]   - Building NBT data...");
-                CompoundTag nbt = buildBlockNBT(blockDef);
-                log.debug("[EaseCation]   - NBT data built successfully, size: " + nbt.getTags().size() + " tags");
-
-                // 3. Register to BlockDataDriven registry
+                // 2. Register to BlockDataDriven registry
                 log.debug("[EaseCation]   - Registering to BlockDataDriven registry...");
                 BlockDataDriven.registerBlockDef(runtimeId, blockDef);
 
-                // 4. Register custom block
+                // 3. Register custom block with Lambda for multi-protocol support
                 log.debug("[EaseCation]   - Registering custom block to Nukkit...");
                 Blocks.registerCustomBlock(
                         blockId,
                         runtimeId,
                         BlockDataDriven.class,
-                        nbt
+                        protocolVersion -> {
+                            log.trace("[EaseCation]     Building NBT for protocol version: " + protocolVersion);
+
+                            // Build base NBT data
+                            CompoundTag nbt = buildBlockNBT(blockDef, runtimeId);
+
+                            // Add components NBT (protocol-version specific)
+                            if (blockDef.components() != null) {
+                                log.trace("[EaseCation]       - Adding components for protocol: " + protocolVersion);
+                                try {
+                                    CompoundTag componentsNBT = BlockComponentsNBT.toNBT(blockDef.components(), false);
+                                    // Merge all component tags into the main NBT
+                                    for (String key : componentsNBT.getTags().keySet()) {
+                                        nbt.put(key, componentsNBT.get(key));
+                                    }
+                                } catch (Exception e) {
+                                    log.warning("[EaseCation]       - Failed to convert components: " + e.getMessage());
+                                    throw new RuntimeException("Failed to convert block components for " + blockDef.id(), e);
+                                }
+                            }
+
+                            // Add permutations NBT (protocol-version specific)
+                            if (blockDef.permutations() != null && !blockDef.permutations().isEmpty()) {
+                                log.trace("[EaseCation]       - Adding permutations for protocol: " + protocolVersion);
+                                try {
+                                    ListTag<CompoundTag> permutations = BlockPermutationNBT.toNBT(blockDef.permutations());
+                                    if (!permutations.isEmpty()) {
+                                        nbt.putList("permutations", permutations);
+                                    }
+                                } catch (Exception e) {
+                                    log.warning("[EaseCation]       - Failed to convert permutations: " + e.getMessage());
+                                    throw new RuntimeException("Failed to convert block permutations for " + blockDef.id(), e);
+                                }
+                            }
+
+                            log.trace("[EaseCation]     NBT build completed, size: " + nbt.getTags().size() + " tags");
+                            return nbt;
+                        }
                 );
 
                 log.debug("[EaseCation] ✓ Successfully registered: " + blockId + " (runtimeId=" + runtimeId + ")");
@@ -145,6 +181,9 @@ public class EasecationRegistry implements AddonRegistry {
                         }
                 );
 
+                // 3. Store entity ID for network registration in afterAllRegistrations()
+                registeredEntityIds.add(identifier);
+
                 log.debug("[EaseCation] Registered entity: " + identifier);
                 successCount++;
 
@@ -205,6 +244,24 @@ public class EasecationRegistry implements AddonRegistry {
             cn.nukkit.item.ItemSerializer.rebuildRuntimeMapping();
             log.debug("[EaseCation] ✓ Item runtime mapping rebuilt");
 
+            // 注册自定义实体标识符到网络协议层（必须）
+            // 这让客户端能够识别和渲染自定义实体
+            if (!registeredEntityIds.isEmpty()) {
+                log.debug("[EaseCation] Registering " + registeredEntityIds.size() + " entity identifiers to network palette...");
+                for (String entityId : registeredEntityIds) {
+                    // 将自定义实体映射到原版实体（洞穴蜘蛛）用于网络传输
+                    // 客户端会使用行为包中的定义来渲染实体
+                    AvailableEntityIdentifiersPalette.registerCustomEntity(entityId, EntityFullNames.CAVE_SPIDER);
+                    log.debug("[EaseCation]   - Registered: " + entityId);
+                }
+
+                // 缓存实体标识符数据包，用于发送给客户端
+                AvailableEntityIdentifiersPalette.cachePackets();
+                log.debug("[EaseCation] ✓ Entity identifier packets cached");
+            } else {
+                log.debug("[EaseCation] No custom entities to register");
+            }
+
             // 重建生物群系网络缓存（可选，如果支持自定义生物群系）
             cn.nukkit.level.biome.Biomes.rebuildNetworkCache();
             log.debug("[EaseCation] ✓ Biome network cache rebuilt");
@@ -221,14 +278,25 @@ public class EasecationRegistry implements AddonRegistry {
     /**
      * Build NBT data for block registration.
      * The NBT contains block definition including menu category, tags, properties, components, etc.
+     *
+     * @param blockDef The block definition
+     * @param runtimeId The runtime ID allocated for this block
+     * @return CompoundTag containing the block NBT data
      */
-    private CompoundTag buildBlockNBT(BlockDef blockDef) {
+    private CompoundTag buildBlockNBT(BlockDef blockDef, int runtimeId) {
         try {
             CompoundTag nbt = new CompoundTag();
 
             // Basic identifier
             log.trace("[EaseCation]     Building NBT for: " + blockDef.id());
             nbt.putString("identifier", blockDef.id());
+
+            // Vanilla block data (contains runtimeId for client recognition)
+            nbt.putCompound("vanilla_block_data", new CompoundTag()
+                .putInt("block_id", runtimeId)
+                .putString("material", "dirt")
+            );
+            log.trace("[EaseCation]       - Added vanilla_block_data with runtimeId: " + runtimeId);
 
             // Menu category (for creative inventory)
             if (blockDef.description() != null && blockDef.description().menuCategory() != null) {
@@ -247,23 +315,8 @@ public class EasecationRegistry implements AddonRegistry {
                 nbt.putCompound("menu_category", menuCategory);
             }
 
-            // Components - serialize to NBT using BlockComponentsNBT
-            if (blockDef.components() != null) {
-                log.trace("[EaseCation]       - Adding components");
-                try {
-                    CompoundTag componentsNBT = BlockComponentsNBT.toNBT(blockDef.components(), false);
-                    // Merge all component tags into the main NBT
-                    int componentCount = 0;
-                    for (String key : componentsNBT.getTags().keySet()) {
-                        nbt.put(key, componentsNBT.get(key));
-                        componentCount++;
-                    }
-                    log.trace("[EaseCation]         Added " + componentCount + " component tags");
-                } catch (Exception e) {
-                    log.warning("[EaseCation]       - Failed to convert components: " + e.getMessage());
-                    throw new RuntimeException("Failed to convert block components for " + blockDef.id(), e);
-                }
-            }
+            // Note: Components and Permutations are added in the Lambda function
+            // to support protocol-version specific NBT generation
 
             // Traits - placement_direction, placement_position, connection
             if (blockDef.description() != null && blockDef.description().traits() != null) {
@@ -307,21 +360,6 @@ public class EasecationRegistry implements AddonRegistry {
                 } catch (Exception e) {
                     log.warning("[EaseCation]       - Failed to convert legacy states: " + e.getMessage());
                     throw new RuntimeException("Failed to convert block states for " + blockDef.id(), e);
-                }
-            }
-
-            // Permutations - conditional component changes
-            if (blockDef.permutations() != null && !blockDef.permutations().isEmpty()) {
-                log.trace("[EaseCation]       - Adding permutations (" + blockDef.permutations().size() + " permutations)");
-                try {
-                    ListTag<CompoundTag> permutations = BlockPermutationNBT.toNBT(blockDef.permutations());
-                    if (!permutations.isEmpty()) {
-                        nbt.putList("permutations", permutations);
-                        log.trace("[EaseCation]         Converted " + permutations.size() + " permutation(s)");
-                    }
-                } catch (Exception e) {
-                    log.warning("[EaseCation]       - Failed to convert permutations: " + e.getMessage());
-                    throw new RuntimeException("Failed to convert block permutations for " + blockDef.id(), e);
                 }
             }
 

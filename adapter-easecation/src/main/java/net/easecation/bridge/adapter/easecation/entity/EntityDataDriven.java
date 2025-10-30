@@ -2,12 +2,15 @@ package net.easecation.bridge.adapter.easecation.entity;
 
 import cn.nukkit.Player;
 import cn.nukkit.entity.EntityCreature;
+import cn.nukkit.entity.attribute.Attribute;
 import cn.nukkit.entity.data.FloatEntityData;
 import cn.nukkit.event.entity.EntityDamageEvent;
 import cn.nukkit.item.Item;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.nbt.tag.CompoundTag;
+import cn.nukkit.network.protocol.AddEntityPacket;
 import cn.nukkit.network.protocol.ProtocolInfo;
+import cn.nukkit.network.protocol.UpdateAttributesPacket;
 import net.easecation.bridge.core.dto.v1_21_60.behavior.entities.Components;
 import net.easecation.bridge.core.dto.v1_21_60.behavior.entities.Range_a_B_;
 
@@ -271,5 +274,48 @@ public class EntityDataDriven extends EntityCreature {
 
     public String getCustomIdentifier() {
         return identifier;
+    }
+
+    /**
+     * Override spawnTo to send custom entity identifier to the client.
+     * This is critical for the client to recognize and render custom entities.
+     */
+    @Override
+    public void spawnTo(Player player) {
+        // Check if already spawned to this player
+        if (this.hasSpawned.containsKey(player.getLoaderId())) {
+            return;
+        }
+
+        // Create AddEntityPacket with custom identifier
+        AddEntityPacket pk = new AddEntityPacket();
+        pk.id = this.identifier;  // Use custom identifier instead of networkId
+        pk.entityUniqueId = this.getId();
+        pk.entityRuntimeId = this.getId();
+        pk.x = (float) this.x;
+        pk.y = (float) this.y;
+        pk.z = (float) this.z;
+        pk.speedX = (float) this.motionX;
+        pk.speedY = (float) this.motionY;
+        pk.speedZ = (float) this.motionZ;
+        pk.yaw = (float) this.yaw;
+        pk.pitch = (float) this.pitch;
+        pk.headYaw = (float) this.yaw;
+        pk.metadata = this.dataProperties;
+        pk.attributes = new Attribute[]{
+            Attribute.getAttribute(Attribute.HEALTH)
+                .setMaxValue(this.getMaxHealth())
+                .setValue(this.getHealth() > 0 ? this.getHealth() : this.getMaxHealth()),
+        };
+        player.dataPacket(pk);
+
+        // Send UpdateAttributesPacket to ensure attributes are synced
+        UpdateAttributesPacket pk0 = new UpdateAttributesPacket();
+        pk0.entityId = this.getId();
+        pk0.entries = pk.attributes;
+        player.dataPacket(pk0);
+
+        // Call parent to handle spawning logic (adding to viewers, etc.)
+        super.spawnTo(player);
     }
 }
