@@ -30,6 +30,7 @@ packs/
 
 # Package Files #
 *.jar
+!adapter-pm1e/lib/patched.jar
 *.war
 *.nar
 *.ear
