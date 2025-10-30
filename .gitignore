@@ -30,6 +30,7 @@ packs/
 
 # Package Files #
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 !adapter-pm1e/lib/patched.jar
 *.war
 *.nar

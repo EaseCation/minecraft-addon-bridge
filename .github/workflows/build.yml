@@ -12,42 +12,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 检出代码
+    - name: Checkout code
       uses: actions/checkout@v4
       with:
         submodules: recursive
 
-    - name: 设置 Java 21
+    - name: Set up Java 21
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '21'
         cache: 'gradle'
 
-    - name: 授予 Gradle 执行权限
+    - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: 构建项目并生成 ShadowJar
+    - name: Build with Gradle and create ShadowJar
       run: ./gradlew :plugin-runner:shadowJar --no-daemon
 
-    - name: 验证构建产物
+    - name: Verify build artifact
       run: |
         if [ -f plugin-runner/build/libs/nukkit-addon-bridge.jar ]; then
-          echo "✓ 构建产物已生成"
+          echo "✓ Build artifact generated successfully"
           ls -lh plugin-runner/build/libs/nukkit-addon-bridge.jar
         else
-          echo "✗ 构建产物未找到"
+          echo "✗ Build artifact not found"
           exit 1
         fi
 
-    - name: 上传构建产物
+    - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:
         name: nukkit-addon-bridge
         path: plugin-runner/build/libs/nukkit-addon-bridge.jar
         if-no-files-found: error
 
-    - name: 上传到 Release（仅标签推送）
+    - name: Upload to Release (on tag push only)
       if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
