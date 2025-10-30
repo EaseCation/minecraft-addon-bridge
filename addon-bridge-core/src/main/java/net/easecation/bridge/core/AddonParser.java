@@ -146,13 +146,13 @@ public class AddonParser {
                 return new AddonPack(manifest, List.of(), List.of(), List.of(), List.of(), originalPath, needsPackaging);
             }
 
-            // Parse blocks
+            // Parse blocks (including Netease edition blocks)
             List<BlockDef> blocks = new ArrayList<>();
             Enumeration<? extends ZipEntry> entries = zip.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
                 String name = entry.getName();
-                if (name.startsWith("blocks/") && name.endsWith(".json")) {
+                if ((name.startsWith("blocks/") || name.startsWith("netease_blocks/")) && name.endsWith(".json")) {
                     try (InputStream is = zip.getInputStream(entry)) {
                         String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
                         // Parse wrapper: {"format_version": "1.21.60", "minecraft:block": {...}}
@@ -203,13 +203,13 @@ public class AddonParser {
                 log.info("Entity parsing: found " + entityFileCount + " files, successfully parsed " + entityParsedCount);
             }
 
-            // Parse items
+            // Parse items (including Netease edition items)
             List<ItemDef> items = new ArrayList<>();
             entries = zip.entries();
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
                 String name = entry.getName();
-                if (name.startsWith("items/") && name.endsWith(".json")) {
+                if ((name.startsWith("items/") || name.startsWith("netease_items_beh/")) && name.endsWith(".json")) {
                     try (InputStream is = zip.getInputStream(entry)) {
                         String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
                         // Parse wrapper: {"format_version": "1.21.60", "minecraft:item": {...}}
@@ -280,7 +280,7 @@ public class AddonParser {
             return new AddonPack(manifest, List.of(), List.of(), List.of(), List.of(), originalPath, needsPackaging);
         }
 
-        // Parse blocks
+        // Parse blocks (including Netease edition blocks)
         List<BlockDef> blocks = new ArrayList<>();
         Path blocksDir = packRoot.resolve("blocks");
         if (Files.isDirectory(blocksDir)) {
@@ -297,6 +297,25 @@ public class AddonParser {
                             }
                         } catch (Exception e) {
                             log.debug("Failed to parse block: " + blockFile + " - " + e.getMessage());
+                        }
+                    });
+        }
+        // Also parse Netease edition blocks
+        Path neteaseBlocksDir = packRoot.resolve("netease_blocks");
+        if (Files.isDirectory(neteaseBlocksDir)) {
+            Files.walk(neteaseBlocksDir)
+                    .filter(p -> p.toString().endsWith(".json"))
+                    .forEach(blockFile -> {
+                        try {
+                            String json = Files.readString(blockFile, StandardCharsets.UTF_8);
+                            Map<String, Object> wrapper = MAPPER.readValue(json, Map.class);
+                            if (wrapper.containsKey("minecraft:block")) {
+                                Object blockData = wrapper.get("minecraft:block");
+                                BlockDefinitions blockDef = MAPPER.convertValue(blockData, BlockDefinitions.class);
+                                blocks.add(BlockDef.fromDTO(blockDef));
+                            }
+                        } catch (Exception e) {
+                            log.debug("Failed to parse Netease block: " + blockFile + " - " + e.getMessage());
                         }
                     });
         }
@@ -335,7 +354,7 @@ public class AddonParser {
             }
         }
 
-        // Parse items
+        // Parse items (including Netease edition items)
         List<ItemDef> items = new ArrayList<>();
         Path itemsDir = packRoot.resolve("items");
         if (Files.isDirectory(itemsDir)) {
@@ -383,6 +402,56 @@ public class AddonParser {
                             }
                         } catch (Exception e) {
                             log.debug("Failed to parse item: " + itemFile + " - " + e.getMessage());
+                        }
+                    });
+        }
+        // Also parse Netease edition items
+        Path neteaseItemsDir = packRoot.resolve("netease_items_beh");
+        if (Files.isDirectory(neteaseItemsDir)) {
+            Files.walk(neteaseItemsDir)
+                    .filter(p -> p.toString().endsWith(".json"))
+                    .forEach(itemFile -> {
+                        try {
+                            String json = Files.readString(itemFile, StandardCharsets.UTF_8);
+                            Map<String, Object> wrapper = MAPPER.readValue(json, Map.class);
+                            if (wrapper.containsKey("minecraft:item")) {
+                                Object itemData = wrapper.get("minecraft:item");
+                                Map<String, Object> itemMap = MAPPER.convertValue(itemData, Map.class);
+
+                                // Extract identifier, components, and menu_category
+                                String identifier = null;
+                                Map<String, Object> components = null;
+                                ItemDef.MenuCategoryInfo menuCategoryInfo = null;
+
+                                if (itemMap.containsKey("description")) {
+                                    @SuppressWarnings("unchecked")
+                                    Map<String, Object> description = (Map<String, Object>) itemMap.get("description");
+                                    identifier = (String) description.get("identifier");
+
+                                    // Extract menu_category for creative mode
+                                    if (description.containsKey("menu_category")) {
+                                        @SuppressWarnings("unchecked")
+                                        Map<String, Object> mc = (Map<String, Object>) description.get("menu_category");
+                                        menuCategoryInfo = new ItemDef.MenuCategoryInfo(
+                                            mc.get("category") != null ? mc.get("category").toString() : null,
+                                            (String) mc.get("group"),
+                                            (Boolean) mc.get("is_hidden_in_commands")
+                                        );
+                                    }
+                                }
+
+                                if (itemMap.containsKey("components")) {
+                                    @SuppressWarnings("unchecked")
+                                    Map<String, Object> comps = (Map<String, Object>) itemMap.get("components");
+                                    components = comps;
+                                }
+
+                                if (identifier != null) {
+                                    items.add(new ItemDef(identifier, components, menuCategoryInfo));
+                                }
+                            }
+                        } catch (Exception e) {
+                            log.debug("Failed to parse Netease item: " + itemFile + " - " + e.getMessage());
                         }
                     });
         }
