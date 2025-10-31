@@ -1,6 +1,6 @@
 package net.easecation.bridge.core.versioned.upgrade;
 
-import net.easecation.bridge.core.BridgeLogger;
+import net.easecation.bridge.core.BridgeLoggerHolder;
 import net.easecation.bridge.core.versioned.FormatVersion;
 
 import javax.annotation.Nullable;
@@ -21,17 +21,9 @@ public class VersionUpgrader<T> {
 
     private final Map<FormatVersion, UpgradeStep<?, ?>> upgradeSteps = new LinkedHashMap<>();
     private final FormatVersion targetVersion;
-    private BridgeLogger logger;
 
     public VersionUpgrader(FormatVersion targetVersion) {
         this.targetVersion = targetVersion;
-    }
-
-    /**
-     * Set the logger for this upgrader.
-     */
-    public void setLogger(BridgeLogger logger) {
-        this.logger = logger;
     }
 
     /**
@@ -47,9 +39,7 @@ public class VersionUpgrader<T> {
             }
         }
         upgradeSteps.put(step.fromVersion(), step);
-        if (logger != null) {
-            logger.debug(String.format("Registered upgrade step: %s -> %s", step.fromVersion(), step.toVersion()));
-        }
+        BridgeLoggerHolder.getLogger().debug(String.format("Registered upgrade step: %s -> %s", step.fromVersion(), step.toVersion()));
     }
 
     /**
@@ -71,9 +61,7 @@ public class VersionUpgrader<T> {
                 "Cannot downgrade from newer version to older version");
         }
 
-        if (logger != null) {
-            logger.info(String.format("Starting upgrade from %s to %s", currentVersion, targetVersion));
-        }
+        BridgeLoggerHolder.getLogger().info(String.format("Starting upgrade from %s to %s", currentVersion, targetVersion));
 
         Object current = object;
         FormatVersion currentVer = currentVersion;
@@ -91,12 +79,10 @@ public class VersionUpgrader<T> {
             }
 
             FormatVersion nextVersion = step.toVersion();
-            if (logger != null) {
-                logger.info(String.format("Upgrading from %s to %s", currentVer, nextVersion));
-            }
+            BridgeLoggerHolder.getLogger().debug(String.format("Upgrading from %s to %s", currentVer, nextVersion));
 
             // Create a context for this specific step (with correct version pair)
-            UpgradeContext stepContext = new UpgradeContext(currentVer, nextVersion, logger);
+            UpgradeContext stepContext = new UpgradeContext(currentVer, nextVersion);
 
             try {
                 current = step.upgrade(current, stepContext);
@@ -115,16 +101,12 @@ public class VersionUpgrader<T> {
 
         // Report all warnings at the end
         if (!allWarnings.isEmpty()) {
-            if (logger != null) {
-                logger.warning(String.format("Upgrade completed with %d warning(s)", allWarnings.size()));
-                for (String warning : allWarnings) {
-                    logger.warning("  - " + warning);
-                }
+            BridgeLoggerHolder.getLogger().warning(String.format("Upgrade completed with %d warning(s)", allWarnings.size()));
+            for (String warning : allWarnings) {
+                BridgeLoggerHolder.getLogger().warning("  - " + warning);
             }
         } else {
-            if (logger != null) {
-                logger.info("Upgrade completed successfully with no warnings");
-            }
+            BridgeLoggerHolder.getLogger().info("Upgrade completed successfully with no warnings");
         }
 
         return (T) current;

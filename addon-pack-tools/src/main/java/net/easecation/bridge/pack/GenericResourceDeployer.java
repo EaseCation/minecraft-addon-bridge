@@ -1,7 +1,7 @@
 package net.easecation.bridge.pack;
 
 import net.easecation.bridge.core.AddonPack;
-import net.easecation.bridge.core.BridgeLogger;
+import net.easecation.bridge.core.BridgeLoggerHolder;
 import net.easecation.bridge.core.DeployedPack;
 import net.easecation.bridge.core.PackType;
 import net.easecation.bridge.core.ResourcePackDeployer;
@@ -18,12 +18,10 @@ import java.util.Map;
  */
 public class GenericResourceDeployer implements ResourcePackDeployer {
     private final Path dataDir;
-    private final BridgeLogger log;
     private final String baseUrl; // optional CDN base; if empty uses file URI
 
-    public GenericResourceDeployer(Path dataDir, BridgeLogger log, String baseUrl) {
+    public GenericResourceDeployer(Path dataDir, String baseUrl) {
         this.dataDir = dataDir;
-        this.log = log;
         this.baseUrl = baseUrl != null ? baseUrl : "";
     }
 
@@ -34,7 +32,7 @@ public class GenericResourceDeployer implements ResourcePackDeployer {
         Files.createDirectories(packsDir);
 
         PackType packType = pack.manifest().getPackType();
-        String packName = pack.manifest().getName();
+        String packName = pack.packName();
 
         if (!pack.needsPackaging()) {
             // Use original ZIP/MCPACK file directly - no need to repackage
@@ -46,10 +44,10 @@ public class GenericResourceDeployer implements ResourcePackDeployer {
                 ? originalFile.toUri().toString()
                 : joinUrl(baseUrl, originalFile.getFileName().toString());
 
-            log.info("Using original pack file: " + packName);
-            log.debug("  Path: " + originalFile);
-            log.debug("  SHA1: " + sha1);
-            log.debug("  Pack type: " + packType);
+            BridgeLoggerHolder.getLogger().info("Using original pack file: " + packName);
+            BridgeLoggerHolder.getLogger().debug("  Path: " + originalFile);
+            BridgeLoggerHolder.getLogger().debug("  SHA1: " + sha1);
+            BridgeLoggerHolder.getLogger().debug("  Pack type: " + packType);
 
             out.add(new DeployedPack(url, sha1, packType));
         } else {
@@ -63,29 +61,29 @@ public class GenericResourceDeployer implements ResourcePackDeployer {
             boolean needsRepackaging = true;
             if (Files.exists(outZip)) {
                 String existingSha1 = Sha1.hex(outZip);
-                log.debug("Found existing package: " + fileName + " (sha1=" + existingSha1 + ")");
+                BridgeLoggerHolder.getLogger().debug("Found existing package: " + fileName + " (sha1=" + existingSha1 + ")");
 
                 // For now, we trust existing files with same version
                 // In the future, could add content hash checking
                 needsRepackaging = false;
-                log.debug("  Reusing existing package");
+                BridgeLoggerHolder.getLogger().debug("  Reusing existing package");
             }
 
             if (needsRepackaging) {
                 // Stream pack contents directly from directory to ZIP
                 // This avoids loading large resource packs into memory
-                log.info("Packaging directory to ZIP: " + packName);
+                BridgeLoggerHolder.getLogger().info("Packaging directory to ZIP: " + packName);
                 ZipUtil.zipFromDirectory(pack.originalPath(), outZip);
-                log.debug("Created new package: " + fileName);
+                BridgeLoggerHolder.getLogger().debug("Created new package: " + fileName);
             }
 
             String sha1 = Sha1.hex(outZip);
             String url = baseUrl.isEmpty() ? outZip.toUri().toString() : joinUrl(baseUrl, fileName);
 
-            log.info("Deployed packaged resource: " + packName);
-            log.debug("  URL: " + url);
-            log.debug("  SHA1: " + sha1);
-            log.debug("  Pack type: " + packType);
+            BridgeLoggerHolder.getLogger().info("Deployed packaged resource: " + packName);
+            BridgeLoggerHolder.getLogger().debug("  URL: " + url);
+            BridgeLoggerHolder.getLogger().debug("  SHA1: " + sha1);
+            BridgeLoggerHolder.getLogger().debug("  Pack type: " + packType);
 
             out.add(new DeployedPack(url, sha1, packType));
         }

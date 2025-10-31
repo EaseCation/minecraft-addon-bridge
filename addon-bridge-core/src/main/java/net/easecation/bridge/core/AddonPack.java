@@ -13,6 +13,7 @@ import java.util.List;
  * @param recipes List of custom recipes
  * @param originalPath Path to the original pack file or directory
  * @param needsPackaging Whether this pack needs to be packaged (true for directories, false for ZIP/MCPACK files)
+ * @param packName The actual pack name derived from file/directory name (not from manifest)
  */
 public record AddonPack(
         Manifest manifest,
@@ -21,6 +22,7 @@ public record AddonPack(
         List<EntityDef> entities,
         List<RecipeDef> recipes,
         Path originalPath,
-        boolean needsPackaging
+        boolean needsPackaging,
+        String packName
 ) {}
 

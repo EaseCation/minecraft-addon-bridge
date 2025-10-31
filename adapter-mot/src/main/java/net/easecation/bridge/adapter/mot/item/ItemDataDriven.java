@@ -26,7 +26,24 @@ public class ItemDataDriven extends ItemCustom {
     private final String textureName;
 
     /**
-     * Constructor for MOT ItemCustom.
+     * Constructor for Legacy mode items (two-parameter version).
+     * When textureName is not specified, ItemCustom will use displayName as textureName automatically.
+     * This is used for Legacy mode (v1.10) items where textures are defined client-side.
+     *
+     * @param identifier The item identifier (e.g., "namespace:item_name")
+     * @param displayName The display name (can be null)
+     */
+    public ItemDataDriven(String identifier, String displayName) {
+        super(identifier, displayName);
+        this.identifier = identifier;
+        // ItemCustom's two-parameter constructor will use displayName as textureName
+        this.textureName = displayName;
+    }
+
+    /**
+     * Constructor for Component-based mode items (three-parameter version).
+     * Used for Component-based mode (v1.19+) items where textures are defined server-side.
+     *
      * @param identifier The item identifier (e.g., "namespace:item_name")
      * @param displayName The display name (can be null)
      * @param textureName The texture name
@@ -82,10 +99,24 @@ public class ItemDataDriven extends ItemCustom {
     public int getMaxStackSize() {
         // Get from ItemDef if available
         ItemDef itemDef = ITEM_DEF_REGISTRY.get(identifier);
-        if (itemDef != null && itemDef.components() != null && itemDef.components().minecraft_maxStackSize() != null) {
-            net.easecation.bridge.core.dto.item.v1_21_60.MaxStackSize maxStackSize = itemDef.components().minecraft_maxStackSize();
-            if (maxStackSize instanceof net.easecation.bridge.core.dto.item.v1_21_60.MaxStackSize.MaxStackSize_Variant0 variant0) {
-                return variant0.value().intValue();
+        if (itemDef != null) {
+            if (itemDef.isLegacy()) {
+                // Legacy模式 (v1.10)
+                var components = itemDef.legacyComponents();
+                if (components != null && components.getMaxStackSize() != null
+                    && components.getMaxStackSize().value() != null) {
+                    return components.getMaxStackSize().value();
+                }
+            } else {
+                // Component-based模式 (v1.19+)
+                if (itemDef.componentComponents() != null
+                    && itemDef.componentComponents().minecraft_maxStackSize() != null) {
+                    net.easecation.bridge.core.dto.item.v1_21_60.MaxStackSize maxStackSize =
+                        itemDef.componentComponents().minecraft_maxStackSize();
+                    if (maxStackSize instanceof net.easecation.bridge.core.dto.item.v1_21_60.MaxStackSize.MaxStackSize_Variant0 variant0) {
+                        return variant0.value().intValue();
+                    }
+                }
             }
         }
         return super.getMaxStackSize();
@@ -95,10 +126,18 @@ public class ItemDataDriven extends ItemCustom {
     public int getMaxDurability() {
         // Get from ItemDef if available
         ItemDef itemDef = ITEM_DEF_REGISTRY.get(identifier);
-        if (itemDef != null && itemDef.components() != null && itemDef.components().minecraft_durability() != null) {
-            net.easecation.bridge.core.dto.item.v1_21_60.Durability durability = itemDef.components().minecraft_durability();
-            if (durability.maxDurability() != null) {
-                return durability.maxDurability();
+        if (itemDef != null) {
+            // Legacy模式暂不支持耐久度（minecraft:max_damage组件）
+            if (!itemDef.isLegacy()) {
+                // Component-based模式 (v1.19+)
+                if (itemDef.componentComponents() != null
+                    && itemDef.componentComponents().minecraft_durability() != null) {
+                    net.easecation.bridge.core.dto.item.v1_21_60.Durability durability =
+                        itemDef.componentComponents().minecraft_durability();
+                    if (durability.maxDurability() != null) {
+                        return durability.maxDurability();
+                    }
+                }
             }
         }
         return super.getMaxDurability();

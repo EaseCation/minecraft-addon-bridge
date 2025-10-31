@@ -22,7 +22,10 @@
       "Bash(jar -tf:*)",
       "Bash(javap:*)",
       "Bash(git log:*)",
-      "Bash(git checkout tags/v1.20.0-0)"
+      "Bash(git checkout tags/v1.20.0-0)",
+      "Bash(tree:*)",
+      "Bash(unzip:*)",
+      "Read(//tmp/easecation_beh_temp/blocks/**)"
     ],
     "deny": [],
     "ask": []

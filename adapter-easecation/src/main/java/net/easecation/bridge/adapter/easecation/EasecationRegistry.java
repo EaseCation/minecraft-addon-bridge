@@ -3,6 +3,7 @@ package net.easecation.bridge.adapter.easecation;
 import cn.nukkit.block.Blocks;
 import cn.nukkit.entity.Entity;
 import cn.nukkit.entity.EntityFullNames;
+import cn.nukkit.item.Items;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.nbt.tag.ListTag;
 import cn.nukkit.plugin.PluginBase;
@@ -12,6 +13,7 @@ import net.easecation.bridge.adapter.easecation.block.BlockPermutationNBT;
 import net.easecation.bridge.adapter.easecation.block.BlockStatesNBT;
 import net.easecation.bridge.adapter.easecation.block.BlockTraitsNBT;
 import net.easecation.bridge.adapter.easecation.entity.EntityDataDriven;
+import net.easecation.bridge.adapter.easecation.item.ItemDataDriven;
 import net.easecation.bridge.core.*;
 import org.itxtech.synapseapi.multiprotocol.utils.AvailableEntityIdentifiersPalette;
 import org.itxtech.synapseapi.multiprotocol.utils.CreativeItemsPalette;
@@ -62,12 +64,19 @@ public class EasecationRegistry implements AddonRegistry {
 
                 // 4. Register custom item with Nukkit
                 log.debug("[EaseCation]   - Registering custom item to Nukkit...");
-                cn.nukkit.item.Items.registerCustomItem(
-                    itemId,
-                    customItemId,
-                    net.easecation.bridge.adapter.easecation.item.ItemDataDriven.class,
-                    (meta, count) -> new net.easecation.bridge.adapter.easecation.item.ItemDataDriven(customItemId, meta, count),
-                    nbt
+                if (itemDef.isLegacy()) {
+                    // Legacy item
+                    log.debug("[EaseCation]   - Using Legacy item");
+                } else {
+                    // Component-based item - use 5-parameter version (with NBT)
+                    log.debug("[EaseCation]   - Using Component-based item");
+                }
+                Items.registerCustomItem(
+                        itemId,
+                        customItemId,
+                        ItemDataDriven.class,
+                        (meta, count) -> new ItemDataDriven(customItemId, meta, count),
+                        nbt
                 );
 
                 // 5. Register to creative mode inventory
@@ -93,7 +102,7 @@ public class EasecationRegistry implements AddonRegistry {
                 }
 
                 // Log item definition details for debugging
-                if (itemDef.components() != null) {
+                if (itemDef.componentComponents() != null) {
                     log.error("[EaseCation]   Item has components: YES");
                 } else {
                     log.error("[EaseCation]   Item has components: NO");
@@ -462,68 +471,111 @@ public class EasecationRegistry implements AddonRegistry {
      * Build NBT data for item registration.
      * The NBT contains item definition including properties and components.
      *
+     * <p>For Legacy mode (v1.10):
+     * <ul>
+     *   <li>Simple items: Returns null (no NBT needed)</li>
+     *   <li>Food items: Returns NBT with only minecraft:food and minecraft:use_duration</li>
+     * </ul>
+     *
+     * <p>For Component-based mode (v1.19+):
+     * <ul>
+     *   <li>Returns full NBT with item_properties and all components</li>
+     * </ul>
+     *
      * @param itemDef The item definition
-     * @return CompoundTag containing the item NBT data
+     * @return CompoundTag containing the item NBT data, or null for Legacy simple items
      */
     private CompoundTag buildItemNBT(ItemDef itemDef) {
         try {
             log.trace("[EaseCation]     Building NBT for: " + itemDef.id());
 
-            // Basic identifier
-            CompoundTag nbt = new CompoundTag();
-            nbt.putString("identifier", itemDef.id());
-
-            // Menu category (for creative inventory) - same as block implementation
-            if (itemDef.menuCategory() != null) {
-                log.trace("[EaseCation]       - Adding menu category");
-                CompoundTag menuCategory = new CompoundTag();
-                var mc = itemDef.menuCategory();
-
-                menuCategory.putString("category", mc.category() != null ? mc.category() : "items");
-                if (mc.group() != null && !mc.group().isEmpty()) {
-                    menuCategory.putString("group", mc.group());
-                }
-                if (mc.isHiddenInCommands() != null) {
-                    menuCategory.putBoolean("is_hidden_in_commands", mc.isHiddenInCommands());
-                }
-
-                nbt.putCompound("menu_category", menuCategory);
+            // Branch on registration mode
+            if (itemDef.isLegacy()) {
+                return buildLegacyItemNBT(itemDef);
             } else {
-                // Default: add default menu_category (category="items")
-                log.trace("[EaseCation]       - Adding default menu category");
-                nbt.putCompound("menu_category", new CompoundTag()
-                    .putString("category", "items")
-                    .putString("group", "")
-                    .putBoolean("is_hidden_in_commands", false)
-                );
+                return buildComponentBasedItemNBT(itemDef);
             }
-
-            // Add components NBT
-            if (itemDef.components() != null) {
-                log.trace("[EaseCation]       - Adding components");
-                try {
-                    CompoundTag componentsNBT = net.easecation.bridge.adapter.easecation.item.ItemComponentsNBT.toNBT(
-                        itemDef,  // Pass the full ItemDef (includes menu_category)
-                        itemDef.id()
-                    );
-                    // Merge all component tags into the main NBT
-                    for (String key : componentsNBT.getTags().keySet()) {
-                        nbt.put(key, componentsNBT.get(key));
-                    }
-                } catch (Exception e) {
-                    log.warning("[EaseCation]       - Failed to convert components: " + e.getMessage());
-                    throw new RuntimeException("Failed to convert item components for " + itemDef.id(), e);
-                }
-            }
-
-            log.trace("[EaseCation]     NBT build completed for: " + itemDef.id());
-            return nbt;
 
         } catch (Exception e) {
             log.error("[EaseCation]     Failed to build NBT for item: " + itemDef.id());
             log.error("[EaseCation]     Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             throw new RuntimeException("Failed to build NBT for item " + itemDef.id(), e);
         }
+    }
+
+    /**
+     * Build NBT for Legacy mode (v1.10) items.
+     * Returns null for simple items, food NBT for food items.
+     */
+    private CompoundTag buildLegacyItemNBT(ItemDef itemDef) {
+        log.trace("[EaseCation]       - Legacy mode item");
+        CompoundTag nbt = net.easecation.bridge.adapter.easecation.item.ItemComponentsNBT_Legacy.toNBT(itemDef);
+
+        if (nbt == null) {
+            log.trace("[EaseCation]       - No NBT (legacy simple item)");
+        } else {
+            log.trace("[EaseCation]       - Legacy food item NBT built");
+        }
+
+        return nbt;
+    }
+
+    /**
+     * Build NBT for Component-based mode (v1.19+) items.
+     * Returns full NBT with item_properties and all components.
+     */
+    private CompoundTag buildComponentBasedItemNBT(ItemDef itemDef) {
+        log.trace("[EaseCation]       - Component-based mode item");
+
+        // Basic identifier
+        CompoundTag nbt = new CompoundTag();
+        nbt.putString("identifier", itemDef.id());
+
+        // Menu category (for creative inventory) - same as block implementation
+        if (itemDef.menuCategory() != null) {
+            log.trace("[EaseCation]       - Adding menu category");
+            CompoundTag menuCategory = new CompoundTag();
+            var mc = itemDef.menuCategory();
+
+            menuCategory.putString("category", mc.category() != null ? mc.category() : "items");
+            if (mc.group() != null && !mc.group().isEmpty()) {
+                menuCategory.putString("group", mc.group());
+            }
+            if (mc.isHiddenInCommands() != null) {
+                menuCategory.putBoolean("is_hidden_in_commands", mc.isHiddenInCommands());
+            }
+
+            nbt.putCompound("menu_category", menuCategory);
+        } else {
+            // Default: add default menu_category (category="items")
+            log.trace("[EaseCation]       - Adding default menu category");
+            nbt.putCompound("menu_category", new CompoundTag()
+                .putString("category", "items")
+                .putString("group", "")
+                .putBoolean("is_hidden_in_commands", false)
+            );
+        }
+
+        // Add components NBT
+        if (itemDef.componentComponents() != null) {
+            log.trace("[EaseCation]       - Adding components");
+            try {
+                CompoundTag componentsNBT = net.easecation.bridge.adapter.easecation.item.ItemComponentsNBT.toNBT(
+                    itemDef,  // Pass the full ItemDef (includes menu_category)
+                    itemDef.id()
+                );
+                // Merge all component tags into the main NBT
+                for (String key : componentsNBT.getTags().keySet()) {
+                    nbt.put(key, componentsNBT.get(key));
+                }
+            } catch (Exception e) {
+                log.warning("[EaseCation]       - Failed to convert components: " + e.getMessage());
+                throw new RuntimeException("Failed to convert item components for " + itemDef.id(), e);
+            }
+        }
+
+        log.trace("[EaseCation]     NBT build completed for: " + itemDef.id());
+        return nbt;
     }
 }
 

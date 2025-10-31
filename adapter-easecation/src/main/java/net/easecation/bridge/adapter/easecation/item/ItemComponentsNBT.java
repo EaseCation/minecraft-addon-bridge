@@ -22,7 +22,7 @@ public class ItemComponentsNBT {
      * @return CompoundTag containing all component NBT data
      */
     public static CompoundTag toNBT(ItemDef itemDef, String identifier) {
-        var components = itemDef.components();
+        var components = itemDef.componentComponents();
         if (components == null) {
             return new CompoundTag();
         }

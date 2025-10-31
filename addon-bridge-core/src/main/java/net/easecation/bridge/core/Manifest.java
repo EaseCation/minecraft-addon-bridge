@@ -1,6 +1,7 @@
 package net.easecation.bridge.core;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.annotation.Nullable;
@@ -32,6 +33,7 @@ public record Manifest(
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     public record Header(
             @JsonProperty("uuid") String uuid,
             @JsonProperty("name") String name,

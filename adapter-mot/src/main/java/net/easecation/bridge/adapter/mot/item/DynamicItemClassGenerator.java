@@ -56,18 +56,39 @@ public class DynamicItemClassGenerator {
         try {
             // Use ByteBuddy to generate the class
             @SuppressWarnings("unchecked")
-            Class<? extends ItemDataDriven> dynamicClass = (Class<? extends ItemDataDriven>) new ByteBuddy()
-                .subclass(ItemDataDriven.class)
-                .name(className)
-                // Define a public no-arg constructor
-                .defineConstructor(Visibility.PUBLIC)
-                // Call super(identifier, displayName, textureName)
-                .intercept(MethodCall.invoke(ItemDataDriven.class.getDeclaredConstructor(
-                        String.class, String.class, String.class))
-                    .with(identifier, displayName, textureName))
-                .make()
-                .load(ItemDataDriven.class.getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
-                .getLoaded();
+            Class<? extends ItemDataDriven> dynamicClass;
+
+            // For Legacy mode (textureName == null), use two-parameter constructor
+            // For Component-based mode, use three-parameter constructor
+            if (textureName == null) {
+                // Legacy mode: textures are defined client-side in resource pack
+                dynamicClass = (Class<? extends ItemDataDriven>) new ByteBuddy()
+                    .subclass(ItemDataDriven.class)
+                    .name(className)
+                    // Define a public no-arg constructor
+                    .defineConstructor(Visibility.PUBLIC)
+                    // Call super(identifier, displayName) - two-parameter constructor
+                    .intercept(MethodCall.invoke(ItemDataDriven.class.getDeclaredConstructor(
+                            String.class, String.class))
+                        .with(identifier, displayName))
+                    .make()
+                    .load(ItemDataDriven.class.getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
+                    .getLoaded();
+            } else {
+                // Component-based mode: textures are defined server-side
+                dynamicClass = (Class<? extends ItemDataDriven>) new ByteBuddy()
+                    .subclass(ItemDataDriven.class)
+                    .name(className)
+                    // Define a public no-arg constructor
+                    .defineConstructor(Visibility.PUBLIC)
+                    // Call super(identifier, displayName, textureName) - three-parameter constructor
+                    .intercept(MethodCall.invoke(ItemDataDriven.class.getDeclaredConstructor(
+                            String.class, String.class, String.class))
+                        .with(identifier, displayName, textureName))
+                    .make()
+                    .load(ItemDataDriven.class.getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
+                    .getLoaded();
+            }
 
             // Cache the generated class
             GENERATED_CLASSES.put(identifier, dynamicClass);
@@ -81,13 +102,22 @@ public class DynamicItemClassGenerator {
 
     /**
      * Extract display name from ItemDef components.
+     * Legacy mode items don't have display_name component.
      */
     private static String extractDisplayName(ItemDef itemDef) {
-        if (itemDef.components() == null || itemDef.components().minecraft_displayName() == null) {
+        // Legacy模式没有displayName组件
+        if (itemDef.isLegacy()) {
             return null;
         }
 
-        net.easecation.bridge.core.dto.item.v1_21_60.DisplayName displayName = itemDef.components().minecraft_displayName();
+        // Component-based模式
+        if (itemDef.componentComponents() == null
+            || itemDef.componentComponents().minecraft_displayName() == null) {
+            return null;
+        }
+
+        net.easecation.bridge.core.dto.item.v1_21_60.DisplayName displayName =
+            itemDef.componentComponents().minecraft_displayName();
         return displayName.value();
     }
 

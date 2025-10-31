@@ -1,12 +1,18 @@
 package net.easecation.bridge.core.versioned.upgrade;
 
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import net.easecation.bridge.core.BridgeLoggerHolder;
 import net.easecation.bridge.core.versioned.FormatVersion;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
+import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +33,7 @@ public class GenericUpgradeStep<F extends Record, T extends Record> implements U
     private final FormatVersion toVersion;
     private final Class<F> fromClass;
     private final Class<T> toClass;
+    private final ObjectMapper mapper;
 
     // Cached reflection data
     private final Map<String, Method> fromAccessors;
@@ -37,12 +44,14 @@ public class GenericUpgradeStep<F extends Record, T extends Record> implements U
         FormatVersion fromVersion,
         FormatVersion toVersion,
         Class<F> fromClass,
-        Class<T> toClass
+        Class<T> toClass,
+        ObjectMapper mapper
     ) {
         this.fromVersion = fromVersion;
         this.toVersion = toVersion;
         this.fromClass = fromClass;
         this.toClass = toClass;
+        this.mapper = mapper;
 
         // Pre-compute reflection data for performance
         this.fromAccessors = buildAccessorMap(fromClass);
@@ -90,20 +99,41 @@ public class GenericUpgradeStep<F extends Record, T extends Record> implements U
                         continue;
                     }
 
-                    // Check if types are directly assignable
+                    // Priority 1: Map/Collection - ALWAYS use JSON deep conversion
+                    // This ensures nested objects (like sealed interface variants) are recreated with target version
+                    if (sourceValue instanceof Map || sourceValue instanceof Collection) {
+                        try {
+                            String json = mapper.writeValueAsString(sourceValue);
+                            JavaType targetJavaType = mapper.getTypeFactory().constructType(targetComponent.getGenericType());
+                            args[i] = mapper.readValue(json, targetJavaType);
+                            BridgeLoggerHolder.getLogger().debug(String.format(
+                                "[%s->%s] Field '%s': JSON converted %s",
+                                fromVersion, toVersion, fieldName, sourceType.getSimpleName()));
+                            continue;
+                        } catch (Exception e) {
+                            // Fail immediately - no silent failures
+                            throw new UpgradeException(fromVersion, toVersion,
+                                String.format("Failed to JSON-convert %s field '%s': %s\n" +
+                                    "This requires manual upgrade logic.",
+                                    sourceType.getSimpleName(), fieldName, e.getMessage()), e);
+                        }
+                    }
+
+                    // Priority 2: Direct type assignment if types are compatible
                     if (targetType.isAssignableFrom(sourceType)) {
                         args[i] = sourceValue;
+                        BridgeLoggerHolder.getLogger().debug(String.format(
+                            "[%s->%s] Field '%s': Direct assignment",
+                            fromVersion, toVersion, fieldName));
                         continue;
                     }
 
-                    // Special handling: if both are Records with the same simple name,
-                    // we need to recursively upgrade the nested Record
+                    // Priority 3: Nested Records with same simple name - recursively upgrade
                     if (sourceValue instanceof Record && Record.class.isAssignableFrom(targetType)) {
                         String sourceSimpleName = sourceType.getSimpleName();
                         String targetSimpleName = targetType.getSimpleName();
 
                         if (sourceSimpleName.equals(targetSimpleName)) {
-                            // Recursively upgrade the nested Record
                             try {
                                 args[i] = upgradeNestedRecord(
                                     (Record) sourceValue,
@@ -111,25 +141,25 @@ public class GenericUpgradeStep<F extends Record, T extends Record> implements U
                                     targetType,
                                     context
                                 );
+                                BridgeLoggerHolder.getLogger().debug(String.format(
+                                    "[%s->%s] Field '%s': Upgraded nested Record %s",
+                                    fromVersion, toVersion, fieldName, targetSimpleName));
                                 continue;
                             } catch (Exception e) {
-                                // If nested upgrade fails, set to null and warn
-                                args[i] = null;
-                                context.addFieldWarning(fieldName,
-                                    "Failed to upgrade nested Record: " + e.getMessage());
-                                continue;
+                                // Fail immediately - no silent failures
+                                throw new UpgradeException(fromVersion, toVersion,
+                                    String.format("Failed to upgrade nested Record '%s' (field '%s'): %s",
+                                        targetSimpleName, fieldName, e.getMessage()), e);
                             }
                         }
                     }
 
-                    // Special handling for regular classes (non-Record) with same simple name
-                    // This is needed for large DTO classes like Components that can't be Records
+                    // Priority 4: Regular classes with same simple name - recursively upgrade
                     if (!(sourceValue instanceof Record) && !targetType.isRecord()) {
                         String sourceSimpleName = sourceType.getSimpleName();
                         String targetSimpleName = targetType.getSimpleName();
 
                         if (sourceSimpleName.equals(targetSimpleName)) {
-                            // Recursively upgrade the nested class
                             try {
                                 args[i] = upgradeNestedClass(
                                     sourceValue,
@@ -137,25 +167,56 @@ public class GenericUpgradeStep<F extends Record, T extends Record> implements U
                                     targetType,
                                     context
                                 );
+                                BridgeLoggerHolder.getLogger().debug(String.format(
+                                    "[%s->%s] Field '%s': Upgraded nested class %s",
+                                    fromVersion, toVersion, fieldName, targetSimpleName));
                                 continue;
                             } catch (Exception e) {
-                                // If nested upgrade fails, set to null and warn
-                                args[i] = null;
-                                context.addFieldWarning(fieldName,
-                                    "Failed to upgrade nested class: " + e.getMessage());
-                                continue;
+                                // Fail immediately - no silent failures
+                                throw new UpgradeException(fromVersion, toVersion,
+                                    String.format("Failed to upgrade nested class '%s' (field '%s'): %s",
+                                        targetSimpleName, fieldName, e.getMessage()), e);
                             }
                         }
                     }
 
-                    // Type mismatch - set to null and warn
-                    args[i] = null;
-                    context.addTypeConversionWarning(fieldName, sourceType, targetType);
+                    // Priority 5: JSON Fallback for same-name types (sealed interfaces, enums, etc.)
+                    // This handles types that are structurally identical but from different version packages
+                    String sourceSimpleName = sourceType.getSimpleName();
+                    String targetSimpleName = targetType.getSimpleName();
 
+                    if (sourceSimpleName.equals(targetSimpleName)) {
+                        try {
+                            // Use JSON serialization/deserialization to convert cross-version types
+                            // Works for: sealed interfaces (e.g., Range_a_B), enums, complex nested structures
+                            String json = mapper.writeValueAsString(sourceValue);
+                            args[i] = mapper.readValue(json, targetType);
+                            BridgeLoggerHolder.getLogger().debug(String.format(
+                                "[%s->%s] Field '%s': JSON fallback for %s (structurally identical type)",
+                                fromVersion, toVersion, fieldName, targetSimpleName));
+                            continue;
+                        } catch (Exception e) {
+                            // JSON fallback failed - now we really need manual upgrade logic
+                            throw new UpgradeException(fromVersion, toVersion,
+                                String.format("JSON fallback failed for field '%s': %s -> %s\n" +
+                                    "Types have same name but JSON conversion failed (requires manual upgrade logic)\n" +
+                                    "Error: %s",
+                                    fieldName, sourceType.getName(), targetType.getName(), e.getMessage()), e);
+                        }
+                    }
+
+                    // Type mismatch - fail immediately
+                    throw new UpgradeException(fromVersion, toVersion,
+                        String.format("Type mismatch for field '%s': %s -> %s (requires manual upgrade logic)",
+                            fieldName, sourceType.getName(), targetType.getName()));
+
+                } catch (UpgradeException e) {
+                    // Re-throw UpgradeException as-is
+                    throw e;
                 } catch (Exception e) {
-                    // Failed to access source field
-                    args[i] = null;
-                    context.addFieldWarning(fieldName, "Failed to access: " + e.getMessage());
+                    // Failed to access source field - fail immediately
+                    throw new UpgradeException(fromVersion, toVersion,
+                        String.format("Failed to access field '%s': %s", fieldName, e.getMessage()), e);
                 }
             }
 
@@ -256,13 +317,28 @@ public class GenericUpgradeStep<F extends Record, T extends Record> implements U
 
             Class<?> sourceType = sourceAccessor.getReturnType();
 
-            // Direct assignment if types match
+            // Priority 1: Map/Collection - ALWAYS use JSON deep conversion
+            if (sourceValue instanceof Map || sourceValue instanceof Collection) {
+                try {
+                    String json = mapper.writeValueAsString(sourceValue);
+                    JavaType targetJavaType = mapper.getTypeFactory().constructType(targetComponent.getGenericType());
+                    args[i] = mapper.readValue(json, targetJavaType);
+                    continue;
+                } catch (Exception e) {
+                    // Fail immediately - no silent failures
+                    throw new RuntimeException(String.format(
+                        "Failed to JSON-convert %s field '%s' in nested Record: %s",
+                        sourceType.getSimpleName(), fieldName, e.getMessage()), e);
+                }
+            }
+
+            // Priority 2: Direct assignment if types match
             if (targetType.isAssignableFrom(sourceType)) {
                 args[i] = sourceValue;
                 continue;
             }
 
-            // Recursively upgrade nested Records
+            // Priority 3: Recursively upgrade nested Records
             if (sourceValue instanceof Record && Record.class.isAssignableFrom(targetType)) {
                 String sourceSimpleName = sourceType.getSimpleName();
                 String targetSimpleName = targetType.getSimpleName();
@@ -278,30 +354,46 @@ public class GenericUpgradeStep<F extends Record, T extends Record> implements U
                 }
             }
 
-            // Recursively upgrade nested regular classes
+            // Priority 4: Recursively upgrade nested regular classes
             if (!(sourceValue instanceof Record) && !targetType.isRecord()) {
                 String sourceSimpleName = sourceType.getSimpleName();
                 String targetSimpleName = targetType.getSimpleName();
 
                 if (sourceSimpleName.equals(targetSimpleName)) {
-                    try {
-                        args[i] = upgradeNestedClass(
-                            sourceValue,
-                            sourceType,
-                            targetType,
-                            context
-                        );
-                        continue;
-                    } catch (Exception e) {
-                        // If nested upgrade fails, set to null
-                        args[i] = null;
-                        continue;
-                    }
+                    args[i] = upgradeNestedClass(
+                        sourceValue,
+                        sourceType,
+                        targetType,
+                        context
+                    );
+                    continue;
                 }
             }
 
-            // Type mismatch - set to null
-            args[i] = null;
+            // Priority 5: JSON Fallback for same-name types (sealed interfaces, enums, etc.)
+            String sourceSimpleName = sourceType.getSimpleName();
+            String targetSimpleName = targetType.getSimpleName();
+
+            if (sourceSimpleName.equals(targetSimpleName)) {
+                try {
+                    // Use JSON serialization/deserialization to convert cross-version types
+                    String json = mapper.writeValueAsString(sourceValue);
+                    args[i] = mapper.readValue(json, targetType);
+                    continue;
+                } catch (Exception e) {
+                    // JSON fallback failed - throw detailed error
+                    throw new RuntimeException(String.format(
+                        "JSON fallback failed for field '%s' in nested Record: %s -> %s\n" +
+                        "Types have same name but JSON conversion failed\n" +
+                        "Error: %s",
+                        fieldName, sourceType.getName(), targetType.getName(), e.getMessage()), e);
+                }
+            }
+
+            // Type mismatch - fail immediately
+            throw new RuntimeException(String.format(
+                "Type mismatch for field '%s' in nested Record: %s -> %s (requires manual upgrade logic)",
+                fieldName, sourceType.getName(), targetType.getName()));
         }
 
         return (Record) targetConstructor.newInstance(args);
@@ -357,13 +449,29 @@ public class GenericUpgradeStep<F extends Record, T extends Record> implements U
 
             Class<?> sourceType = sourceField.getType();
 
-            // Direct assignment if types match
+            // Priority 1: Map/Collection - ALWAYS use JSON deep conversion
+            if (sourceValue instanceof Map || sourceValue instanceof Collection) {
+                try {
+                    String json = mapper.writeValueAsString(sourceValue);
+                    JavaType targetJavaType = mapper.getTypeFactory().constructType(targetField.getGenericType());
+                    Object upgradedValue = mapper.readValue(json, targetJavaType);
+                    targetField.set(targetObject, upgradedValue);
+                    continue;
+                } catch (Exception e) {
+                    // Fail immediately - no silent failures
+                    throw new RuntimeException(String.format(
+                        "Failed to JSON-convert %s field '%s' in nested class: %s",
+                        sourceType.getSimpleName(), fieldName, e.getMessage()), e);
+                }
+            }
+
+            // Priority 2: Direct assignment if types match
             if (targetType.isAssignableFrom(sourceType)) {
                 targetField.set(targetObject, sourceValue);
                 continue;
             }
 
-            // Recursively upgrade nested Records
+            // Priority 3: Recursively upgrade nested Records
             if (sourceValue instanceof Record && Record.class.isAssignableFrom(targetType)) {
                 String sourceSimpleName = sourceType.getSimpleName();
                 String targetSimpleName = targetType.getSimpleName();
@@ -380,7 +488,7 @@ public class GenericUpgradeStep<F extends Record, T extends Record> implements U
                 }
             }
 
-            // Recursively upgrade nested regular classes
+            // Priority 4: Recursively upgrade nested regular classes
             if (!(sourceValue instanceof Record) && !targetType.isRecord()) {
                 String sourceSimpleName = sourceType.getSimpleName();
                 String targetSimpleName = targetType.getSimpleName();
@@ -397,14 +505,31 @@ public class GenericUpgradeStep<F extends Record, T extends Record> implements U
                 }
             }
 
-            // For same simple name (cross-version compatibility), pass through
-            if (sourceType.getSimpleName().equals(targetType.getSimpleName())) {
-                targetField.set(targetObject, sourceValue);
-                continue;
+            // Priority 5: JSON Fallback for same-name types (sealed interfaces, enums, etc.)
+            String sourceSimpleName = sourceType.getSimpleName();
+            String targetSimpleName = targetType.getSimpleName();
+
+            if (sourceSimpleName.equals(targetSimpleName)) {
+                try {
+                    // Use JSON serialization/deserialization to convert cross-version types
+                    String json = mapper.writeValueAsString(sourceValue);
+                    Object upgradedValue = mapper.readValue(json, targetType);
+                    targetField.set(targetObject, upgradedValue);
+                    continue;
+                } catch (Exception e) {
+                    // JSON fallback failed - throw detailed error
+                    throw new RuntimeException(String.format(
+                        "JSON fallback failed for field '%s' in nested class: %s -> %s\n" +
+                        "Types have same name but JSON conversion failed\n" +
+                        "Error: %s",
+                        fieldName, sourceType.getName(), targetType.getName(), e.getMessage()), e);
+                }
             }
 
-            // Type mismatch - leave as default value (null)
-            // Don't warn for every field, as this is expected for version upgrades
+            // Type mismatch - fail immediately
+            throw new RuntimeException(String.format(
+                "Type mismatch for field '%s' in nested class: %s -> %s (requires manual upgrade logic)",
+                fieldName, sourceType.getName(), targetType.getName()));
         }
 
         return targetObject;
@@ -424,6 +549,72 @@ public class GenericUpgradeStep<F extends Record, T extends Record> implements U
         }
 
         return accessors;
+    }
+
+    /**
+     * Check if two types have generic parameters that need upgrade (cross-version).
+     * Returns true if the generic parameters contain different version packages.
+     *
+     * @param sourceType The source generic type
+     * @param targetType The target generic type
+     * @return true if generic parameters need upgrade, false otherwise
+     */
+    private boolean needsGenericTypeUpgrade(Type sourceType, Type targetType) {
+        // Both must be parameterized types (have generic parameters)
+        if (!(sourceType instanceof ParameterizedType) || !(targetType instanceof ParameterizedType)) {
+            return false;
+        }
+
+        ParameterizedType sourceParam = (ParameterizedType) sourceType;
+        ParameterizedType targetParam = (ParameterizedType) targetType;
+
+        Type[] sourceArgs = sourceParam.getActualTypeArguments();
+        Type[] targetArgs = targetParam.getActualTypeArguments();
+
+        // Must have same number of type arguments
+        if (sourceArgs.length != targetArgs.length) {
+            return false;
+        }
+
+        // Check each type argument pair
+        for (int i = 0; i < sourceArgs.length; i++) {
+            String sourceTypeName = sourceArgs[i].getTypeName();
+            String targetTypeName = targetArgs[i].getTypeName();
+
+            // Check if they are from different version packages
+            // Example: "net.easecation.bridge.core.dto.block.v1_19_50.MaterialInstancesValue"
+            //      vs  "net.easecation.bridge.core.dto.block.v1_21_60.MaterialInstancesValue"
+            if (isVersionedType(sourceTypeName) && isVersionedType(targetTypeName)) {
+                String sourceVersion = extractVersion(sourceTypeName);
+                String targetVersion = extractVersion(targetTypeName);
+
+                if (sourceVersion != null && targetVersion != null && !sourceVersion.equals(targetVersion)) {
+                    return true; // Different versions, needs upgrade
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a type name contains a version package (e.g., "v1_19_50", "v1_21_60").
+     */
+    private boolean isVersionedType(String typeName) {
+        return typeName.matches(".*\\.v\\d+_\\d+_\\d+\\..*");
+    }
+
+    /**
+     * Extract version string from a fully qualified type name.
+     * Example: "net.easecation.bridge.core.dto.block.v1_19_50.MaterialInstancesValue" -> "v1_19_50"
+     */
+    private String extractVersion(String typeName) {
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\.(v\\d+_\\d+_\\d+)\\.");
+        java.util.regex.Matcher matcher = pattern.matcher(typeName);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
     }
 
     /**

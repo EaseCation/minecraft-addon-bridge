@@ -18,6 +18,10 @@ public final class BridgeBootstrap extends PluginBase {
     @Override
     public void onLoad() {
         var nukkitLogger = getLogger();
+
+        // 初始化全局Logger，必须在所有业务逻辑之前
+        BridgeLoggerHolder.setLogger(new NukkitLoggerAdapter(nukkitLogger));
+
         try {
             nukkitLogger.info("AddonBridge loading...");
 
@@ -34,15 +38,13 @@ public final class BridgeBootstrap extends PluginBase {
 
             // 3. 初始化Bridge和资源部署器
             Path dataDir = getDataFolder().toPath();
-            BridgeLogger logger = new NukkitLoggerAdapter(nukkitLogger);
             ResourcePackDeployer deployer = new GenericResourceDeployer(
                     dataDir,
-                    logger,
                     config.getBaseUrl()  // 使用配置文件中的 base-url
             );
 
             this.bridge = new DefaultAddonBridge(
-                    new AddonParser(logger), new DependencyResolver(), registry, deployer, config
+                    new AddonParser(), new DependencyResolver(), registry, deployer, config
             );
 
             // 4. 准备addons目录

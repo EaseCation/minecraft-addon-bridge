@@ -56,8 +56,11 @@ public class MotRegistry implements AddonRegistry {
                 ItemDataDriven.registerItemDef(itemId, itemDef);
 
                 // 2. Extract texture name from icon component or use identifier
+                // For Legacy mode, textureName will be null (textures defined client-side)
                 String textureName = extractTextureName(itemDef);
-                log.info("[MOT]   - Texture name: " + textureName);
+                if (textureName != null) {
+                    log.debug("[MOT]   - Texture name: " + textureName);
+                }
 
                 // 3. Dynamically generate a unique class for this item
                 log.debug("[MOT]   - Generating dynamic class for item...");
@@ -87,8 +90,9 @@ public class MotRegistry implements AddonRegistry {
                 }
 
                 // Log item definition details
-                if (itemDef.components() != null) {
+                if (itemDef.getComponents() != null) {
                     log.error("[MOT]   Item has components: YES");
+                    log.error("[MOT]   Item registration mode: " + itemDef.registrationMode());
                 } else {
                     log.error("[MOT]   Item has components: NO");
                 }
@@ -100,23 +104,41 @@ public class MotRegistry implements AddonRegistry {
 
     /**
      * Extract texture name from item definition.
+     * Supports both Legacy (v1.10) and Component-based (v1.19+) modes.
+     *
+     * <p>For Legacy mode (v1.10):
+     * Returns null - textures are defined client-side in resource pack.
+     * MOT's ItemCustom will automatically use displayName as textureName.
+     *
+     * <p>For Component-based mode (v1.19+):
+     * Extracts texture from minecraft:icon component.
      */
     private String extractTextureName(ItemDef itemDef) {
-        if (itemDef.components() != null && itemDef.components().minecraft_icon() != null) {
-            net.easecation.bridge.core.dto.item.v1_21_60.Icon icon = itemDef.components().minecraft_icon();
+        if (itemDef.isLegacy()) {
+            // Legacy模式：不处理纹理，返回 null
+            // 纹理由客户端资源包定义，服务端不需要处理
+            // MOT 的 ItemCustom 两参数构造函数会自动使用 displayName 作为 textureName
+            return null;
+        } else {
+            // Component-based模式：icon可能是字符串或复杂对象
+            if (itemDef.componentComponents() != null
+                && itemDef.componentComponents().minecraft_icon() != null) {
+                net.easecation.bridge.core.dto.item.v1_21_60.Icon icon =
+                    itemDef.componentComponents().minecraft_icon();
 
-            // Icon can be either a simple string or a complex object
-            if (icon instanceof net.easecation.bridge.core.dto.item.v1_21_60.Icon.Icon_Variant0 variant0) {
-                return variant0.value();
-            } else if (icon instanceof net.easecation.bridge.core.dto.item.v1_21_60.Icon.Icon_Variant1 variant1) {
-                if (variant1.textures() != null && variant1.textures().defaultField() != null) {
-                    return variant1.textures().defaultField();
+                // Icon can be either a simple string or a complex object
+                if (icon instanceof net.easecation.bridge.core.dto.item.v1_21_60.Icon.Icon_Variant0 variant0) {
+                    return variant0.value();
+                } else if (icon instanceof net.easecation.bridge.core.dto.item.v1_21_60.Icon.Icon_Variant1 variant1) {
+                    if (variant1.textures() != null && variant1.textures().defaultField() != null) {
+                        return variant1.textures().defaultField();
+                    }
                 }
             }
-        }
 
-        // Fallback: use identifier as texture name (replace : with _)
-        return itemDef.id().replace(":", "_");
+            // Fallback: use identifier as texture name (replace : with _)
+            return itemDef.id().replace(":", "_");
+        }
     }
 
     @Override

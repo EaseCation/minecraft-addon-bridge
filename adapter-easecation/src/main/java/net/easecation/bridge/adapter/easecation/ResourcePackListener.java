@@ -83,7 +83,7 @@ public class ResourcePackListener implements Listener {
 
             } catch (Exception e) {
                 log.error("[ResourcePack] ✗ Failed to push pack: " + pack.url());
-                log.error("[ResourcePack]   Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                log.error("[ResourcePack]   Error: " + e.getClass().getSimpleName() + " - " + e.getMessage(), e);
                 failureCount++;
             }
         }

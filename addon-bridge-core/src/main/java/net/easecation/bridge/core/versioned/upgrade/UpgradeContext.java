@@ -1,6 +1,6 @@
 package net.easecation.bridge.core.versioned.upgrade;
 
-import net.easecation.bridge.core.BridgeLogger;
+import net.easecation.bridge.core.BridgeLoggerHolder;
 import net.easecation.bridge.core.versioned.FormatVersion;
 
 import java.util.ArrayList;
@@ -16,13 +16,11 @@ public class UpgradeContext {
     private final FormatVersion sourceVersion;
     private final FormatVersion targetVersion;
     private final List<String> warnings;
-    private final BridgeLogger logger;
 
-    public UpgradeContext(FormatVersion sourceVersion, FormatVersion targetVersion, BridgeLogger logger) {
+    public UpgradeContext(FormatVersion sourceVersion, FormatVersion targetVersion) {
         this.sourceVersion = sourceVersion;
         this.targetVersion = targetVersion;
         this.warnings = new ArrayList<>();
-        this.logger = logger;
     }
 
     /**
@@ -31,9 +29,7 @@ public class UpgradeContext {
     public void addWarning(String message) {
         String fullMessage = String.format("[Upgrade %s→%s] %s", sourceVersion, targetVersion, message);
         warnings.add(message);
-        if (logger != null) {
-            logger.warning(fullMessage);
-        }
+        BridgeLoggerHolder.getLogger().warning(fullMessage);
     }
 
     /**

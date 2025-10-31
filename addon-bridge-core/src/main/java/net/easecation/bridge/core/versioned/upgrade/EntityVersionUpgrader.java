@@ -1,5 +1,6 @@
 package net.easecation.bridge.core.versioned.upgrade;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.easecation.bridge.core.versioned.FormatVersion;
 
 /**
@@ -10,9 +11,11 @@ public class EntityVersionUpgrader extends VersionUpgrader<net.easecation.bridge
 
     private static final EntityVersionUpgrader INSTANCE = new EntityVersionUpgrader();
 
+    private ObjectMapper mapper;
+    private boolean stepsRegistered = false;
+
     private EntityVersionUpgrader() {
         super(FormatVersion.V1_21_60);
-        registerAllSteps();
     }
 
     /**
@@ -23,15 +26,31 @@ public class EntityVersionUpgrader extends VersionUpgrader<net.easecation.bridge
     }
 
     /**
+     * Set the ObjectMapper for this upgrader. This must be called before upgrade operations.
+     * Will register all upgrade steps if not already done.
+     */
+    public void setMapper(ObjectMapper mapper) {
+        this.mapper = mapper;
+        if (!stepsRegistered) {
+            registerAllSteps();
+            stepsRegistered = true;
+        }
+    }
+
+    /**
      * Register all 7 upgrade steps for Entity module.
      */
     private void registerAllSteps() {
+        if (mapper == null) {
+            throw new IllegalStateException("ObjectMapper must be set before registering steps");
+        }
         // Step 1: v1.19.0 -> v1.19.40 (Generic upgrade - just new fields)
         registerStep(new GenericUpgradeStep<>(
             FormatVersion.V1_19_0,
             FormatVersion.V1_19_40,
             net.easecation.bridge.core.dto.entity.v1_19_0.Entity.class,
-            net.easecation.bridge.core.dto.entity.v1_19_40.Entity.class
+            net.easecation.bridge.core.dto.entity.v1_19_40.Entity.class,
+            mapper
         ));
 
         // Step 2: v1.19.40 -> v1.19.50 (Generic upgrade)
@@ -39,7 +58,8 @@ public class EntityVersionUpgrader extends VersionUpgrader<net.easecation.bridge
             FormatVersion.V1_19_40,
             FormatVersion.V1_19_50,
             net.easecation.bridge.core.dto.entity.v1_19_40.Entity.class,
-            net.easecation.bridge.core.dto.entity.v1_19_50.Entity.class
+            net.easecation.bridge.core.dto.entity.v1_19_50.Entity.class,
+            mapper
         ));
 
         // Step 3: v1.19.50 -> v1.20.10 (Generic upgrade)
@@ -47,7 +67,8 @@ public class EntityVersionUpgrader extends VersionUpgrader<net.easecation.bridge
             FormatVersion.V1_19_50,
             FormatVersion.V1_20_10,
             net.easecation.bridge.core.dto.entity.v1_19_50.Entity.class,
-            net.easecation.bridge.core.dto.entity.v1_20_10.Entity.class
+            net.easecation.bridge.core.dto.entity.v1_20_10.Entity.class,
+            mapper
         ));
 
         // Step 4: v1.20.10 -> v1.20.41 (Generic upgrade)
@@ -55,25 +76,24 @@ public class EntityVersionUpgrader extends VersionUpgrader<net.easecation.bridge
             FormatVersion.V1_20_10,
             FormatVersion.V1_20_41,
             net.easecation.bridge.core.dto.entity.v1_20_10.Entity.class,
-            net.easecation.bridge.core.dto.entity.v1_20_41.Entity.class
-        ));
-
-        // Step 5: v1.20.41 -> v1.20.81 (Generic upgrade)
-        registerStep(new GenericUpgradeStep<>(
-            FormatVersion.V1_20_41,
-            FormatVersion.V1_20_81,
             net.easecation.bridge.core.dto.entity.v1_20_41.Entity.class,
-            net.easecation.bridge.core.dto.entity.v1_20_81.Entity.class
+            mapper
         ));
 
-        // Step 6: v1.20.81 -> v1.21.50 (Generic upgrade)
-        // Note: Health -> Attribute type changes may cause warnings, but GenericUpgradeStep
-        // will set incompatible fields to null and warn
+        // Step 5: v1.20.41 -> v1.20.81 (Manual upgrade - Components type changes)
+        // In this version, 7 component types changed from specific types to Attribute:
+        // Health, AttackDamage, FollowRange, KnockbackResistance, LavaMovement, Movement, UnderwaterMovement
+        registerStep(new EntityComponentsUpgradeStep_v1_20_41_to_v1_20_81(mapper));
+
+        // Step 6: v1.20.81 -> v1.21.50 (JSON-based upgrade - Range_a_B cross-version)
+        // Range_a_B type is structurally identical but from different packages
+        // JSON conversion handles automatic type recreation
         registerStep(new GenericUpgradeStep<>(
-            FormatVersion.V1_20_81,
-            FormatVersion.V1_21_50,
-            net.easecation.bridge.core.dto.entity.v1_20_81.Entity.class,
-            net.easecation.bridge.core.dto.entity.v1_21_50.Entity.class
+                FormatVersion.V1_20_81,
+                FormatVersion.V1_21_50,
+                net.easecation.bridge.core.dto.entity.v1_20_81.Entity.class,
+                net.easecation.bridge.core.dto.entity.v1_21_50.Entity.class,
+                mapper
         ));
 
         // Step 7: v1.21.50 -> v1.21.60 (Generic upgrade)
@@ -81,7 +101,8 @@ public class EntityVersionUpgrader extends VersionUpgrader<net.easecation.bridge
             FormatVersion.V1_21_50,
             FormatVersion.V1_21_60,
             net.easecation.bridge.core.dto.entity.v1_21_50.Entity.class,
-            net.easecation.bridge.core.dto.entity.v1_21_60.Entity.class
+            net.easecation.bridge.core.dto.entity.v1_21_60.Entity.class,
+            mapper
         ));
     }
 

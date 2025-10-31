@@ -26,17 +26,9 @@ import java.util.zip.ZipFile;
 public class AddonParser {
     private static final ObjectMapper MAPPER = createObjectMapper();
     private final VersionedDtoLoader dtoLoader = new VersionedDtoLoader(MAPPER);
-    private final BridgeLogger log;
 
-    public AddonParser(BridgeLogger log) {
-        this.log = log != null ? log : new BridgeLogger() {
-            @Override public void info(String msg) { System.out.println("[INFO] " + msg); }
-            @Override public void warning(String msg) { System.out.println("[WARN] " + msg); }
-            @Override public void error(String msg) { System.err.println("[ERROR] " + msg); }
-            @Override public void debug(String msg) { System.out.println("[DEBUG] " + msg); }
-            @Override public void trace(String msg) { System.out.println("[TRACE] " + msg); }
-        };
-        this.dtoLoader.setLogger(this.log);
+    public AddonParser() {
+        // Logger通过BridgeLoggerHolder全局访问，无需传递
     }
 
     private static ObjectMapper createObjectMapper() {
@@ -46,20 +38,20 @@ public class AddonParser {
     }
 
     public List<AddonPack> scanAndParse(File addonsRoot) throws IOException {
-        log.debug("Scanning directory: " + (addonsRoot != null ? addonsRoot.getAbsolutePath() : "null"));
+        BridgeLoggerHolder.getLogger().debug("Scanning directory: " + (addonsRoot != null ? addonsRoot.getAbsolutePath() : "null"));
 
         List<AddonPack> packs = new ArrayList<>();
         if (addonsRoot == null) {
-            log.debug("addonsRoot is null, returning empty list");
+            BridgeLoggerHolder.getLogger().debug("addonsRoot is null, returning empty list");
             return packs;
         }
         if (!addonsRoot.isDirectory()) {
-            log.debug("addonsRoot is not a directory, returning empty list");
+            BridgeLoggerHolder.getLogger().debug("addonsRoot is not a directory, returning empty list");
             return packs;
         }
 
-        log.debug("Directory exists: " + addonsRoot.exists());
-        log.debug("Is directory: " + addonsRoot.isDirectory());
+        BridgeLoggerHolder.getLogger().debug("Directory exists: " + addonsRoot.exists());
+        BridgeLoggerHolder.getLogger().debug("Is directory: " + addonsRoot.isDirectory());
 
         // Scan for ZIP files (.zip, .mcpack, .mcaddon)
         List<File> zipFiles = Files.walk(addonsRoot.toPath(), 1)
@@ -72,55 +64,55 @@ public class AddonParser {
                 .sorted(Comparator.comparing(File::getName))
                 .collect(Collectors.toList());
 
-        log.debug("Found " + zipFiles.size() + " ZIP/MCPACK/MCADDON files");
+        BridgeLoggerHolder.getLogger().debug("Found " + zipFiles.size() + " ZIP/MCPACK/MCADDON files");
         for (File zipFile : zipFiles) {
-            log.debug("  - " + zipFile.getName());
+            BridgeLoggerHolder.getLogger().debug("  - " + zipFile.getName());
         }
 
         // Parse each ZIP file
         for (File zipFile : zipFiles) {
             try {
-                log.debug("Parsing ZIP: " + zipFile.getName());
+                BridgeLoggerHolder.getLogger().debug("Parsing ZIP: " + zipFile.getName());
                 AddonPack pack = parseZipPack(zipFile);
                 boolean isBehavior = pack.manifest().isBehaviorPack();
-                log.debug("  Pack name: " + pack.manifest().getName());
-                log.debug("  Is behavior pack: " + isBehavior);
-                log.debug("  Blocks: " + pack.blocks().size());
-                log.debug("  Entities: " + pack.entities().size());
-                log.debug("  Items: " + pack.items().size());
+                BridgeLoggerHolder.getLogger().debug("  Pack name: " + pack.packName());
+                BridgeLoggerHolder.getLogger().debug("  Is behavior pack: " + isBehavior);
+                BridgeLoggerHolder.getLogger().debug("  Blocks: " + pack.blocks().size());
+                BridgeLoggerHolder.getLogger().debug("  Entities: " + pack.entities().size());
+                BridgeLoggerHolder.getLogger().debug("  Items: " + pack.items().size());
                 packs.add(pack);
             } catch (Exception e) {
-                log.error("Failed to parse pack: " + zipFile.getName());
-                log.error("  Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                BridgeLoggerHolder.getLogger().error("Failed to parse pack: " + zipFile.getName());
+                BridgeLoggerHolder.getLogger().error("  Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
                 e.printStackTrace();
                 // Continue with next pack
             }
         }
 
         // Also scan for directory-based packs
-        log.debug("Scanning for directory-based packs...");
+        BridgeLoggerHolder.getLogger().debug("Scanning for directory-based packs...");
         final int[] dirPackCount = {0};
         Files.walk(addonsRoot.toPath())
                 .filter(p -> p.getFileName().toString().equalsIgnoreCase("manifest.json"))
                 .filter(p -> !isInsideZip(p))
                 .forEach(manifestPath -> {
                     dirPackCount[0]++;
-                    log.debug("Found directory pack manifest: " + manifestPath);
+                    BridgeLoggerHolder.getLogger().debug("Found directory pack manifest: " + manifestPath);
                     try {
                         AddonPack pack = parseDirectoryPack(manifestPath.getParent());
-                        log.debug("  Pack name: " + pack.manifest().getName());
-                        log.debug("  Is behavior pack: " + pack.manifest().isBehaviorPack());
-                        log.debug("  Blocks: " + pack.blocks().size());
+                        BridgeLoggerHolder.getLogger().debug("  Pack name: " + pack.packName());
+                        BridgeLoggerHolder.getLogger().debug("  Is behavior pack: " + pack.manifest().isBehaviorPack());
+                        BridgeLoggerHolder.getLogger().debug("  Blocks: " + pack.blocks().size());
                         packs.add(pack);
                     } catch (IOException e) {
-                        log.error("Failed to parse directory pack: " + manifestPath.getParent());
-                        log.error("  Error: " + e.getMessage());
+                        BridgeLoggerHolder.getLogger().error("Failed to parse directory pack: " + manifestPath.getParent());
+                        BridgeLoggerHolder.getLogger().error("  Error: " + e.getMessage());
                         e.printStackTrace();
                     }
                 });
-        log.debug("Found " + dirPackCount[0] + " directory pack(s)");
+        BridgeLoggerHolder.getLogger().debug("Found " + dirPackCount[0] + " directory pack(s)");
 
-        log.info("Total packs loaded: " + packs.size());
+        BridgeLoggerHolder.getLogger().info("Total packs loaded: " + packs.size());
         return packs;
     }
 
@@ -141,13 +133,21 @@ public class AddonParser {
                 manifest = MAPPER.readValue(is, Manifest.class);
             }
 
+            // Extract pack name from file name (without extension)
+            String fileName = zipFile.getName();
+            String packName = fileName;
+            if (fileName.endsWith(".mcpack") || fileName.endsWith(".zip")) {
+                int dotIndex = fileName.lastIndexOf('.');
+                packName = fileName.substring(0, dotIndex);
+            }
+
             // For ZIP/MCPACK files, we don't need to package them again
             Path originalPath = zipFile.toPath();
             boolean needsPackaging = false;
 
             // Only parse behavior packs (data modules)
             if (!manifest.isBehaviorPack()) {
-                return new AddonPack(manifest, List.of(), List.of(), List.of(), List.of(), originalPath, needsPackaging);
+                return new AddonPack(manifest, List.of(), List.of(), List.of(), List.of(), originalPath, needsPackaging, packName);
             }
 
             // Parse blocks (including Netease edition blocks)
@@ -170,7 +170,7 @@ public class AddonParser {
                             blocks.add(BlockDef.fromDTO(blockDef));
                         }
                     } catch (Exception e) {
-                        log.debug("Failed to parse block: " + name + " - " + e.getMessage());
+                        BridgeLoggerHolder.getLogger().debug("Failed to parse block: " + name + " - " + e.getMessage());
                     }
                 }
             }
@@ -197,26 +197,26 @@ public class AddonParser {
                             Entity entityDto = dtoLoader.loadEntity(entityData, formatVersion);
                             try {
                                 String entityJson = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(entityDto);
-                                log.info(String.format("Final upgraded Entity DTO as JSON:\n%s", entityJson));
+                                BridgeLoggerHolder.getLogger().debug(String.format("Final upgraded Entity DTO as JSON:\n%s", entityJson));
                             } catch (Exception e) {
-                                log.warning("Failed to serialize Entity DTO to JSON: " + e.getMessage());
+                                BridgeLoggerHolder.getLogger().warning("Failed to serialize Entity DTO to JSON: " + e.getMessage());
                             }
                             entities.add(EntityDef.fromDTO(entityDto));
                             entityParsedCount++;
                         } else {
-                            log.warning("Entity file missing 'minecraft:entity' key: " + name);
+                            BridgeLoggerHolder.getLogger().warning("Entity file missing 'minecraft:entity' key: " + name);
                         }
                     } catch (Exception e) {
-                        log.error("Failed to parse entity: " + name);
-                        log.error("  Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                        BridgeLoggerHolder.getLogger().error("Failed to parse entity: " + name);
+                        BridgeLoggerHolder.getLogger().error("  Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
                         if (e.getCause() != null) {
-                            log.error("  Cause: " + e.getCause().getClass().getSimpleName() + " - " + e.getCause().getMessage());
+                            BridgeLoggerHolder.getLogger().error("  Cause: " + e.getCause().getClass().getSimpleName() + " - " + e.getCause().getMessage());
                         }
                     }
                 }
             }
             if (entityFileCount > 0) {
-                log.info("Entity parsing: found " + entityFileCount + " files, successfully parsed " + entityParsedCount);
+                BridgeLoggerHolder.getLogger().info("Entity parsing: found " + entityFileCount + " files, successfully parsed " + entityParsedCount);
             }
 
             // Parse items (including Netease edition items)
@@ -233,15 +233,25 @@ public class AddonParser {
                         Map<String, Object> itemMap = MAPPER.readValue(json, Map.class);
                         String formatVersion = (String) itemMap.get("format_version");
 
-                        // Load and upgrade to latest version (ItemsDefinition)
-                        net.easecation.bridge.core.dto.item.v1_21_60.ItemsDefinition itemsDef =
-                            dtoLoader.loadItem(itemMap, formatVersion);
+                        // **关键分支：根据format_version判断模式**
+                        ItemDef itemDef;
+                        if (formatVersion != null && formatVersion.startsWith("1.10")) {
+                            // Legacy模式（1.10）：直接加载v1_10 DTO
+                            net.easecation.bridge.core.dto.item.v1_10.ItemsDefinition legacyDto =
+                                MAPPER.readValue(json, net.easecation.bridge.core.dto.item.v1_10.ItemsDefinition.class);
 
-                        // Convert to ItemDef (using latest version Item from ItemsDefinition)
-                        ItemDef itemDef = ItemDef.fromDTO(itemsDef.minecraft_item());
+                            itemDef = ItemDef.fromLegacyDTO(legacyDto.minecraft_item());
+                        } else {
+                            // Component-based模式（1.19+）：现有升级流程
+                            net.easecation.bridge.core.dto.item.v1_21_60.ItemsDefinition itemsDef =
+                                dtoLoader.loadItem(itemMap, formatVersion);
+
+                            itemDef = ItemDef.fromComponentBasedDTO(itemsDef.minecraft_item());
+                        }
+
                         items.add(itemDef);
                     } catch (Exception e) {
-                        log.debug("Failed to parse item: " + name + " - " + e.getMessage());
+                        BridgeLoggerHolder.getLogger().debug("Failed to parse item: " + name + " - " + e.getMessage());
                     }
                 }
             }
@@ -249,7 +259,7 @@ public class AddonParser {
             // Recipes not implemented yet
             List<RecipeDef> recipes = List.of();
 
-            return new AddonPack(manifest, items, blocks, entities, recipes, originalPath, needsPackaging);
+            return new AddonPack(manifest, items, blocks, entities, recipes, originalPath, needsPackaging, packName);
         }
     }
 
@@ -257,6 +267,9 @@ public class AddonParser {
         // Read manifest.json
         Path manifestPath = packRoot.resolve("manifest.json");
         Manifest manifest = MAPPER.readValue(manifestPath.toFile(), Manifest.class);
+
+        // Extract pack name from directory name
+        String packName = packRoot.getFileName().toString();
 
         // Directory packs need to be packaged
         Path originalPath = packRoot;
@@ -267,7 +280,7 @@ public class AddonParser {
 
         // Only parse behavior packs
         if (!manifest.isBehaviorPack()) {
-            return new AddonPack(manifest, List.of(), List.of(), List.of(), List.of(), originalPath, needsPackaging);
+            return new AddonPack(manifest, List.of(), List.of(), List.of(), List.of(), originalPath, needsPackaging, packName);
         }
 
         // Parse blocks (including Netease edition blocks)
@@ -289,7 +302,7 @@ public class AddonParser {
                                 blocks.add(BlockDef.fromDTO(blockDef));
                             }
                         } catch (Exception e) {
-                            log.debug("Failed to parse block: " + blockFile + " - " + e.getMessage());
+                            BridgeLoggerHolder.getLogger().debug("Failed to parse block: " + blockFile + " - " + e.getMessage());
                         }
                     });
         }
@@ -311,7 +324,7 @@ public class AddonParser {
                                 blocks.add(BlockDef.fromDTO(blockDef));
                             }
                         } catch (Exception e) {
-                            log.debug("Failed to parse Netease block: " + blockFile + " - " + e.getMessage());
+                            BridgeLoggerHolder.getLogger().debug("Failed to parse Netease block: " + blockFile + " - " + e.getMessage());
                         }
                     });
         }
@@ -337,25 +350,25 @@ public class AddonParser {
                                 Entity entityDto = dtoLoader.loadEntity(entityData, formatVersion);
                                 try {
                                     String entityJson = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(entityDto);
-                                    log.info(String.format("Final upgraded Entity DTO as JSON:\n%s", entityJson));
+                                    BridgeLoggerHolder.getLogger().debug(String.format("Final upgraded Entity DTO as JSON:\n%s", entityJson));
                                 } catch (Exception e) {
-                                    log.warning("Failed to serialize Entity DTO to JSON: " + e.getMessage());
+                                    BridgeLoggerHolder.getLogger().warning("Failed to serialize Entity DTO to JSON: " + e.getMessage());
                                 }
                                 entities.add(EntityDef.fromDTO(entityDto));
                                 entityParsedCount[0]++;
                             } else {
-                                log.warning("Entity file missing 'minecraft:entity' key: " + entityFile);
+                                BridgeLoggerHolder.getLogger().warning("Entity file missing 'minecraft:entity' key: " + entityFile);
                             }
                         } catch (Exception e) {
-                            log.error("Failed to parse entity: " + entityFile);
-                            log.error("  Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                            BridgeLoggerHolder.getLogger().error("Failed to parse entity: " + entityFile);
+                            BridgeLoggerHolder.getLogger().error("  Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
                             if (e.getCause() != null) {
-                                log.error("  Cause: " + e.getCause().getClass().getSimpleName() + " - " + e.getCause().getMessage());
+                                BridgeLoggerHolder.getLogger().error("  Cause: " + e.getCause().getClass().getSimpleName() + " - " + e.getCause().getMessage());
                             }
                         }
                     });
             if (entityFileCount[0] > 0) {
-                log.info("Entity parsing: found " + entityFileCount[0] + " files, successfully parsed " + entityParsedCount[0]);
+                BridgeLoggerHolder.getLogger().info("Entity parsing: found " + entityFileCount[0] + " files, successfully parsed " + entityParsedCount[0]);
             }
         }
 
@@ -373,15 +386,25 @@ public class AddonParser {
                             Map<String, Object> itemMap = MAPPER.readValue(json, Map.class);
                             String formatVersion = (String) itemMap.get("format_version");
 
-                            // Load and upgrade to latest version (ItemsDefinition)
-                            net.easecation.bridge.core.dto.item.v1_21_60.ItemsDefinition itemsDef =
-                                dtoLoader.loadItem(itemMap, formatVersion);
+                            // **关键分支：根据format_version判断模式**
+                            ItemDef itemDef;
+                            if (formatVersion != null && formatVersion.startsWith("1.10")) {
+                                // Legacy模式（1.10）：直接加载v1_10 DTO
+                                net.easecation.bridge.core.dto.item.v1_10.ItemsDefinition legacyDto =
+                                    MAPPER.readValue(json, net.easecation.bridge.core.dto.item.v1_10.ItemsDefinition.class);
 
-                            // Convert to ItemDef (using latest version Item from ItemsDefinition)
-                            ItemDef itemDef = ItemDef.fromDTO(itemsDef.minecraft_item());
+                                itemDef = ItemDef.fromLegacyDTO(legacyDto.minecraft_item());
+                            } else {
+                                // Component-based模式（1.19+）：现有升级流程
+                                net.easecation.bridge.core.dto.item.v1_21_60.ItemsDefinition itemsDef =
+                                    dtoLoader.loadItem(itemMap, formatVersion);
+
+                                itemDef = ItemDef.fromComponentBasedDTO(itemsDef.minecraft_item());
+                            }
+
                             items.add(itemDef);
                         } catch (Exception e) {
-                            log.debug("Failed to parse item: " + itemFile + " - " + e.getMessage());
+                            BridgeLoggerHolder.getLogger().debug("Failed to parse item: " + itemFile + " - " + e.getMessage());
                         }
                     });
         }
@@ -398,15 +421,25 @@ public class AddonParser {
                             Map<String, Object> itemMap = MAPPER.readValue(json, Map.class);
                             String formatVersion = (String) itemMap.get("format_version");
 
-                            // Load and upgrade to latest version (ItemsDefinition)
-                            net.easecation.bridge.core.dto.item.v1_21_60.ItemsDefinition itemsDef =
-                                dtoLoader.loadItem(itemMap, formatVersion);
+                            // **关键分支：根据format_version判断模式**
+                            ItemDef itemDef;
+                            if (formatVersion != null && formatVersion.startsWith("1.10")) {
+                                // Legacy模式（1.10）：直接加载v1_10 DTO
+                                net.easecation.bridge.core.dto.item.v1_10.ItemsDefinition legacyDto =
+                                    MAPPER.readValue(json, net.easecation.bridge.core.dto.item.v1_10.ItemsDefinition.class);
 
-                            // Convert to ItemDef (using latest version Item from ItemsDefinition)
-                            ItemDef itemDef = ItemDef.fromDTO(itemsDef.minecraft_item());
+                                itemDef = ItemDef.fromLegacyDTO(legacyDto.minecraft_item());
+                            } else {
+                                // Component-based模式（1.19+）：现有升级流程
+                                net.easecation.bridge.core.dto.item.v1_21_60.ItemsDefinition itemsDef =
+                                    dtoLoader.loadItem(itemMap, formatVersion);
+
+                                itemDef = ItemDef.fromComponentBasedDTO(itemsDef.minecraft_item());
+                            }
+
                             items.add(itemDef);
                         } catch (Exception e) {
-                            log.debug("Failed to parse Netease item: " + itemFile + " - " + e.getMessage());
+                            BridgeLoggerHolder.getLogger().debug("Failed to parse Netease item: " + itemFile + " - " + e.getMessage());
                         }
                     });
         }
@@ -414,7 +447,7 @@ public class AddonParser {
         // Recipes not implemented yet
         List<RecipeDef> recipes = List.of();
 
-        return new AddonPack(manifest, items, blocks, entities, recipes, originalPath, needsPackaging);
+        return new AddonPack(manifest, items, blocks, entities, recipes, originalPath, needsPackaging, packName);
     }
 }
 

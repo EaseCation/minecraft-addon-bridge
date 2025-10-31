@@ -60,88 +60,12 @@ public class ItemDataDriven extends Item {
 
         String identifier = itemDef.id();
         try {
-            var components = itemDef.components();
-
-            if (components == null) {
-                // Minimal item with default properties
-                this.definition = new ItemDefinition(
-                    identifier,           // identifier
-                    identifier,           // displayName
-                    64,                   // maxStackSize
-                    0,                    // maxDurability
-                    false,                // canAlwaysEat
-                    0,                    // nutrition
-                    0.0f,                 // saturationModifier
-                    null,                 // usingConvertsTo
-                    0,                    // armorProtection
-                    null,                 // armorSlot
-                    false                 // hasFood
-                );
-                return;
+            // Branch on registration mode
+            if (itemDef.isLegacy()) {
+                this.definition = initLegacyItem(itemDef, identifier);
+            } else {
+                this.definition = initComponentBasedItem(itemDef, identifier);
             }
-
-            // Extract properties from components
-            String displayName = extractDisplayName(components, identifier);
-            int maxStackSize = extractMaxStackSize(components);
-            int maxDurability = extractMaxDurability(components);
-
-            // Extract food properties
-            boolean canAlwaysEat = false;
-            int nutrition = 0;
-            float saturationModifier = 0.0f;
-            String usingConvertsTo = null;
-            boolean hasFood = false;
-
-            if (components.minecraft_food() != null) {
-                var food = components.minecraft_food();
-                hasFood = true;
-
-                if (food.canAlwaysEat() != null) {
-                    canAlwaysEat = food.canAlwaysEat();
-                }
-
-                if (food.nutrition() != null) {
-                    nutrition = food.nutrition().intValue();
-                }
-
-                if (food.saturationModifier() != null) {
-                    saturationModifier = food.saturationModifier().floatValue();
-                }
-
-                if (food.usingConvertsTo() != null) {
-                    usingConvertsTo = food.usingConvertsTo();
-                }
-            }
-
-            // Extract armor properties
-            int armorProtection = 0;
-            String armorSlot = null;
-
-            if (components.minecraft_wearable() != null) {
-                var wearable = components.minecraft_wearable();
-
-                if (wearable.protection() != null) {
-                    armorProtection = wearable.protection();
-                }
-
-                if (wearable.slot() != null) {
-                    armorSlot = wearable.slot();
-                }
-            }
-
-            this.definition = new ItemDefinition(
-                identifier,
-                displayName,
-                maxStackSize,
-                maxDurability,
-                canAlwaysEat,
-                nutrition,
-                saturationModifier,
-                usingConvertsTo,
-                armorProtection,
-                armorSlot,
-                hasFood
-            );
 
         } catch (Exception e) {
             String errorMsg = "Failed to initialize ItemDefinition for item '" + identifier + "' (itemId=" + itemId + ")";
@@ -149,7 +73,7 @@ public class ItemDataDriven extends Item {
             System.err.println("[ItemDataDriven] Error type: " + e.getClass().getSimpleName());
             System.err.println("[ItemDataDriven] Error message: " + e.getMessage());
 
-            if (itemDef.components() != null) {
+            if (itemDef.componentComponents() != null) {
                 System.err.println("[ItemDataDriven] Item has components: YES");
             } else {
                 System.err.println("[ItemDataDriven] Item has components: NO");
@@ -158,6 +82,195 @@ public class ItemDataDriven extends Item {
             e.printStackTrace();
             throw new RuntimeException(errorMsg, e);
         }
+    }
+
+    /**
+     * Initialize item definition from Legacy mode (v1.10) components.
+     */
+    private ItemDefinition initLegacyItem(ItemDef itemDef, String identifier) {
+        var components = itemDef.legacyComponents();
+
+        // Default values
+        int maxStackSize = 64;
+        int maxDurability = 0;
+        boolean canAlwaysEat = false;
+        int nutrition = 0;
+        float saturationModifier = 0.0f;
+        String usingConvertsTo = null;
+        boolean hasFood = false;
+        int armorProtection = 0;
+        String armorSlot = null;
+
+        if (components != null) {
+            // Max stack size
+            if (components.getMaxStackSize() != null && components.getMaxStackSize().value() != null) {
+                maxStackSize = components.getMaxStackSize().value();
+            }
+
+            // Food properties
+            if (components.getFood() != null) {
+                var food = components.getFood();
+                hasFood = true;
+
+                if (food.canAlwaysEat() != null) {
+                    canAlwaysEat = food.canAlwaysEat();
+                }
+                if (food.nutrition() != null) {
+                    nutrition = food.nutrition();
+                }
+                if (food.saturationModifier() != null) {
+                    saturationModifier = parseSaturationModifier(food.saturationModifier());
+                }
+                if (food.usingConvertsTo() != null) {
+                    usingConvertsTo = food.usingConvertsTo();
+                }
+            }
+
+            // Armor properties (Netease extension)
+            if (components.getNeteaseArmor() != null) {
+                var armor = components.getNeteaseArmor();
+                if (armor.defense() != null) {
+                    armorProtection = armor.defense();
+                }
+                if (armor.armorSlot() != null) {
+                    armorSlot = mapArmorSlotToString(armor.armorSlot());
+                }
+            }
+        }
+
+        return new ItemDefinition(
+            identifier,
+            identifier,  // Legacy mode doesn't have display_name component
+            maxStackSize,
+            maxDurability,
+            canAlwaysEat,
+            nutrition,
+            saturationModifier,
+            usingConvertsTo,
+            armorProtection,
+            armorSlot,
+            hasFood
+        );
+    }
+
+    /**
+     * Parse saturation modifier string to float value.
+     * Maps Bedrock's named values to numeric coefficients.
+     */
+    private static float parseSaturationModifier(String modifier) {
+        if (modifier == null) return 0.6f;
+        return switch (modifier.toLowerCase()) {
+            case "poor" -> 0.1f;
+            case "low" -> 0.3f;
+            case "normal" -> 0.6f;
+            case "good" -> 0.8f;
+            case "max" -> 1.0f;
+            case "supernatural" -> 1.2f;
+            default -> 0.6f;
+        };
+    }
+
+    /**
+     * Map Legacy mode armor slot integer to slot string.
+     * Legacy: 0=head, 1=chest, 2=legs, 3=feet
+     * Component-based: "slot.armor.head", "slot.armor.chest", etc.
+     */
+    private static String mapArmorSlotToString(Integer slotId) {
+        if (slotId == null) return null;
+        return switch (slotId) {
+            case 0 -> "slot.armor.head";
+            case 1 -> "slot.armor.chest";
+            case 2 -> "slot.armor.legs";
+            case 3 -> "slot.armor.feet";
+            default -> "slot.armor.head"; // Default to helmet
+        };
+    }
+
+    /**
+     * Initialize item definition from Component-based mode (v1.19+) components.
+     */
+    private ItemDefinition initComponentBasedItem(ItemDef itemDef, String identifier) {
+        var components = itemDef.componentComponents();
+
+        if (components == null) {
+            // Minimal item with default properties
+            return new ItemDefinition(
+                identifier,           // identifier
+                identifier,           // displayName
+                64,                   // maxStackSize
+                0,                    // maxDurability
+                false,                // canAlwaysEat
+                0,                    // nutrition
+                0.0f,                 // saturationModifier
+                null,                 // usingConvertsTo
+                0,                    // armorProtection
+                null,                 // armorSlot
+                false                 // hasFood
+            );
+        }
+
+        // Extract properties from components
+        String displayName = extractDisplayName(components, identifier);
+        int maxStackSize = extractMaxStackSize(components);
+        int maxDurability = extractMaxDurability(components);
+
+        // Extract food properties
+        boolean canAlwaysEat = false;
+        int nutrition = 0;
+        float saturationModifier = 0.0f;
+        String usingConvertsTo = null;
+        boolean hasFood = false;
+
+        if (components.minecraft_food() != null) {
+            var food = components.minecraft_food();
+            hasFood = true;
+
+            if (food.canAlwaysEat() != null) {
+                canAlwaysEat = food.canAlwaysEat();
+            }
+
+            if (food.nutrition() != null) {
+                nutrition = food.nutrition().intValue();
+            }
+
+            if (food.saturationModifier() != null) {
+                saturationModifier = food.saturationModifier().floatValue();
+            }
+
+            if (food.usingConvertsTo() != null) {
+                usingConvertsTo = food.usingConvertsTo();
+            }
+        }
+
+        // Extract armor properties
+        int armorProtection = 0;
+        String armorSlot = null;
+
+        if (components.minecraft_wearable() != null) {
+            var wearable = components.minecraft_wearable();
+
+            if (wearable.protection() != null) {
+                armorProtection = wearable.protection();
+            }
+
+            if (wearable.slot() != null) {
+                armorSlot = wearable.slot();
+            }
+        }
+
+        return new ItemDefinition(
+            identifier,
+            displayName,
+            maxStackSize,
+            maxDurability,
+            canAlwaysEat,
+            nutrition,
+            saturationModifier,
+            usingConvertsTo,
+            armorProtection,
+            armorSlot,
+            hasFood
+        );
     }
 
     private String extractDisplayName(net.easecation.bridge.core.dto.item.v1_21_60.Item.Components components, String fallback) {

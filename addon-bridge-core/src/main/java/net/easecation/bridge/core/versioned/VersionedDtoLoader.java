@@ -1,7 +1,7 @@
 package net.easecation.bridge.core.versioned;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.easecation.bridge.core.BridgeLogger;
+import net.easecation.bridge.core.BridgeLoggerHolder;
 import net.easecation.bridge.core.versioned.upgrade.*;
 
 import javax.annotation.Nullable;
@@ -15,7 +15,6 @@ import java.util.Map;
 public class VersionedDtoLoader {
 
     private final ObjectMapper mapper;
-    private BridgeLogger logger;
 
     // Version to class mapping for each module
     private static final Map<String, Class<?>> ENTITY_CLASSES = new HashMap<>();
@@ -34,6 +33,10 @@ public class VersionedDtoLoader {
         ENTITY_CLASSES.put("v1_21_60", net.easecation.bridge.core.dto.entity.v1_21_60.Entity.class);
 
         // Item version mapping
+        // Legacy mode (v1.10) - 不参与升级链，在AddonParser中直接处理
+        ITEM_CLASSES.put("v1_10", net.easecation.bridge.core.dto.item.v1_10.ItemsDefinition.class);
+
+        // Component-based mode (v1.19+) - 参与升级链
         ITEM_CLASSES.put("v1_19_0", net.easecation.bridge.core.dto.item.v1_19_0.ItemsDefinition.class);
         ITEM_CLASSES.put("v1_19_40", net.easecation.bridge.core.dto.item.v1_19_40.ItemsDefinition.class);
         ITEM_CLASSES.put("v1_19_50", net.easecation.bridge.core.dto.item.v1_19_50.ItemsDefinition.class);
@@ -56,13 +59,6 @@ public class VersionedDtoLoader {
 
     public VersionedDtoLoader(ObjectMapper mapper) {
         this.mapper = mapper;
-    }
-
-    /**
-     * Set the logger for upgrade operations.
-     */
-    public void setLogger(BridgeLogger logger) {
-        this.logger = logger;
     }
 
     /**
@@ -94,7 +90,7 @@ public class VersionedDtoLoader {
 
         // Upgrade to latest version
         EntityVersionUpgrader upgrader = EntityVersionUpgrader.getInstance();
-        upgrader.setLogger(logger);
+        upgrader.setMapper(mapper);
         return upgrader.upgrade(versionedEntity, version);
     }
 
@@ -127,7 +123,7 @@ public class VersionedDtoLoader {
 
         // Upgrade to latest version
         ItemVersionUpgrader upgrader = ItemVersionUpgrader.getInstance();
-        upgrader.setLogger(logger);
+        upgrader.setMapper(mapper);
         return upgrader.upgrade(versionedItem, version);
     }
 
@@ -160,7 +156,7 @@ public class VersionedDtoLoader {
 
         // Upgrade to latest version
         BlockVersionUpgrader upgrader = BlockVersionUpgrader.getInstance();
-        upgrader.setLogger(logger);
+        upgrader.setMapper(mapper);
         return upgrader.upgrade(versionedBlock, version);
     }
 
@@ -188,10 +184,8 @@ public class VersionedDtoLoader {
 
         FormatVersion version = FormatVersion.parse(formatVersionStr);
         if (version == null) {
-            if (logger != null) {
-                logger.warning(String.format("Invalid format_version '%s', using default %s",
-                    formatVersionStr, FormatVersion.DEFAULT));
-            }
+            BridgeLoggerHolder.getLogger().warning(String.format("Invalid format_version '%s', using default %s",
+                formatVersionStr, FormatVersion.DEFAULT));
             return FormatVersion.DEFAULT;
         }
 
@@ -204,18 +198,14 @@ public class VersionedDtoLoader {
         // Find the closest lower version
         FormatVersion closestVersion = findClosestLowerVersion(version);
         if (closestVersion != null) {
-            if (logger != null) {
-                logger.info(String.format("format_version %s not directly supported, using closest version %s",
-                    version, closestVersion));
-            }
+            BridgeLoggerHolder.getLogger().info(String.format("format_version %s not directly supported, using closest version %s",
+                version, closestVersion));
             return closestVersion;
         }
 
         // If no lower version found, use the oldest supported version
-        if (logger != null) {
-            logger.warning(String.format("format_version %s is older than all supported versions, using %s",
-                version, SUPPORTED_VERSIONS[0]));
-        }
+        BridgeLoggerHolder.getLogger().warning(String.format("format_version %s is older than all supported versions, using %s",
+            version, SUPPORTED_VERSIONS[0]));
         return SUPPORTED_VERSIONS[0];
     }
 
