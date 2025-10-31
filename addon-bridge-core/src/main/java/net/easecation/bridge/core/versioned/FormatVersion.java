@@ -72,14 +72,14 @@ public record FormatVersion(int major, int minor, int patch) implements Comparab
         return Objects.hash(major, minor, patch);
     }
 
-    // Common versions as constants
+    // Common versions as constants (matching version-mapping.json)
     public static final FormatVersion V1_19_0 = new FormatVersion(1, 19, 0);
     public static final FormatVersion V1_19_40 = new FormatVersion(1, 19, 40);
-    public static final FormatVersion V1_19_80 = new FormatVersion(1, 19, 80);
-    public static final FormatVersion V1_20_0 = new FormatVersion(1, 20, 0);
+    public static final FormatVersion V1_19_50 = new FormatVersion(1, 19, 50);
+    public static final FormatVersion V1_20_10 = new FormatVersion(1, 20, 10);
     public static final FormatVersion V1_20_41 = new FormatVersion(1, 20, 41);
     public static final FormatVersion V1_20_81 = new FormatVersion(1, 20, 81);
-    public static final FormatVersion V1_21_20 = new FormatVersion(1, 21, 20);
+    public static final FormatVersion V1_21_50 = new FormatVersion(1, 21, 50);
     public static final FormatVersion V1_21_60 = new FormatVersion(1, 21, 60);
 
     // Default version (latest)

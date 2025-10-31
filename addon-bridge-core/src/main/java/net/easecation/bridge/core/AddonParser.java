@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.easecation.bridge.core.dto.block.v1_21_60.BlockDefinitions;
 import net.easecation.bridge.core.dto.entity.v1_21_60.Entity;
 import net.easecation.bridge.core.dto.item.v1_21_60.Item;
+import net.easecation.bridge.core.versioned.VersionedDtoLoader;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.util.zip.ZipFile;
  */
 public class AddonParser {
     private static final ObjectMapper MAPPER = createObjectMapper();
+    private final VersionedDtoLoader dtoLoader = new VersionedDtoLoader(MAPPER);
     private final BridgeLogger log;
 
     public AddonParser(BridgeLogger log) {
@@ -34,6 +36,7 @@ public class AddonParser {
             @Override public void debug(String msg) { System.out.println("[DEBUG] " + msg); }
             @Override public void trace(String msg) { System.out.println("[TRACE] " + msg); }
         };
+        this.dtoLoader.setLogger(this.log);
     }
 
     private static ObjectMapper createObjectMapper() {
@@ -159,8 +162,11 @@ public class AddonParser {
                         // Parse wrapper: {"format_version": "1.21.60", "minecraft:block": {...}}
                         Map<String, Object> wrapper = MAPPER.readValue(json, Map.class);
                         if (wrapper.containsKey("minecraft:block")) {
+                            String formatVersion = (String) wrapper.get("format_version");
                             Object blockData = wrapper.get("minecraft:block");
-                            BlockDefinitions blockDef = MAPPER.convertValue(blockData, BlockDefinitions.class);
+
+                            // Load and upgrade to latest version
+                            BlockDefinitions blockDef = dtoLoader.loadBlock(blockData, formatVersion);
                             blocks.add(BlockDef.fromDTO(blockDef));
                         }
                     } catch (Exception e) {
@@ -184,8 +190,17 @@ public class AddonParser {
                         // Parse wrapper: {"format_version": "1.21.60", "minecraft:entity": {...}}
                         Map<String, Object> wrapper = MAPPER.readValue(json, Map.class);
                         if (wrapper.containsKey("minecraft:entity")) {
+                            String formatVersion = (String) wrapper.get("format_version");
                             Object entityData = wrapper.get("minecraft:entity");
-                            Entity entityDto = MAPPER.convertValue(entityData, Entity.class);
+
+                            // Load and upgrade to latest version
+                            Entity entityDto = dtoLoader.loadEntity(entityData, formatVersion);
+                            try {
+                                String entityJson = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(entityDto);
+                                log.info(String.format("Final upgraded Entity DTO as JSON:\n%s", entityJson));
+                            } catch (Exception e) {
+                                log.warning("Failed to serialize Entity DTO to JSON: " + e.getMessage());
+                            }
                             entities.add(EntityDef.fromDTO(entityDto));
                             entityParsedCount++;
                         } else {
@@ -204,7 +219,7 @@ public class AddonParser {
                 log.info("Entity parsing: found " + entityFileCount + " files, successfully parsed " + entityParsedCount);
             }
 
-            // Parse items (including Netease edition items) - using v1_21_60 DTO
+            // Parse items (including Netease edition items)
             List<ItemDef> items = new ArrayList<>();
             entries = zip.entries();
             while (entries.hasMoreElements()) {
@@ -214,11 +229,16 @@ public class AddonParser {
                     try (InputStream is = zip.getInputStream(entry)) {
                         String json = new String(is.readAllBytes(), StandardCharsets.UTF_8);
 
-                        // Parse using Jackson to v1_21_60.Item DTO
-                        Item item = MAPPER.readValue(json, Item.class);
+                        // Parse as Map to extract format_version
+                        Map<String, Object> itemMap = MAPPER.readValue(json, Map.class);
+                        String formatVersion = (String) itemMap.get("format_version");
 
-                        // Convert to ItemDef (using latest version)
-                        ItemDef itemDef = ItemDef.fromDTO(item);
+                        // Load and upgrade to latest version (ItemsDefinition)
+                        net.easecation.bridge.core.dto.item.v1_21_60.ItemsDefinition itemsDef =
+                            dtoLoader.loadItem(itemMap, formatVersion);
+
+                        // Convert to ItemDef (using latest version Item from ItemsDefinition)
+                        ItemDef itemDef = ItemDef.fromDTO(itemsDef.minecraft_item());
                         items.add(itemDef);
                     } catch (Exception e) {
                         log.debug("Failed to parse item: " + name + " - " + e.getMessage());
@@ -261,8 +281,11 @@ public class AddonParser {
                             String json = Files.readString(blockFile, StandardCharsets.UTF_8);
                             Map<String, Object> wrapper = MAPPER.readValue(json, Map.class);
                             if (wrapper.containsKey("minecraft:block")) {
+                                String formatVersion = (String) wrapper.get("format_version");
                                 Object blockData = wrapper.get("minecraft:block");
-                                BlockDefinitions blockDef = MAPPER.convertValue(blockData, BlockDefinitions.class);
+
+                                // Load and upgrade to latest version
+                                BlockDefinitions blockDef = dtoLoader.loadBlock(blockData, formatVersion);
                                 blocks.add(BlockDef.fromDTO(blockDef));
                             }
                         } catch (Exception e) {
@@ -280,8 +303,11 @@ public class AddonParser {
                             String json = Files.readString(blockFile, StandardCharsets.UTF_8);
                             Map<String, Object> wrapper = MAPPER.readValue(json, Map.class);
                             if (wrapper.containsKey("minecraft:block")) {
+                                String formatVersion = (String) wrapper.get("format_version");
                                 Object blockData = wrapper.get("minecraft:block");
-                                BlockDefinitions blockDef = MAPPER.convertValue(blockData, BlockDefinitions.class);
+
+                                // Load and upgrade to latest version
+                                BlockDefinitions blockDef = dtoLoader.loadBlock(blockData, formatVersion);
                                 blocks.add(BlockDef.fromDTO(blockDef));
                             }
                         } catch (Exception e) {
@@ -304,8 +330,17 @@ public class AddonParser {
                             String json = Files.readString(entityFile, StandardCharsets.UTF_8);
                             Map<String, Object> wrapper = MAPPER.readValue(json, Map.class);
                             if (wrapper.containsKey("minecraft:entity")) {
+                                String formatVersion = (String) wrapper.get("format_version");
                                 Object entityData = wrapper.get("minecraft:entity");
-                                Entity entityDto = MAPPER.convertValue(entityData, Entity.class);
+
+                                // Load and upgrade to latest version
+                                Entity entityDto = dtoLoader.loadEntity(entityData, formatVersion);
+                                try {
+                                    String entityJson = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(entityDto);
+                                    log.info(String.format("Final upgraded Entity DTO as JSON:\n%s", entityJson));
+                                } catch (Exception e) {
+                                    log.warning("Failed to serialize Entity DTO to JSON: " + e.getMessage());
+                                }
                                 entities.add(EntityDef.fromDTO(entityDto));
                                 entityParsedCount[0]++;
                             } else {
@@ -333,9 +368,17 @@ public class AddonParser {
                     .forEach(itemFile -> {
                         try {
                             String json = Files.readString(itemFile, StandardCharsets.UTF_8);
-                            // Parse using Jackson to v1_21_60.Item DTO
-                            Item item = MAPPER.readValue(json, Item.class);
-                            ItemDef itemDef = ItemDef.fromDTO(item);
+
+                            // Parse as Map to extract format_version
+                            Map<String, Object> itemMap = MAPPER.readValue(json, Map.class);
+                            String formatVersion = (String) itemMap.get("format_version");
+
+                            // Load and upgrade to latest version (ItemsDefinition)
+                            net.easecation.bridge.core.dto.item.v1_21_60.ItemsDefinition itemsDef =
+                                dtoLoader.loadItem(itemMap, formatVersion);
+
+                            // Convert to ItemDef (using latest version Item from ItemsDefinition)
+                            ItemDef itemDef = ItemDef.fromDTO(itemsDef.minecraft_item());
                             items.add(itemDef);
                         } catch (Exception e) {
                             log.debug("Failed to parse item: " + itemFile + " - " + e.getMessage());
@@ -350,9 +393,17 @@ public class AddonParser {
                     .forEach(itemFile -> {
                         try {
                             String json = Files.readString(itemFile, StandardCharsets.UTF_8);
-                            // Parse using Jackson to v1_21_60.Item DTO
-                            Item item = MAPPER.readValue(json, Item.class);
-                            ItemDef itemDef = ItemDef.fromDTO(item);
+
+                            // Parse as Map to extract format_version
+                            Map<String, Object> itemMap = MAPPER.readValue(json, Map.class);
+                            String formatVersion = (String) itemMap.get("format_version");
+
+                            // Load and upgrade to latest version (ItemsDefinition)
+                            net.easecation.bridge.core.dto.item.v1_21_60.ItemsDefinition itemsDef =
+                                dtoLoader.loadItem(itemMap, formatVersion);
+
+                            // Convert to ItemDef (using latest version Item from ItemsDefinition)
+                            ItemDef itemDef = ItemDef.fromDTO(itemsDef.minecraft_item());
                             items.add(itemDef);
                         } catch (Exception e) {
                             log.debug("Failed to parse Netease item: " + itemFile + " - " + e.getMessage());
