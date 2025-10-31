@@ -1,5 +1,6 @@
 package net.easecation.bridge.core;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,6 +13,7 @@ import java.util.List;
  * Contains metadata, modules, dependencies and capabilities.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record Manifest(
         @JsonProperty("format_version") int formatVersion,
         @JsonProperty("header") Header header,
@@ -33,7 +35,6 @@ public record Manifest(
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    @JsonInclude(JsonInclude.Include.ALWAYS)
     public record Header(
             @JsonProperty("uuid") String uuid,
             @JsonProperty("name") String name,
@@ -69,14 +70,17 @@ public record Manifest(
     ) {}
 
     // Helper methods
+    @JsonIgnore
     public String getUuid() {
         return header.uuid();
     }
 
+    @JsonIgnore
     public String getName() {
         return header.name();
     }
 
+    @JsonIgnore
     public String getVersion() {
         List<Integer> ver = header.version();
         if (ver == null || ver.isEmpty()) return "0.0.0";
@@ -86,6 +90,7 @@ public record Manifest(
         return major + "." + minor + "." + patch;
     }
 
+    @JsonIgnore
     public boolean isBehaviorPack() {
         if (modules == null || modules.isEmpty()) {
             return false;
@@ -96,6 +101,7 @@ public record Manifest(
                               "javascript".equalsIgnoreCase(m.type()));
     }
 
+    @JsonIgnore
     public boolean isResourcePack() {
         return modules != null && modules.stream()
                 .anyMatch(m -> "resources".equals(m.type()));
@@ -108,6 +114,7 @@ public record Manifest(
      *
      * @return PackType.RESOURCE if the pack contains resources, PackType.BEHAVIOR otherwise
      */
+    @JsonIgnore
     public PackType getPackType() {
         return isResourcePack() ? PackType.RESOURCE : PackType.BEHAVIOR;
     }
