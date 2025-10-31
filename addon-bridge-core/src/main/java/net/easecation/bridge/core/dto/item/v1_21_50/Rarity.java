@@ -16,17 +16,17 @@ import javax.annotation.Nullable;
 public sealed interface Rarity {
     @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
     record Rarity_Variant0(
-        @JsonValue DcRarities value
+        @JsonValue String value
     ) implements Rarity {
         @JsonCreator
-        public static Rarity_Variant0 of(DcRarities value) {
+        public static Rarity_Variant0 of(String value) {
             return new Rarity_Variant0(value);
         }
     }
     @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
     record Rarity_Variant1(
         /* Sets the base rarity of the item. The rarity of an item automatically increases when enchanted, either to Rare when the base rarity is Common or Uncommon, or Epic when the base rarity is Rare. */
-        @JsonProperty("value") @Nullable DcRarities value
+        @JsonProperty("value") @Nullable String value
     ) implements Rarity {
     }
 
@@ -42,11 +42,8 @@ public sealed interface Rarity {
                 // Try to deserialize as value wrapper variants
                 try {
                     // For value wrapper, directly read the primitive value and call factory method
-                    // Fallback for complex types
-                    com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
-                    nodeParser.nextToken();
-                    DcRarities value = ctxt.readValue(nodeParser, DcRarities.class);
-                                        return Rarity_Variant0.of(value);
+                    String value = node.asText();
+                    return Rarity_Variant0.of(value);
                 } catch (Exception e) {
                     // Try next variant
                 }

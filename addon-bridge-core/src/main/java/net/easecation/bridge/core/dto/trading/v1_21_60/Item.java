@@ -29,7 +29,7 @@ public sealed interface Item {
         @JsonProperty("price_multiplier") @Nullable Double priceMultiplier,
         @JsonProperty("functions") @Nullable Functions functions,
         /* UNDOCUMENTED. */
-        @JsonProperty("biomes") @Nullable List<Biome> biomes,
+        @JsonProperty("biomes") @Nullable List<String> biomes,
         @JsonProperty("quantity") @Nullable Object quantity
     ) implements Item {
     }

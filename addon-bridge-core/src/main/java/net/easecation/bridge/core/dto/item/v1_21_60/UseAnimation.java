@@ -6,14 +6,15 @@ import com.fasterxml.jackson.annotation.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
 public sealed interface UseAnimation {
-    @JsonIgnoreProperties(ignoreUnknown = true) 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     record UseAnimation_Variant0(
+        @JsonValue String value
     ) implements UseAnimation {
     }
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record UseAnimation_Variant1(
         /* Which animation to play when using the item. */
-        @JsonProperty("value") EcAnimation value
+        @JsonProperty("value") String value
     ) implements UseAnimation {
     }
 }

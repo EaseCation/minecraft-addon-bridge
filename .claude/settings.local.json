@@ -25,7 +25,12 @@
       "Bash(git checkout tags/v1.20.0-0)",
       "Bash(tree:*)",
       "Bash(unzip:*)",
-      "Read(//tmp/easecation_beh_temp/blocks/**)"
+      "Read(//tmp/easecation_beh_temp/blocks/**)",
+      "Bash(while read f)",
+      "Bash(do if grep -Pzo '(?s)public record \\w+\\(\\s*\\)\\s*\\{' \"$f\")",
+      "Bash(/dev/null)",
+      "Bash(then echo \"$f\")",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": []

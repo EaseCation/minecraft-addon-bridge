@@ -151,8 +151,14 @@ public class ItemComponentsNBT {
             tag.putCompound("minecraft:digger", convertDigger(components.minecraft_digger()));
         }
 
-        // Use Animation (not in v1_21_60 schema)
-        // Skipped
+        // Use Animation
+        if (components.minecraft_useAnimation() != null) {
+            String animation = extractStringValue(components.minecraft_useAnimation());
+            if (animation != null) {
+                tag.putCompound("minecraft:use_animation",
+                    new CompoundTag().putString("value", animation));
+            }
+        }
 
         // Hand Equipped
         if (components.minecraft_handEquipped() != null) {

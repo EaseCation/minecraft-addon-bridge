@@ -16,21 +16,21 @@ import javax.annotation.Nullable;
 @JsonDeserialize(using = Range_a_B.Deserializer.class)
 public sealed interface Range_a_B {
     @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
-    record Range_a_BVariant0(
+    record Range_a_B_Variant0(
         @JsonValue Double value
     ) implements Range_a_B {
         @JsonCreator
-        public static Range_a_BVariant0 of(Double value) {
-            return new Range_a_BVariant0(value);
+        public static Range_a_B_Variant0 of(Double value) {
+            return new Range_a_B_Variant0(value);
         }
     }
     @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
-    record Range_a_BVariant1(
+    record Range_a_B_Variant1(
         List<Double> value
     ) implements Range_a_B {
     }
     @JsonDeserialize(using = com.fasterxml.jackson.databind.JsonDeserializer.None.class) @JsonIgnoreProperties(ignoreUnknown = true) 
-    record Range_a_BVariant2(
+    record Range_a_B_Variant2(
         /* The minimum value of the range. */
         @JsonProperty("range_min") @Nullable Double rangeMin,
         /* The maximum value of the range. */
@@ -51,7 +51,7 @@ public sealed interface Range_a_B {
                 try {
                     // For value wrapper, directly read the primitive value and call factory method
                     Double value = node.asDouble();
-                    return Range_a_BVariant0.of(value);
+                    return Range_a_B_Variant0.of(value);
                 } catch (Exception e) {
                     // Try next variant
                 }
@@ -61,14 +61,14 @@ public sealed interface Range_a_B {
             try {
                 com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
                 nodeParser.nextToken();
-                return ctxt.readValue(nodeParser, Range_a_BVariant1.class);
+                return ctxt.readValue(nodeParser, Range_a_B_Variant1.class);
             } catch (Exception e) {
                 // Try next variant
             }
             try {
                 com.fasterxml.jackson.core.JsonParser nodeParser = node.traverse(p.getCodec());
                 nodeParser.nextToken();
-                return ctxt.readValue(nodeParser, Range_a_BVariant2.class);
+                return ctxt.readValue(nodeParser, Range_a_B_Variant2.class);
             } catch (Exception e) {
                 // Try next variant
             }

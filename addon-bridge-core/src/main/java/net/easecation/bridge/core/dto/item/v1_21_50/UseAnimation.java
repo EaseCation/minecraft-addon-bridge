@@ -13,7 +13,7 @@ public sealed interface UseAnimation {
     @JsonIgnoreProperties(ignoreUnknown = true) 
     record UseAnimation_Variant1(
         /* Which animation to play when using the item. */
-        @JsonProperty("value") EbAnimation value
+        @JsonProperty("value") String value
     ) implements UseAnimation {
     }
 }

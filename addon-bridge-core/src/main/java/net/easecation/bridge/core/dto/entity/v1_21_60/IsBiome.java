@@ -11,6 +11,6 @@ public record IsBiome(
     @JsonProperty("operator") @Nullable String operator,
     @JsonProperty("subject") @Nullable String subject,
     /* The biome type to test. */
-    @JsonProperty("value") Biome value
+    @JsonProperty("value") String value
 ) {
 }

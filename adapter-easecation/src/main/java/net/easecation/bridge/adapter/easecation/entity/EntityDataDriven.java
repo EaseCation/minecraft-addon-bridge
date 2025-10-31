@@ -202,9 +202,9 @@ public class EntityDataDriven extends EntityCreature {
             return null;
         }
 
-        if (range instanceof Range_a_B.Range_a_BVariant0 variant0) {
+        if (range instanceof Range_a_B.Range_a_B_Variant0 variant0) {
             return variant0.value();
-        } else if (range instanceof Range_a_B.Range_a_BVariant2 variant2) {
+        } else if (range instanceof Range_a_B.Range_a_B_Variant2 variant2) {
             // For range, use min value
             if (variant2.rangeMin() != null) {
                 return variant2.rangeMin();

@@ -53,6 +53,25 @@ export class SchemaParser {
       for (const [defName, defSchema] of Object.entries(schema.definitions)) {
         const def = defSchema as JSONSchema7;
 
+        // 提前处理纯enum定义 - 直接映射为String，不生成包装类
+        // 纯enum定义只有enum字段，没有type/properties/oneOf等结构
+        if (def.enum && def.enum.length > 0) {
+          const isPureEnum = !def.type &&
+                            !def.properties &&
+                            !def.oneOf &&
+                            !def.anyOf &&
+                            !def.allOf;
+          if (isPureEnum) {
+            // 直接注册为String，不生成类
+            this.typeRegistry.registerDefinitionRef(
+              enhancedContext.filePath,
+              defName,
+              'String'
+            );
+            continue; // 跳过后续处理
+          }
+        }
+
         // 检查是否是纯基本类型（没有 properties，只有 type，没有额外约束）
         const isPrimitiveType = this.isPurePrimitiveType(def);
         if (isPrimitiveType) {
@@ -206,6 +225,19 @@ export class SchemaParser {
    * 不应该导致生成包装类。只有 enum, const, oneOf/anyOf/allOf 这些改变类型语义的才需要包装。
    */
   private isPurePrimitiveType(schema: JSONSchema7): boolean {
+    // 纯enum定义视为primitive type（应该映射为String）
+    // enum只是值约束，不改变String类型的本质
+    if (schema.enum && schema.enum.length > 0) {
+      const isPureEnum = !schema.type &&
+                        !schema.properties &&
+                        !schema.oneOf &&
+                        !schema.anyOf &&
+                        !schema.allOf;
+      if (isPureEnum) {
+        return true;
+      }
+    }
+
     // 必须有 type 字段，且是基本类型之一
     const type = schema.type;
     if (type !== 'string' && type !== 'boolean' && type !== 'number' && type !== 'integer') {
