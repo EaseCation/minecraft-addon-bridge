@@ -2,7 +2,9 @@ package net.easecation.bridge.core.dto.item.v1_10;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.util.HashMap;
 import java.util.List;
@@ -237,9 +239,38 @@ public class Components {
     /**
      * 最大堆叠数量
      */
+    @JsonDeserialize(using = MaxStackSize.Deserializer.class)
     public record MaxStackSize(
         @JsonProperty("value") Integer value
-    ) {}
+    ) {
+        @JsonCreator
+        public static MaxStackSize of(Integer value) {
+            return new MaxStackSize(value);
+        }
+        
+        // Custom deserializer to handle both number and object formats
+        public static class Deserializer extends com.fasterxml.jackson.databind.JsonDeserializer<MaxStackSize> {
+            @Override
+            public MaxStackSize deserialize(com.fasterxml.jackson.core.JsonParser p, 
+                    com.fasterxml.jackson.databind.DeserializationContext ctxt)
+                    throws java.io.IOException {
+                com.fasterxml.jackson.databind.JsonNode node = p.getCodec().readTree(p);
+                
+                // Handle direct number format: "minecraft:max_stack_size": 1
+                if (node.isNumber()) {
+                    return MaxStackSize.of(node.asInt());
+                }
+                
+                // Handle object format: "minecraft:max_stack_size": {"value": 1}
+                if (node.isObject() && node.has("value")) {
+                    return MaxStackSize.of(node.get("value").asInt());
+                }
+                
+                throw new com.fasterxml.jackson.databind.JsonMappingException(p,
+                    "Cannot deserialize MaxStackSize: expected number or object with 'value' field");
+            }
+        }
+    }
 
     /**
      * 种子属性
