@@ -57,7 +57,8 @@ public class ItemDefinitionBuilder {
         if (components != null) {
             // 基础组件：max_stack_size
             if (components.getMaxStackSize() != null && components.getMaxStackSize().value() != null) {
-                builder.maxStackSize(components.getMaxStackSize().value());
+                int stackSize = components.getMaxStackSize().value();
+                builder.maxStackSize(stackSize);
             }
 
             // TODO: minecraft:fuel（燃料属性）
