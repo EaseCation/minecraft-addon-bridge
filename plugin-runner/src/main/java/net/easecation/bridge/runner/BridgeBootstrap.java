@@ -36,6 +36,9 @@ public final class BridgeBootstrap extends PluginBase {
             // 2. 根据服务端品牌信息与类特征选择适配器
             this.registry = AdapterFactory.detectRegistryOrNoop(getServer(), nukkitLogger);
 
+            // 2.5. 初始化Registry，传递Plugin实例
+            this.registry.initialize(this);
+
             // 3. 初始化Bridge和资源部署器
             Path dataDir = getDataFolder().toPath();
             ResourcePackDeployer deployer = new GenericResourceDeployer(

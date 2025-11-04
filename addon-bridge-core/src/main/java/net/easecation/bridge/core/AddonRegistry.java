@@ -3,6 +3,16 @@ package net.easecation.bridge.core;
 import java.util.List;
 
 public interface AddonRegistry {
+    /**
+     * 初始化Registry，传递Plugin实例。
+     * 该方法会在Registry创建后、注册方法调用前被调用。
+     *
+     * @param plugin 插件实例（通常是 PluginBase）
+     */
+    default void initialize(Object plugin) {
+        // 默认实现：不做任何处理
+    }
+
     void registerItems(List<ItemDef> items);
     void registerBlocks(List<BlockDef> blocks);
     void registerEntities(List<EntityDef> entities);
