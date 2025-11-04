@@ -53,6 +53,24 @@ public class SimpleDynamicBlockGenerator {
             String className = generateClassName(blockDef.id());
             BridgeLoggerHolder.getLogger().info("[SimpleDynamicBlockGenerator] Generating block class: " + className);
 
+            // 提取states和traits，合并为完整的states定义
+            java.util.Map<String, net.easecation.bridge.core.dto.block.v1_21_60.StatesValue> states = null;
+            if (blockDef.description() != null) {
+                states = blockDef.description().states();
+
+                // 如果有traits，转换并合并到states中
+                if (blockDef.description().traits() != null) {
+                    states = TraitsConverter.mergeTraitsIntoStates(states, blockDef.description().traits());
+                }
+
+                // 如果最终有states，注册到BlockPropertiesFactory缓存
+                if (states != null && !states.isEmpty()) {
+                    BlockPropertiesFactory.registerStates(blockDef.id(), states);
+                    BridgeLoggerHolder.getLogger().info("[SimpleDynamicBlockGenerator] Registered " + states.size()
+                        + " states for block: " + blockDef.id());
+                }
+            }
+
             // 使用ByteBuddy生成类
             DynamicType.Builder<Block> builder = byteBuddy
                 .subclass(Block.class)

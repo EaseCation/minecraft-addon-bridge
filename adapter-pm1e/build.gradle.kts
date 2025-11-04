@@ -20,4 +20,7 @@ dependencies {
     } else {
         logger.lifecycle("未提供 PM1E patched.jar（可通过 -PPM1E_PATCHED_JAR 或放置到 adapter-pm1e/lib/patched.jar）")
     }
+
+    // ByteBuddy for runtime class generation (支持无限数量的自定义物品和实体)
+    implementation("net.bytebuddy:byte-buddy:1.14.10")
 }
