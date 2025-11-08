@@ -1,0 +1,124 @@
+{
+  "$comment": "版本映射配置 - format_version 到 Git commit 的映射关系",
+  "$schema": "./version-mapping.schema.json",
+  "description": "此配置定义了 Minecraft 基岩版各个版本对应的 Schema commit hash",
+  "modules": {
+    "items": [
+      {
+        "format_version": "1.19.0",
+        "commit": "c8128d1e1267d25ddf429ad64a5261b4c77f2087",
+        "notes": "MC 1.19.0 - 最早可追溯版本 (2022-08-05)"
+      },
+      {
+        "format_version": "1.19.40",
+        "commit": "28f69c0fc8d49510cedd168980c3696ca6ccaee0",
+        "notes": "MC 1.19.40 (2022-09-08)"
+      },
+      {
+        "format_version": "1.19.50",
+        "commit": "2fe9f2ed705f576de9d23c4a0153eb8c0636d182",
+        "notes": "MC 1.19.50 (2022-10-29)"
+      },
+      {
+        "format_version": "1.20.10",
+        "commit": "c3ab09755729883117ef623bda9db895adf7a8d6",
+        "notes": "MC 1.20.10 (2023-03-09)"
+      },
+      {
+        "format_version": "1.20.41",
+        "commit": "d3a8c7a4a49ee1e3f1e99c145983a014b6e64c07",
+        "notes": "MC 1.20.41 (2023-08-17)"
+      },
+      {
+        "format_version": "1.20.81",
+        "commit": "0ed8493085f990ec01b24488dd7c179fc29f991c",
+        "notes": "MC 1.20.81 (2024-05-11)"
+      },
+      {
+        "format_version": "1.21.50",
+        "commit": "ec99529c64db37358d38bbdd748470baf4aefad5",
+        "notes": "MC 1.21.50 (2024-12-05)"
+      },
+      {
+        "format_version": "1.21.60",
+        "commit": "2d7ba565356605ee83bd052b068c358cbf0277eb",
+        "notes": "MC 1.21.60 - 当前最新 (2024-12-24)"
+      }
+    ],
+    "blocks": [
+      {
+        "format_version": "1.19.0",
+        "commit": "c8128d1e1267d25ddf429ad64a5261b4c77f2087",
+        "notes": "MC 1.19.0 - 最早可追溯版本 (2022-08-05)"
+      },
+      {
+        "format_version": "1.19.40",
+        "commit": "49019fd6f56312f760b59694e08bd32ddc11f520",
+        "notes": "MC 1.19.40 (2022-10-11)"
+      },
+      {
+        "format_version": "1.19.50",
+        "commit": "beafe8e1169e50f5ea65f88ba7d13b514e3c3206",
+        "notes": "MC 1.19.50 (2022-11-25)"
+      },
+      {
+        "format_version": "1.20.10",
+        "commit": "0a5f3296362b9916895877d36c3c0da9bc38d178",
+        "notes": "MC 1.20.10 (2023-05-21)"
+      },
+      {
+        "format_version": "1.20.41",
+        "commit": "ee2790fd266a16ccb881a515dcf13a8dd80bb804",
+        "notes": "MC 1.20.41 (2023-11-28)"
+      },
+      {
+        "format_version": "1.20.81",
+        "commit": "ebac7a0ab1091ad0695b0ac9e58fa0592989ca99",
+        "notes": "MC 1.20.81 (2024-04-29)"
+      },
+      {
+        "format_version": "1.21.50",
+        "commit": "ec99529c64db37358d38bbdd748470baf4aefad5",
+        "notes": "MC 1.21.50 (2024-12-05)"
+      },
+      {
+        "format_version": "1.21.60",
+        "commit": "2d7ba565356605ee83bd052b068c358cbf0277eb",
+        "notes": "MC 1.21.60 - 当前最新 (2024-12-24)"
+      }
+    ],
+    "entities": [
+      {
+        "format_version": "1.19.0",
+        "commit": "c8128d1e1267d25ddf429ad64a5261b4c77f2087"
+      },
+      {
+        "format_version": "1.21.60",
+        "commit": "2d7ba565356605ee83bd052b068c358cbf0277eb"
+      }
+    ],
+    "animations": [
+      {
+        "format_version": "1.19.0",
+        "commit": "c8128d1e1267d25ddf429ad64a5261b4c77f2087"
+      },
+      {
+        "format_version": "1.21.60",
+        "commit": "2d7ba565356605ee83bd052b068c358cbf0277eb"
+      }
+    ],
+    "animation_controllers": [
+      {
+        "format_version": "1.19.0",
+        "commit": "c8128d1e1267d25ddf429ad64a5261b4c77f2087"
+      },
+      {
+        "format_version": "1.21.60",
+        "commit": "2d7ba565356605ee83bd052b068c358cbf0277eb"
+      }
+    ]
+  },
+  "default_commit": "2d7ba565356605ee83bd052b068c358cbf0277eb",
+  "schema_repository": "https://github.com/Blockception/Minecraft-bedrock-json-schemas.git",
+  "schema_directory": "../schemas/minecraft-bedrock-json-schemas"
+}

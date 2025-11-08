@@ -1,0 +1,49 @@
+{
+  "name": "@nukkit-addon-bridge/schema-types",
+  "version": "1.0.0",
+  "description": "TypeScript type definitions for Minecraft Bedrock JSON schemas",
+  "main": "types/index.d.ts",
+  "types": "types/index.d.ts",
+  "scripts": {
+    "generate": "ts-node src/index.ts",
+    "generate:behavior": "ts-node src/index.ts --category behavior",
+    "generate:resource": "ts-node src/index.ts --category resource",
+    "generate:all": "ts-node src/generate-all.ts",
+    "generate:all:behavior": "ts-node src/generate-all.ts --category behavior",
+    "generate:all:resource": "ts-node src/generate-all.ts --category resource",
+    "generate:all:force": "ts-node src/generate-all.ts --force",
+    "generate:all:preview": "ts-node src/generate-all.ts --dry-run",
+    "generate:items": "ts-node src/generate-all.ts --module items",
+    "generate:blocks": "ts-node src/generate-all.ts --module blocks",
+    "generate:entities": "ts-node src/generate-all.ts --module entities",
+    "clean": "rm -rf types && mkdir -p types",
+    "build": "tsc",
+    "dev": "ts-node --watch src/index.ts"
+  },
+  "keywords": [
+    "minecraft",
+    "bedrock",
+    "schema",
+    "types",
+    "typescript",
+    "addon"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/glob": "^8.1.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "@apidevtools/json-schema-ref-parser": "^11.9.3",
+    "chalk": "^4.1.2",
+    "commander": "^12.0.0",
+    "fs-extra": "^11.2.0",
+    "glob": "^10.3.0",
+    "json-schema-to-typescript": "^14.0.0",
+    "json5": "^2.2.3"
+  }
+}
